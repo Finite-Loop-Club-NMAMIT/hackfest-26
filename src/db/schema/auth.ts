@@ -7,16 +7,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "@auth/core/adapters";
-
-export const users = pgTable("user", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name"),
-  email: text("email").unique(),
-  emailVerified: timestamp("emailVerified", { mode: "date" }),
-  image: text("image"),
-});
+import { users } from "./user";
 
 export const accounts = pgTable(
   "account",

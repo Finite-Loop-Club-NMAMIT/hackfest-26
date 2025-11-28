@@ -6,7 +6,21 @@
       "idx": 0,
       "version": "7",
       "when": 1764354372499,
-      "tag": "0000_fast_slapstick",
+      "tag": "0000_create_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764354372499,
+      "tag": "0001_fast_slapstick",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764359640322,
+      "tag": "0002_thankful_speed_demon",
       "breakpoints": true
     }
   ]
