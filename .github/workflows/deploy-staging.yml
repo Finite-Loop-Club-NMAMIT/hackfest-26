@@ -31,6 +31,8 @@ jobs:
         run: pnpm db:migrate
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          GITHUB_CLIENT_ID: ${{ secrets.STAGING_GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}
           NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET }}
           NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
         continue-on-error: false
