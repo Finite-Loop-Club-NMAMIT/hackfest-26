@@ -29,7 +29,8 @@ jobs:
       - name: Build application
         run: pnpm build
         env:
-          # Add any required environment variables for build
-          # These can be set in GitHub repository secrets if needed
           NODE_ENV: production
+          # Client env vars are needed at build time for Next.js
+          NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'placeholder' }}
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'placeholder' }}
 

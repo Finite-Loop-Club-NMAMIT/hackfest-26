@@ -1,11 +1,11 @@
-import db from "~/db";
 import { eq } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
+import db from "~/db";
 import { safeDB } from "./wrappers";
 
 export function queryBuilder<
-  Table extends PgTable<any> & {
-    id: any;
+  Table extends PgTable<Record<string, unknown>> & {
+    id: string | number;
   },
   TableName extends keyof typeof db.query,
 >(table: Table, tableName: TableName) {

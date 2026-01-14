@@ -1,10 +1,10 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { eq, and } from "drizzle-orm";
-import NextAuth, { DefaultSession } from "next-auth";
+import { and, eq } from "drizzle-orm";
+import NextAuth, { type DefaultSession } from "next-auth";
 import GitHub from "next-auth/providers/github";
-import { env } from "~/env";
 import db from "~/db";
-import { users, accounts, sessions, verificationTokens } from "~/db/schema";
+import { accounts, sessions, users, verificationTokens } from "~/db/schema";
+import { env } from "~/env";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -47,15 +47,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             .from(users)
             .where(eq(users.id, user.id))
             .limit(1);
-          
+
           if (existingUser[0] && !existingUser[0].github && githubUsername) {
             await db
               .update(users)
               .set({ github: githubUsername as string })
               .where(eq(users.id, user.id));
           }
-        } catch {
-        }
+        } catch {}
       }
       return true;
     },
@@ -74,12 +73,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const githubAccount = await db
           .select()
           .from(accounts)
-          .where(and(
-            eq(accounts.userId, user.id),
-            eq(accounts.provider, "github")
-          ))
+          .where(
+            and(eq(accounts.userId, user.id), eq(accounts.provider, "github")),
+          )
           .limit(1);
-        
+
         if (githubAccount[0]?.access_token) {
           try {
             const githubResponse = await fetch("https://api.github.com/user", {
@@ -88,18 +86,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             });
             if (githubResponse.ok) {
-              const githubUser = await githubResponse.json() as { login: string };
+              const githubUser = (await githubResponse.json()) as {
+                login: string;
+              };
               const githubUsername = githubUser.login;
               await db
                 .update(users)
                 .set({ github: githubUsername })
                 .where(eq(users.id, user.id));
             }
-          } catch {
-          }
+          } catch {}
         }
       }
-      
+
       return session;
     },
   },

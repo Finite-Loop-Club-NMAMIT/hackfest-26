@@ -1,11 +1,13 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  registerUserSchema,
-  type RegisterUserInput,
-} from "~/lib/validation/user";
+import { X } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { Button } from "~/components/ui/button";
 import {
   Form,
@@ -23,13 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { stateEnum, courseEnum, genderEnum } from "~/db/enum";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { courseEnum, genderEnum, stateEnum } from "~/db/enum";
 import { apiFetch } from "~/lib/fetcher";
-import { CloudinaryUpload } from "~/components/cloudinary-upload";
-import { X } from "lucide-react";
+import {
+  type RegisterUserInput,
+  registerUserSchema,
+} from "~/lib/validation/user";
 
 interface College {
   id: string;
@@ -307,10 +308,11 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               <FormControl>
                 {field.value ? (
                   <div className="relative aspect-video w-full max-w-sm overflow-hidden rounded-lg border">
-                    <img
+                    <Image
                       src={field.value}
                       alt="ID Proof"
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                     <Button
                       type="button"

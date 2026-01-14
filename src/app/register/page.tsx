@@ -1,5 +1,5 @@
-import { auth } from "~/auth/config";
 import { redirect } from "next/navigation";
+import { auth } from "~/auth/config";
 import { RegisterForm } from "~/components/forms/register-form";
 import {
   Card,
