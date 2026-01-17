@@ -1,0 +1,46 @@
+name: Open PR from staging to main
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - staging
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pr-to-main:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create PR from staging to main
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const existingPRs = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              head: `${owner}:staging`,
+              base: 'main'
+            });
+
+            if (existingPRs.data.length > 0) {
+              console.log('PR from staging to main already exists. Skipping.');
+              return;
+            }
+
+            await github.rest.pulls.create({
+              owner,
+              repo,
+              title: 'Release: staging → main',
+              head: 'staging',
+              base: 'main',
+              body: '🚀 Auto-generated PR after merging changes into `staging`.'
+            });
