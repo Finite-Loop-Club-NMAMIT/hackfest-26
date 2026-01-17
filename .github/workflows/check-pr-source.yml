@@ -1,0 +1,41 @@
+name: Check PR Source Branch
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Close PR if not from staging
+        if: github.head_ref != 'staging'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨**Policy Check Failed**: Pull requests to `main` must come from the `staging` branch. This PR will be automatically closed.🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨'
+            })
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: 'closed'
+            })
+
+      - name: Fail workflow if invalid
+        if: github.head_ref != 'staging'
+        run: |
+          echo "Error: PR must come from 'staging' branch"
+          exit 1
