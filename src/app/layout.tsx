@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import "./globals.css";
 
@@ -24,6 +25,13 @@ export default function RootLayout({
       <body className={`${jakarta.variable} antialiased dark`}>
         {children}
         <ToasterWrapper />
+        {/* Umami Analytics */}
+        <Script
+          defer
+          src="https://analytics.finiteloop.club/script.js"
+          data-website-id="3c904eb5-16f5-428c-9c63-146a683de618"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
