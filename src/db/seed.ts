@@ -112,7 +112,7 @@ async function seed() {
       key: "participant:view_profile",
       description: "View participant profiles",
     },
-    {key: "team:view_team_details", description: "View team details"},
+    { key: "team:view_team_details", description: "View team details" },
     // Submissions
     { key: "submission:view", description: "View submissions" },
     { key: "submission:score", description: "Score submissions" },

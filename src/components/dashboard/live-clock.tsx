@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function LiveClock() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -30,7 +30,7 @@ export function LiveClock() {
       setCurrentTime((prev) => (prev ? new Date(prev.getTime() + 1000) : null));
     }, 1000);
     return () => clearInterval(timer);
-  }, [currentTime !== null]);
+  }, [currentTime]);
 
   if (isLoading || !currentTime) {
     return (
