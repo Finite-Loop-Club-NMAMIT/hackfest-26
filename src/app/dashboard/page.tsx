@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { LiveClock } from "~/components/dashboard/live-clock";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -21,22 +22,27 @@ export default async function DashboardPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
             Welcome back, {dashboardUser.name}
           </p>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/dashboard/login" });
-          }}
-        >
-          <Button type="submit" variant="outline">
-            Logout
-          </Button>
-        </form>
+        <div className="flex-1 flex justify-center">
+          <LiveClock />
+        </div>
+        <div className="flex-1 flex justify-end">
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/dashboard/login" });
+            }}
+          >
+            <Button type="submit" variant="outline">
+              Logout
+            </Button>
+          </form>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
