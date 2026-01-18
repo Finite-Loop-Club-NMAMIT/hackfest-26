@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import db from "~/db";
-import * as teamData from "~/db/data/teams";
 import * as userData from "~/db/data/participant";
-import { teams, participants } from "~/db/schema";
+import * as teamData from "~/db/data/teams";
+import { participants, teams } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 
 export async function createTeam(userId: string, name: string) {

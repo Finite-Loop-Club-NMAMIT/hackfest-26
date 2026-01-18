@@ -1,11 +1,11 @@
 import { query } from "~/db/data";
 import { parseBody } from "~/lib/validation/parse";
 import {
-  type RegisterUserInput,
-  registerUserSchema,
-  type UpdateUserInput,
-  updateUserSchema,
-} from "~/lib/validation/user";
+  type RegisterParticipantInput,
+  registerParticipantSchema,
+  type UpdateParticipantInput,
+  updateParticipantSchema,
+} from "~/lib/validation/participant";
 
 export async function findById(id: string) {
   return query.participants.findOne({
@@ -24,9 +24,9 @@ export async function listUsers() {
 }
 
 export async function createUser(
-  data: RegisterUserInput & { email: string; image?: string | null },
+  data: RegisterParticipantInput & { email: string; image?: string | null },
 ) {
-  const payload = parseBody(registerUserSchema, data);
+  const payload = parseBody(registerParticipantSchema, data);
   return query.participants.insert({
     ...payload,
     email: data.email,
@@ -34,7 +34,7 @@ export async function createUser(
   });
 }
 
-export async function updateUser(id: string, data: UpdateUserInput) {
-  const payload = updateUserSchema.parse(data);
+export async function updateUser(id: string, data: UpdateParticipantInput) {
+  const payload = updateParticipantSchema.parse(data);
   return query.participants.update(id, payload);
 }

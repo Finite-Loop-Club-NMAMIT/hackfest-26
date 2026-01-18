@@ -3,14 +3,18 @@ import { and, eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import db from "~/db";
-import { accounts, sessions, participants, verificationTokens } from "~/db/schema";
+import {
+  accounts,
+  participants,
+  sessions,
+  verificationTokens,
+} from "~/db/schema";
 import { env } from "~/env";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      role: "Admin" | "User" | "Participant" | "Judge";
       isRegistrationComplete: boolean;
     } & DefaultSession["user"];
   }
@@ -66,7 +70,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         .where(eq(participants.id, user.id))
         .limit(1);
       const userData = dbUser[0];
-      session.user.role = userData?.role ?? "User";
       session.user.isRegistrationComplete =
         userData?.isRegistrationComplete ?? false;
       if (!userData?.github && user.id) {

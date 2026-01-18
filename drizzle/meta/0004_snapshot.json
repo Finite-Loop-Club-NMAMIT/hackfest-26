@@ -1,6 +1,6 @@
 {
-  "id": "79274b4b-7dc6-4ae0-a144-827baea8499c",
-  "prevId": "d3087608-f6bd-473d-b723-e122075b0ef7",
+  "id": "daebe173-fcc7-44d1-a1f6-6e81e9694a1c",
+  "prevId": "79274b4b-7dc6-4ae0-a144-827baea8499c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -433,14 +433,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
-        },
-        "role": {
-          "name": "role",
-          "type": "role",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'User'"
         },
         "attended": {
           "name": "attended",
