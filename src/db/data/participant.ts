@@ -8,26 +8,26 @@ import {
 } from "~/lib/validation/user";
 
 export async function findById(id: string) {
-  return query.users.findOne({
+  return query.participants.findOne({
     where: (u, { eq }) => eq(u.id, id),
   });
 }
 
 export async function findByEmail(email: string) {
-  return query.users.findOne({
+  return query.participants.findOne({
     where: (u, { eq }) => eq(u.email, email),
   });
 }
 
 export async function listUsers() {
-  return query.users.findMany({});
+  return query.participants.findMany({});
 }
 
 export async function createUser(
   data: RegisterUserInput & { email: string; image?: string | null },
 ) {
   const payload = parseBody(registerUserSchema, data);
-  return query.users.insert({
+  return query.participants.insert({
     ...payload,
     email: data.email,
     image: data.image || null,
@@ -36,5 +36,5 @@ export async function createUser(
 
 export async function updateUser(id: string, data: UpdateUserInput) {
   const payload = updateUserSchema.parse(data);
-  return query.users.update(id, payload);
+  return query.participants.update(id, payload);
 }

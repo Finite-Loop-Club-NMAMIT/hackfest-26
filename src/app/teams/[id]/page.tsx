@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import * as teamData from "~/db/data/teams";
-import * as userData from "~/db/data/users";
+import * as userData from "~/db/data/participant";
 
 export default async function TeamDetailsPage({
   params,

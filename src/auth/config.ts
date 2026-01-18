@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import db from "~/db";
-import { accounts, sessions, users, verificationTokens } from "~/db/schema";
+import { accounts, sessions, participants, verificationTokens } from "~/db/schema";
 import { env } from "~/env";
 
 declare module "next-auth" {
@@ -18,7 +18,7 @@ declare module "next-auth" {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db, {
-    usersTable: users,
+    usersTable: participants,
     accountsTable: accounts,
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
@@ -44,15 +44,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           const existingUser = await db
             .select()
-            .from(users)
-            .where(eq(users.id, user.id))
+            .from(participants)
+            .where(eq(participants.id, user.id))
             .limit(1);
 
           if (existingUser[0] && !existingUser[0].github && githubUsername) {
             await db
-              .update(users)
+              .update(participants)
               .set({ github: githubUsername as string })
-              .where(eq(users.id, user.id));
+              .where(eq(participants.id, user.id));
           }
         } catch {}
       }
@@ -62,8 +62,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = user.id;
       const dbUser = await db
         .select()
-        .from(users)
-        .where(eq(users.id, user.id))
+        .from(participants)
+        .where(eq(participants.id, user.id))
         .limit(1);
       const userData = dbUser[0];
       session.user.role = userData?.role ?? "User";
@@ -91,9 +91,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               };
               const githubUsername = githubUser.login;
               await db
-                .update(users)
+                .update(participants)
                 .set({ github: githubUsername })
-                .where(eq(users.id, user.id));
+                .where(eq(participants.id, user.id));
             }
           } catch {}
         }

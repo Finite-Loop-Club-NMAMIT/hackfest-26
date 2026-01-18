@@ -1,7 +1,7 @@
-import { teams, users } from "~/db/schema";
+import { teams, participants } from "~/db/schema";
 import { queryBuilder } from "./utils/builder";
 
 export const query = {
-  users: queryBuilder(users, "users"),
+  participants: queryBuilder(participants, "participants"),
   teams: queryBuilder(teams, "teams"),
 };

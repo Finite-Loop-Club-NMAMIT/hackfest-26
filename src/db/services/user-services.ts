@@ -1,4 +1,4 @@
-import * as userData from "~/db/data/users";
+import * as userData from "~/db/data/participant";
 import { AppError } from "~/lib/errors/app-error";
 import type { UpdateUserInput } from "~/lib/validation/user";
 

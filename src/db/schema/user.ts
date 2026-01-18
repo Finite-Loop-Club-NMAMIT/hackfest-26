@@ -2,7 +2,7 @@ import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { courseEnum, genderEnum, roleEnum, stateEnum } from "../enum";
 import { teams } from "./team";
 
-export const users = pgTable("user", {
+export const participants = pgTable("participant", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
