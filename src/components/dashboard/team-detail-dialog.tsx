@@ -366,8 +366,8 @@ export function TeamDetailDialog({
                           <AlertDialogHeader>
                             <AlertDialogTitle>Remove Member?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will remove {member.name || "this member"} from
-                              the team. They can rejoin if the team is not
+                              This will remove {member.name || "this member"}{" "}
+                              from the team. They can rejoin if the team is not
                               completed.
                             </AlertDialogDescription>
                           </AlertDialogHeader>

@@ -56,11 +56,12 @@ async function getUserPermissions(): Promise<UserPermissions> {
   }
 
   const userIsAdmin = isAdmin(session.dashboardUser);
-  const [canMarkAttendance, canViewTeams, canViewTeamDetails] = await Promise.all([
-    hasPermission("team:mark_attendance"),
-    hasPermission(/^team:/),
-    hasPermission("team:view_team_details"),
-  ]);
+  const [canMarkAttendance, canViewTeams, canViewTeamDetails] =
+    await Promise.all([
+      hasPermission("team:mark_attendance"),
+      hasPermission(/^team:/),
+      hasPermission("team:view_team_details"),
+    ]);
 
   return {
     isAdmin: userIsAdmin,
@@ -100,4 +101,3 @@ export default async function TeamsPage() {
     </div>
   );
 }
-

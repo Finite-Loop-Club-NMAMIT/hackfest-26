@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  permissionProtected,
-  type RouteContext,
-} from "~/auth/routes-wrapper";
+import { permissionProtected, type RouteContext } from "~/auth/routes-wrapper";
 import db from "~/db";
 import * as teamData from "~/db/data/teams";
 import { teams } from "~/db/schema";

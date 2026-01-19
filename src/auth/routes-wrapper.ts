@@ -1,3 +1,4 @@
+import type { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 import { auth } from "~/auth/dashboard-config";
@@ -5,7 +6,6 @@ import { hasPermission, isAdmin } from "~/lib/auth/check-access";
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { getCurrentUser } from "./get-current-user";
-import type { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 
 export type RouteContext<T = Record<string, string>> = {
   params: Promise<T>;

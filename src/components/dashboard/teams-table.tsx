@@ -57,7 +57,8 @@ export function TeamsTable({ initialData, permissions }: TeamsTableProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
-  const [selectedTeamAttended, setSelectedTeamAttended] = useState<boolean>(false);
+  const [selectedTeamAttended, setSelectedTeamAttended] =
+    useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -210,9 +211,9 @@ export function TeamsTable({ initialData, permissions }: TeamsTableProps) {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
