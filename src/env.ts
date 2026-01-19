@@ -5,6 +5,7 @@ const server = z.object({
   DATABASE_URL: z.string().min(1),
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
+  MIXPANEL_TOKEN: z.string().min(1),
 });
 
 const client = z.object({
@@ -20,6 +21,7 @@ const processEnv = {
     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  MIXPANEL_TOKEN: process.env.MIXPANEL_TOKEN,
 };
 
 function validateEnv() {
@@ -76,6 +78,7 @@ function validateEnv() {
       DATABASE_URL: "",
       GITHUB_CLIENT_ID: "",
       GITHUB_CLIENT_SECRET: "",
+      MIXPANEL_TOKEN: "",
       ...clientParsed.data,
     };
   }
