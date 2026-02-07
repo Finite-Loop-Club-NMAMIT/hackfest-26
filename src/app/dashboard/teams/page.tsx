@@ -56,12 +56,15 @@ async function getUserPermissions(): Promise<UserPermissions> {
   }
 
   const userIsAdmin = isAdmin(session.dashboardUser);
-  const [canMarkAttendance, canViewTeams, canViewTeamDetails] =
-    await Promise.all([
-      hasPermission("team:mark_attendance"),
-      hasPermission(/^team:/),
-      hasPermission("team:view_team_details"),
-    ]);
+  const canMarkAttendance = hasPermission(
+    session.dashboardUser,
+    "team:mark_attendance",
+  );
+  const canViewTeams = hasPermission(session.dashboardUser, /^team:/);
+  const canViewTeamDetails = hasPermission(
+    session.dashboardUser,
+    "team:view_team_details",
+  );
 
   return {
     isAdmin: userIsAdmin,
