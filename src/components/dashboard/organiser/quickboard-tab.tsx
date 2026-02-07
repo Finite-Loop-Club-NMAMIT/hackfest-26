@@ -1,6 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Users, Building2, MapPin, CheckCircle2 } from "lucide-react";
-import { getCollegeRankingsBySelections, getDashboardStats, getStatesStats } from "~/db/services/dashboard-stats";
+import { toast } from "sonner";
 
 type StatCardProps = {
     title: string;
@@ -9,27 +12,100 @@ type StatCardProps = {
     icon: React.ReactNode;
 };
 
+type QuickStats = {
+    totalTeams: number;
+    totalParticipants: number;
+    uniqueColleges: number;
+    uniqueStates: number;
+    confirmedTeams: number;
+    ideaSubmissions: number;
+};
+
+type StateStat = {
+    state: string | null;
+    totalTeams: number;
+    totalParticipants: number;
+};
+
+type CollegeRanking = {
+    college: string | null;
+    totalTeams: number;
+    totalParticipants: number;
+};
+
 function StatCard({ title, value, description, icon }: StatCardProps) {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <div className="h-4 w-4 text-muted-foreground">{icon}</div>
+                <CardTitle className="text-sm font-medium">
+                    {title}
+                </CardTitle>
+                <div className="h-4 w-4 text-muted-foreground">
+                    {icon}
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{value}</div>
                 {description && (
-                    <p className="text-xs text-muted-foreground">{description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {description}
+                    </p>
                 )}
             </CardContent>
         </Card>
     );
 }
 
-export async function QuickboardTab() {
-    const quickStats = await getDashboardStats();
-    const statesStats = await getStatesStats();
-    const collegeRankings = await getCollegeRankingsBySelections();
+export function QuickboardTab() {
+    const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
+    const [statesStats, setStatesStats] = useState<StateStat[]>([]);
+    const [collegeRankings, setCollegeRankings] = useState<CollegeRanking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                const response = await fetch("/api/dashboard/stats");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch stats");
+                }
+                const data = await response.json();
+                setQuickStats(data.quickStats);
+                setStatesStats(data.statesStats);
+                setCollegeRankings(data.collegeRankings);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to load dashboard statistics");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchStats();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <div className="h-8 w-48 animate-pulse rounded bg-muted mb-2" />
+                    <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-32 animate-pulse rounded-lg border bg-card" />
+                    ))}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    {[...Array(2)].map((_, i) => (
+                        <div key={i} className="h-32 animate-pulse rounded-lg border bg-card" />
+                    ))}
+                </div>
+                <div className="h-64 animate-pulse rounded-lg border bg-card" />
+                <div className="h-64 animate-pulse rounded-lg border bg-card" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -43,22 +119,22 @@ export async function QuickboardTab() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                     title="Total Teams"
-                    value={quickStats.totalTeams}
+                    value={quickStats?.totalTeams ?? 0}
                     icon={<Users className="h-4 w-4" />}
                 />
                 <StatCard
                     title="Total Participants"
-                    value={quickStats.totalParticipants}
+                    value={quickStats?.totalParticipants ?? 0}
                     icon={<Users className="h-4 w-4" />}
                 />
                 <StatCard
                     title="Unique Colleges"
-                    value={quickStats.uniqueColleges}
+                    value={quickStats?.uniqueColleges ?? 0}
                     icon={<Building2 className="h-4 w-4" />}
                 />
                 <StatCard
                     title="Unique States"
-                    value={quickStats.uniqueStates}
+                    value={quickStats?.uniqueStates ?? 0}
                     icon={<MapPin className="h-4 w-4" />}
                 />
             </div>
@@ -66,13 +142,13 @@ export async function QuickboardTab() {
             <div className="grid gap-4 md:grid-cols-2">
                 <StatCard
                     title="Confirmed Teams"
-                    value={quickStats.confirmedTeams}
+                    value={quickStats?.confirmedTeams ?? 0}
                     description="Teams that have confirmed participation"
                     icon={<CheckCircle2 className="h-4 w-4" />}
                 />
                 <StatCard
                     title="Idea Submissions"
-                    value={quickStats.ideaSubmissions}
+                    value={quickStats?.ideaSubmissions ?? 0}
                     description="Teams that have submitted their ideas"
                     icon={<CheckCircle2 className="h-4 w-4" />}
                 />
