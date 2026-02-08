@@ -221,17 +221,23 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
                 <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/40 to-black/80 pointer-events-none -z-10" />
 
                 <div className="relative z-10 flex flex-col items-center text-center w-full">
+                    <motion.h2
+                        className="text-4xl md:text-6xl font-black text-center mb-30 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"
+                        initial={{ opacity: 0, y: -20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        Prize Pool
+                    </motion.h2>
+
                     <motion.div
-                        className="relative mb-10 flex w-full justify-center"
+                        className="relative mb-30 flex w-full justify-center"
                         initial={{ scale: 0 }}
                         whileInView={{ scale: 1 }}
                         transition={{ type: "spring", bounce: 0.5, duration: 1.5 }}
                     >
-                        <img src="/treasure.svg" alt="Treasure" className="w-[90%] h-[90%] md:w-1/2 md:h-1/2 drop-shadow-2xl relative z-10 animate-[float_4s_ease-in-out_infinite]" />
+                        <img src="/treasure.webp" alt="Treasure" className="w-[90%] h-[90%] md:w-2/3 md:h-2/3 drop-shadow-2xl relative z-10 animate-[float_4s_ease-in-out_infinite]" />
                     </motion.div>
-                    <p className="text-3xl md:text-5xl text-yellow-100/90 font-light tracking-wide mb-16">
-                        Prize Pool
-                    </p>
 
                     <Link href="/timeline" passHref>
                         <button className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-bold text-xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden">
