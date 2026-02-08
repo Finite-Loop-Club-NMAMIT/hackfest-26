@@ -19,7 +19,7 @@ useTexture.preload([
     "/images/underwater.png"
 ]);
 
-function Background({ loaded }: { loaded: boolean }) {
+function Background({ loaded, loadingProgress }: { loaded: boolean, loadingProgress: number }) {
     const { viewport } = useThree();
     const materialRef = useRef<any>(null);
     const scroll = useScroll();
@@ -47,6 +47,14 @@ function Background({ loaded }: { loaded: boolean }) {
                 materialRef.current.uMediaRes1.set(sunImg.width, sunImg.height);
                 materialRef.current.uMediaRes2.set(waterImg.width, waterImg.height);
             }
+
+            // Nausea Effect Logic
+            if (loaded) {
+                materialRef.current.uNausea = THREE.MathUtils.lerp(materialRef.current.uNausea, 0, 0.02);
+            } else {
+                const targetNausea = loadingProgress / 100;
+                materialRef.current.uNausea = THREE.MathUtils.lerp(materialRef.current.uNausea, targetNausea, 0.1);
+            }
         }
     });
 
@@ -59,30 +67,14 @@ function Background({ loaded }: { loaded: boolean }) {
                 tMap1={sunny}
                 tMap2={underwater}
                 transparent={true}
-                opacity={loaded ? 1 : 0} // Fade in on load
+                // Opacity is 1 so we can see the nausea effect behind the loading screen as it fades
+                opacity={1}
             />
         </mesh>
     );
 }
 
-function LoadingScreen({ onComplete }: { onComplete: () => void }) {
-    const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        // Simulate loading progress
-        const interval = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setTimeout(onComplete, 500); // Slight delay after 100%
-                    return 100;
-                }
-                return prev + 2; // Adjust speed here
-            });
-        }, 30);
-        return () => clearInterval(interval);
-    }, [onComplete]);
-
+function LoadingScreen({ progress }: { progress: number }) {
     return (
         <motion.div
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
@@ -156,7 +148,7 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
                 transition={{ duration: 1, delay: 0.5 }}
                 viewport={{ once: true }}
             >
-                <img src="/logo.png" alt="HF Logo" className="w-48 md:w-64 h-auto drop-shadow-2xl z-10 mb-8" />
+                <img src="/logo.png" alt="HF Logo" className="w-48 md:w-64 h-auto drop-shadow-2xl z-10 mb-8 translate-x-8" />
                 <h1 className="text-5xl md:text-8xl font-black tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
                     HACKFEST '26
                 </h1>
@@ -256,18 +248,34 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
 export default function Scene() {
     const [loaded, setLoaded] = useState(false);
     const [pages, setPages] = useState(3);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        // Simulate loading progress
+        const interval = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    setLoaded(true);
+                    return 100;
+                }
+                return prev + 2; // Restore speed
+            });
+        }, 30);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="fixed top-0 left-0 w-full h-screen bg-black" style={{ zIndex: 0 }}>
             {/* Loading Screen Overlay */}
             <AnimatePresence>
-                {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
+                {!loaded && <LoadingScreen progress={progress} />}
             </AnimatePresence>
 
             <Canvas gl={{ antialias: true, alpha: false }} dpr={[1, 1.5]}>
                 <Suspense fallback={null}>
                     <ScrollControls pages={pages} damping={0.3}>
-                        <Background loaded={loaded} />
+                        <Background loaded={loaded} loadingProgress={progress} />
                         {/* Scroll content: Only visible when loaded, but mounted so scroll works */}
                         <Scroll html style={{ width: '100vw', height: '100vh', opacity: loaded ? 1 : 0, transition: 'opacity 1s ease-in-out' }}>
                             <LandingContent setPages={setPages} />

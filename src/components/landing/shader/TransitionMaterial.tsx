@@ -17,6 +17,7 @@ uniform sampler2D tMap3;
 uniform float uTime;
 uniform float uTransitionProgress;
 uniform float uHoverProgress;
+uniform float uNausea; // Nausea intensity (0.0 to 1.0)
 uniform float uVar1;
 uniform float uVar2;
 uniform float uVar3;
@@ -158,6 +159,21 @@ vec2 zoom (in vec2 uv_1, in float zoom) {
 
 void main() {
     vec2 uv = vUv;
+
+    // --- NAUSEA EFFECT START ---
+    // Minecraft wobble:
+    // x += sin(y * freq + time) * amp
+    // y += cos(x * freq + time) * amp
+    if (uNausea > 0.0) {
+        float freq = 3.0; // Wobbly frequency
+        float amp = 0.05 * uNausea; // Amplitude scales with nausea intensity
+        float timeScale = uTime * 2.0;
+        
+        uv.x += sin(uv.y * freq + timeScale) * amp;
+        uv.y += cos(uv.x * freq + timeScale) * amp;
+    }
+    // --- NAUSEA EFFECT END ---
+
     vec2 uv1 = getUvs(uPlaneRes, uMediaRes1, uv);
     vec2 uv2 = getUvs(uPlaneRes, uMediaRes2, uv);
 
@@ -210,6 +226,21 @@ void main() {
         finalColor.rgb *= 1.0 - (depth * 0.3);
     }
 
+    // --- NAUSEA PURPLE TINT START ---
+    if (uNausea > 0.0) {
+        // Minecraft Nether portal purple: vec3(0.3, 0.0, 0.5) roughly
+        vec3 portalColor = vec3(0.35, 0.05, 0.6); 
+        // Pulsate the tint strength slightly
+        float pulse = 0.8 + 0.2 * sin(uTime * 4.0);
+        // Mix heavily based on nausea, but preserve some original image
+        finalColor.rgb = mix(finalColor.rgb, portalColor, uNausea * 0.6 * pulse);
+        
+        // Add a vignette for more portal feel
+        float dist = length(vUv - 0.5);
+        finalColor.rgb *= 1.0 - (dist * 0.8 * uNausea);
+    }
+    // --- NAUSEA PURPLE TINT END ---
+
     gl_FragColor = finalColor;
 }
 `;
@@ -240,6 +271,7 @@ export const TransitionMaterial = shaderMaterial(
         tMap1: null,
         tMap2: null,
         tMap3: null, // Unused but in uniforms
+        uNausea: 0,
     },
     vertexShader,
     fragmentShader
