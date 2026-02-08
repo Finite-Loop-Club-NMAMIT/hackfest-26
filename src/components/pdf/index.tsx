@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -8,30 +7,37 @@ import "react-pdf/dist/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function PdfPreview({
-    className,
-    height,
-    width,
-    file,
-    pages,
+  className,
+  height,
+  width,
+  file,
+  pages,
 }: {
-    className?: string;
-    height?: number;
-    width?: number;
-    file: File | string;
-    pages: Array<number>;
+  className?: string;
+  height?: number;
+  width?: number;
+  file: File | string;
+  pages: Array<number>;
 }) {
-    return (
-        <Document
-            file={file}
-            className={className}
-            renderMode="canvas"
-            onItemClick={({ pageNumber }) => {
-                console.log(`Page ${pageNumber} clicked`);
-            }}
-        >
-            {pages.map((page) => {
-                return <Thumbnail key={page} pageNumber={page} height={height} width={width} />;
-            })}
-        </Document>
-    );
+  return (
+    <Document
+      file={file}
+      className={className}
+      renderMode="canvas"
+      onItemClick={({ pageNumber }) => {
+        console.log(`Page ${pageNumber} clicked`);
+      }}
+    >
+      {pages.map((page) => {
+        return (
+          <Thumbnail
+            key={page}
+            pageNumber={page}
+            height={height}
+            width={width}
+          />
+        );
+      })}
+    </Document>
+  );
 }

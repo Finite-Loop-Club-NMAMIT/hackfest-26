@@ -1,4 +1,11 @@
-import { AlertCircle, CheckCircle2, Clock, Home, XCircle, CreditCard } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Home,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
@@ -16,10 +23,10 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import * as userData from "~/db/data/participant";
-import * as teamData from "~/db/data/teams";
 import { getSiteSettings } from "~/db/data/siteSettings";
-import { getFormStatus } from "~/db/services/team-services";
+import * as teamData from "~/db/data/teams";
 import { getIdeaSubmission } from "~/db/services/idea-services";
+import { getFormStatus } from "~/db/services/team-services";
 
 type TeamStatus =
   | "NOT_FOUND"
@@ -63,10 +70,12 @@ export default async function TeamDetailsPage({
 
   const members = await teamData.listMembers(id);
   const siteSettingsData = await getSiteSettings();
-  const teamStatus = await getFormStatus(id) as TeamStatus;
+  const teamStatus = (await getFormStatus(id)) as TeamStatus;
   const submission = await getIdeaSubmission(id);
 
-  const siteSettings = Array.isArray(siteSettingsData) ? siteSettingsData[0] : siteSettingsData;
+  const siteSettings = Array.isArray(siteSettingsData)
+    ? siteSettingsData[0]
+    : siteSettingsData;
 
   const resultsOut = siteSettings?.resultsOut ?? false;
   const registrationsOpen = siteSettings?.registrationsOpen ?? false;
@@ -88,8 +97,9 @@ export default async function TeamDetailsPage({
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  Unfortunately, your team was not selected for this edition of Hackfest.
-                  We appreciate your participation and encourage you to try again next time!
+                  Unfortunately, your team was not selected for this edition of
+                  Hackfest. We appreciate your participation and encourage you
+                  to try again next time!
                 </p>
               </CardContent>
             </Card>
@@ -108,12 +118,15 @@ export default async function TeamDetailsPage({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                  Congratulations! Your team has been selected! Please complete the payment to confirm your participation.
+                  Congratulations! Your team has been selected! Please complete
+                  the payment to confirm your participation.
                 </p>
                 {user.isLeader ? (
                   paymentsOpen ? (
                     <Button asChild>
-                      <Link href={`/teams/${id}/payment`}>Complete Payment</Link>
+                      <Link href={`/teams/${id}/payment`}>
+                        Complete Payment
+                      </Link>
                     </Button>
                   ) : (
                     <p className="text-sm text-yellow-600 dark:text-yellow-400">
@@ -122,7 +135,8 @@ export default async function TeamDetailsPage({
                   )
                 ) : (
                   <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                    Only the team leader can complete the payment. Please contact your team leader.
+                    Only the team leader can complete the payment. Please
+                    contact your team leader.
                   </p>
                 )}
               </CardContent>
@@ -142,8 +156,8 @@ export default async function TeamDetailsPage({
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  Your team is fully registered for Hackfest! Payment has been confirmed.
-                  See you there!
+                  Your team is fully registered for Hackfest! Payment has been
+                  confirmed. See you there!
                 </p>
               </CardContent>
             </Card>
@@ -205,8 +219,8 @@ export default async function TeamDetailsPage({
             </CardHeader>
             <CardContent>
               <p className="text-sm text-blue-600 dark:text-blue-400">
-                Your idea has been submitted successfully! Results will be announced soon.
-                Stay tuned for updates.
+                Your idea has been submitted successfully! Results will be
+                announced soon. Stay tuned for updates.
               </p>
             </CardContent>
           </Card>
@@ -225,8 +239,8 @@ export default async function TeamDetailsPage({
             </CardHeader>
             <CardContent>
               <p className="text-sm text-orange-600 dark:text-orange-400">
-                Registrations have closed but no idea was submitted for your team.
-                Unfortunately, you will not be considered for selection.
+                Registrations have closed but no idea was submitted for your
+                team. Unfortunately, you will not be considered for selection.
               </p>
             </CardContent>
           </Card>
@@ -241,37 +255,34 @@ export default async function TeamDetailsPage({
             <CardTitle>Team Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!team.isCompleted && (
-              <>
-                {user.isLeader ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      As the team leader, you can confirm the team once you have 3-4
-                      members. After confirmation, members will not be able to leave
-                      the team.
-                    </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <ConfirmTeamButton teamId={team.id} />
-                      </div>
-                      <div>
-                        <DeleteTeamButton teamId={team.id} teamName={team.name} />
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Delete team (cannot be undone)
-                        </p>
-                      </div>
+            {!team.isCompleted &&
+              (user.isLeader ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    As the team leader, you can confirm the team once you have
+                    3-4 members. After confirmation, members will not be able to
+                    leave the team.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <ConfirmTeamButton teamId={team.id} />
+                    </div>
+                    <div>
+                      <DeleteTeamButton teamId={team.id} teamName={team.name} />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Delete team (cannot be undone)
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      You can leave the team before it is confirmed by the leader.
-                    </p>
-                    <LeaveTeamButton />
-                  </div>
-                )}
-              </>
-            )}
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    You can leave the team before it is confirmed by the leader.
+                  </p>
+                  <LeaveTeamButton />
+                </div>
+              ))}
 
             {team.isCompleted && (
               <div className="space-y-6">
@@ -282,7 +293,10 @@ export default async function TeamDetailsPage({
                 </div>
 
                 {teamStatus === "IDEA_SUBMITTED" && submission ? (
-                  <TeamSubmissionForm teamId={team.id} submission={submission} />
+                  <TeamSubmissionForm
+                    teamId={team.id}
+                    submission={submission}
+                  />
                 ) : user.isLeader ? (
                   <TeamSubmissionForm teamId={team.id} />
                 ) : (
@@ -294,7 +308,8 @@ export default async function TeamDetailsPage({
                       </p>
                     </div>
                     <p className="text-sm text-blue-600 dark:text-blue-400">
-                      Your team leader is responsible for submitting the idea. Please coordinate with them.
+                      Your team leader is responsible for submitting the idea.
+                      Please coordinate with them.
                     </p>
                   </div>
                 )}
@@ -313,7 +328,8 @@ export default async function TeamDetailsPage({
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Registrations have closed and results are out. Your team was not registered.
+              Registrations have closed and results are out. Your team was not
+              registered.
             </p>
           </CardContent>
         </Card>
@@ -328,7 +344,8 @@ export default async function TeamDetailsPage({
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Registrations have closed but your team is not registered. You will not be considered for selection.
+              Registrations have closed but your team is not registered. You
+              will not be considered for selection.
             </p>
           </CardContent>
         </Card>
@@ -378,14 +395,17 @@ export default async function TeamDetailsPage({
                 </span>{" "}
                 <span>{team.isCompleted ? "Completed" : "Active"}</span>
               </div>
-              {resultsOut && (teamStatus === "PAYMENT_PENDING" || teamStatus === "PAYMENT_PAID") && team.paymentStatus && (
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Payment Status:
-                  </span>{" "}
-                  <span>{team.paymentStatus}</span>
-                </div>
-              )}
+              {resultsOut &&
+                (teamStatus === "PAYMENT_PENDING" ||
+                  teamStatus === "PAYMENT_PAID") &&
+                team.paymentStatus && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Payment Status:
+                    </span>{" "}
+                    <span>{team.paymentStatus}</span>
+                  </div>
+                )}
             </CardContent>
           </Card>
 

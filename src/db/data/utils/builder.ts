@@ -19,7 +19,8 @@ export function queryBuilder<
     ),
 
     findFirst: safeDB(
-      () => // TODO: CHECK WORKING
+      () =>
+        // TODO: CHECK WORKING
         db.query[tableName].findFirst(),
       `${String(tableName).toUpperCase()}_QUERY_FAILED`,
     ),

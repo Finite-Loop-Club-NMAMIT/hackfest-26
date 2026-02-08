@@ -95,7 +95,7 @@ interface UploadOptions {
 
 export async function uploadFileToCloudinary(
   file: File,
-  options: UploadOptions = {}
+  options: UploadOptions = {},
 ): Promise<string> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;

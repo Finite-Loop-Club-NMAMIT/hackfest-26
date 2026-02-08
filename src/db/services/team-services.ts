@@ -2,7 +2,7 @@ import { eq, type InferSelectModel } from "drizzle-orm";
 import db from "~/db";
 import * as userData from "~/db/data/participant";
 import * as teamData from "~/db/data/teams";
-import { notSelected, participants, siteSettings, teams } from "~/db/schema";
+import { notSelected, participants, teams } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 
 type Team = InferSelectModel<typeof teams>;
@@ -275,7 +275,6 @@ export async function fetchTeams({
   };
 }
 
-
 export async function getFormStatus(teamId: string) {
   const teamRes = await db.query.teams.findFirst({
     where: (t, { eq }) => eq(t.id, teamId),
@@ -284,7 +283,7 @@ export async function getFormStatus(teamId: string) {
       semiSelected: true,
       selected: true,
       ideaSubmission: true,
-    }
+    },
   });
   if (!teamRes) {
     return "NOT_FOUND";
@@ -304,21 +303,25 @@ export async function getFormStatus(teamId: string) {
       return "NOT_SELECTED";
     }
     if (teamRes.selected) {
-      if (siteSettingsData.paymentsOpen && (teamRes?.paymentStatus === "Pending" || teamRes?.paymentStatus === "Refunded")) {
+      if (
+        siteSettingsData.paymentsOpen &&
+        (teamRes?.paymentStatus === "Pending" ||
+          teamRes?.paymentStatus === "Refunded")
+      ) {
         return "PAYMENT_PENDING";
-      }
-      else if (siteSettingsData.paymentsOpen && teamRes?.paymentStatus === "Paid") {
+      } else if (
+        siteSettingsData.paymentsOpen &&
+        teamRes?.paymentStatus === "Paid"
+      ) {
         return "PAYMENT_PAID";
-      }
-      else if (!siteSettingsData.paymentsOpen) {
+      } else if (!siteSettingsData.paymentsOpen) {
         return "PAYMENT_NOT_OPEN";
       }
     }
   }
   if (teamRes.ideaSubmission) {
     return "IDEA_SUBMITTED";
-  }
-  else {
+  } else {
     return "IDEA_NOT_SUBMITTED";
   }
 }
