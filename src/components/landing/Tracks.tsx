@@ -83,8 +83,8 @@ function TrackImageShader({ activeIndex }: { activeIndex: number }) {
 
                 // Resolution uniforms need to be set from the texture images
                 if (tex1.image && tex2.image) {
-                    materialRef.current.uMediaRes1.set(tex1.image.width, tex1.image.height);
-                    materialRef.current.uMediaRes2.set(tex2.image.width, tex2.image.height);
+                    materialRef.current.uMediaRes1.set((tex1.image as HTMLImageElement).width, (tex1.image as HTMLImageElement).height);
+                    materialRef.current.uMediaRes2.set((tex2.image as HTMLImageElement).width, (tex2.image as HTMLImageElement).height);
                 }
             }
 
