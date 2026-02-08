@@ -31,7 +31,7 @@ function Background({ loaded, loadingProgress }: { loaded: boolean, loadingProgr
     useFrame((state) => {
         if (materialRef.current) {
             // Slow down time to avoid frantic repetition
-            materialRef.current.uTime = state.clock.elapsedTime * 0.1;
+            materialRef.current.uTime = state.clock.elapsedTime * 0.6;
 
             const progress = scroll.range(0.1, 0.25);
             materialRef.current.uTransitionProgress = progress;

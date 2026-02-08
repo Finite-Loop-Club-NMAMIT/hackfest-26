@@ -181,7 +181,7 @@ void main() {
     
     // Create a wavy water surface line
     // The 'level' moves from -0.1 to 1.1 based on progress
-    float level = mix(-0.1, 1.1, progress); 
+    float level = mix(-0.1, 1.7, progress); 
 
     // Wave distortion
     float wave = sin(uv.x * 10.0 + uTime * 2.0) * 0.02;
@@ -221,10 +221,9 @@ void main() {
     vec4 finalColor = mix(tex1, tex2, clamp(mixVal, 0.0, 1.0));
 
     // Deep ocean darkness at bottom when fully submerged
-    if (progress > 0.8) {
-        float depth = smoothstep(0.8, 0.0, uv.y);
-        finalColor.rgb *= 1.0 - (depth * 0.3);
-    }
+    float depth = smoothstep(0.8, 0.0, uv.y);
+    float darkStrength = smoothstep(0.8, 1.0, progress); // Only apply darkness as we finish transition
+    finalColor.rgb *= 1.0 - (depth * 0.3 * darkStrength);
 
     // --- NAUSEA PURPLE TINT START ---
     if (uNausea > 0.0) {
