@@ -9,3 +9,4 @@ export * from "./schema/team";
 export * from "./schema/team-progress";
 export * from "./schema/tracks";
 export * from "./schema/event-auth";
+export * from "./schema/event";
