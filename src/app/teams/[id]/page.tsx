@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
+import SignOut from "~/components/auth/authButtons/signOut";
 import { ConfirmTeamButton } from "~/components/teams/confirm-team-button";
 import { DeleteTeamButton } from "~/components/teams/delete-team-button";
 import { LeaveTeamButton } from "~/components/teams/leave-team-button";
@@ -371,16 +372,19 @@ export default async function TeamDetailsPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black p-4">
       <div className="w-full max-w-3xl space-y-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="outline" size="icon">
-            <Link href="/">
-              <Home className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div className="flex-1 flex items-center justify-between">
-            <h1 className="text-3xl font-bold">{team.name}</h1>
-            {user.isLeader && <TeamIdDisplay teamId={team.id} />}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <Button asChild variant="outline" size="icon">
+              <Link href="/">
+                <Home className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div className="flex-1 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">{team.name}</h1>
+              {user.isLeader && <TeamIdDisplay teamId={team.id} />}
+            </div>
           </div>
+          <SignOut variant="outline" />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
