@@ -8,3 +8,4 @@ export * from "./schema/site-settings";
 export * from "./schema/team";
 export * from "./schema/team-progress";
 export * from "./schema/tracks";
+export * from "./schema/event-auth";
