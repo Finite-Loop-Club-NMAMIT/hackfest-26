@@ -13,6 +13,8 @@ import Link from "next/link";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import Footer from "./Footer";
+import { Navbar } from "./Navbar";
+import { Navbar as Navbar2 } from "./Navbar2";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import TracksSection from "./Tracks";
 
@@ -158,6 +160,7 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
       ref={ref}
       className="w-full text-white no-scrollbar pointer-events-auto"
     >
+      <Navbar2 />
       {/* HERITAGE SECTION (SUNNY) */}
       <motion.section
         className="h-screen flex flex-col items-center justify-center relative p-8 text-center bg-linear-to-b from-black/20 via-transparent to-transparent"
