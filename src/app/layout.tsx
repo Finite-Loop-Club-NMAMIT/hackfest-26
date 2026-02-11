@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Pirata_One, Cinzel } from "next/font/google";
 import Script from "next/script";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
+  subsets: ["latin"],
+});
+
+const pirata = Pirata_One({
+  weight: "400",
+  variable: "--font-pirata",
+  subsets: ["latin"],
+});
+
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
   subsets: ["latin"],
 });
 
@@ -22,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${jakarta.variable} antialiased dark`}>
+      <body className={`${jakarta.variable} ${pirata.variable} ${cinzel.variable} antialiased dark`}>
         {children}
         <ToasterWrapper />
         {/* Umami Analytics */}
