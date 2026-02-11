@@ -140,4 +140,5 @@ export default function TimelinePage() {
       {!is3D && <Timeline2D />}
     </div>
   );
+
 }
