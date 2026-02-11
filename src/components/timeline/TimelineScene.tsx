@@ -1,50 +1,33 @@
 'use client';
 
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Html, Line, useCursor } from '@react-three/drei';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { extend } from '@react-three/fiber';
 import { events } from '~/constants/timeline';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '~/components/ui/dialog';
 
 extend({ Water });
 
-function seededRandom(seed: number) {
-  let value = seed;
-  return function () {
-    value = (value * 9301 + 49297) % 233280;
-    return value / 233280;
-  };
-}
-
-//Day colors for event labels
+// Day colors for event labels
 const DAY_THEMES: Record<number, { parchment: string; border: string; ink: string; wax: string; icon: string }> = {
   1: { parchment: '#f0e6d2', border: '#8B4513', ink: '#2A1A0A', wax: '#aa2222', icon: '⚓' },
   2: { parchment: '#e8dac0', border: '#654321', ink: '#2A1A0A', wax: '#e69b00', icon: '⚔️' },
   3: { parchment: '#e3dcd2', border: '#556B2F', ink: '#2A1A0A', wax: '#228822', icon: '💎' },
 };
 
-//Ocean — enhanced realistic water
+// ─── Ocean with Water Shader ─────────────────────────────────────────────────
 function Ocean() {
   const waterRef = useRef<any>(null);
+  const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000), []);
 
-  const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000, 2, 2), []);
-
-  // Compute a proper sun direction for specular highlights
   const sunDirection = useMemo(() => {
     const dir = new THREE.Vector3();
-    const theta = Math.PI * (0.45 - 0.5); // Sun elevation
-    const phi = 2 * Math.PI * (0.205 - 0.5); // Sun azimuth
+    const theta = Math.PI * (0.45 - 0.5);
+    const phi = 2 * Math.PI * (0.205 - 0.5);
     dir.x = Math.cos(phi);
     dir.y = Math.sin(theta);
     dir.z = Math.sin(phi);
@@ -54,585 +37,333 @@ function Ocean() {
 
   const water = useMemo(() => {
     const waterInstance = new Water(waterGeometry, {
-      textureWidth: 512,
-      textureHeight: 512,
+      textureWidth: 256,
+      textureHeight: 256,
       waterNormals: new THREE.TextureLoader().load(
         'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/waternormals.jpg',
-        (texture) => {
-          texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        }
+        (texture) => { texture.wrapS = texture.wrapT = THREE.RepeatWrapping; }
       ),
       sunDirection: sunDirection,
-      sunColor: 0xfff5e0,      // Warm golden sunlight
-      waterColor: 0x006994,     // Vibrant ocean blue
-      distortionScale: 4.0,     // Moderate distortion for realism
-      fog: true,                // Blend with scene fog
-      alpha: 0.95,              // Slight transparency at edges
+      sunColor: 0xfff5e0,
+      waterColor: 0x006994,
+      distortionScale: 3.7,
+      fog: true,
     });
-    // Enhance material for realism
     waterInstance.material.transparent = true;
     return waterInstance;
   }, [waterGeometry, sunDirection]);
 
   useFrame((state, delta) => {
     if (waterRef.current?.material?.uniforms) {
-      // Animate water at a natural pace
       waterRef.current.material.uniforms.time.value += delta * 0.6;
-
-      // Subtle sun direction shift over time for dynamic lighting
       const elapsed = state.clock.elapsedTime;
       const dynamicSun = waterRef.current.material.uniforms.sunDirection.value;
       dynamicSun.x = Math.cos(elapsed * 0.02) * 0.8;
       dynamicSun.y = 0.45 + Math.sin(elapsed * 0.01) * 0.05;
       dynamicSun.z = Math.sin(elapsed * 0.02) * 0.8;
       dynamicSun.normalize();
-
-      // Follow camera for infinite ocean illusion
       waterRef.current.position.x = state.camera.position.x;
       waterRef.current.position.z = state.camera.position.z;
     }
   });
 
   return (
-    <primitive
-      ref={waterRef}
-      object={water}
-      rotation-x={-Math.PI / 2}
-      position={[0, 0, 0]}
-    />
+    <primitive ref={waterRef} object={water} rotation-x={-Math.PI / 2} position={[0, 0, 0]} />
   );
 }
 
-//Island Model Loader
+// ─── Island Model Loader ─────────────────────────────────────────────────────
 const islandModelCache: { model: THREE.Group | null; loading: boolean; callbacks: ((m: THREE.Group) => void)[] } = {
-  model: null,
-  loading: false,
-  callbacks: [],
+  model: null, loading: false, callbacks: [],
 };
 
 function loadIslandModel(callback: (model: THREE.Group) => void) {
-  if (islandModelCache.model) {
-    callback(islandModelCache.model);
-    return;
-  }
+  if (islandModelCache.model) { callback(islandModelCache.model); return; }
   islandModelCache.callbacks.push(callback);
   if (islandModelCache.loading) return;
-
   islandModelCache.loading = true;
+
   const loader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
   dracoLoader.setDecoderConfig({ type: 'js' });
   loader.setDRACOLoader(dracoLoader);
 
-  loader.load(
-    '/models/island.glb',
-    (gltf) => {
-      const scene = gltf.scene;
-      scene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh;
-          if (mesh.material) {
-            if (Array.isArray(mesh.material)) mesh.material = mesh.material[0];
-            const mat = mesh.material as THREE.MeshStandardMaterial;
-            if (mat.map) mat.map.minFilter = THREE.LinearFilter;
-            mat.needsUpdate = true;
-          }
-          if (mesh.geometry) mesh.geometry.computeBoundingSphere();
+  loader.load('/models/island.glb', (gltf) => {
+    const scene = gltf.scene;
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          if (Array.isArray(mesh.material)) mesh.material = mesh.material[0];
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          if (mat.map) mat.map.minFilter = THREE.LinearFilter;
+          mat.needsUpdate = true;
         }
-      });
-      islandModelCache.model = scene;
-      islandModelCache.callbacks.forEach((cb) => cb(scene));
-      islandModelCache.callbacks = [];
-      dracoLoader.dispose();
-    },
-    undefined,
-    (error) => console.error('Error loading island model:', error)
-  );
+        if (mesh.geometry) mesh.geometry.computeBoundingSphere();
+      }
+    });
+    islandModelCache.model = scene;
+    islandModelCache.callbacks.forEach((cb) => cb(scene));
+    islandModelCache.callbacks = [];
+    dracoLoader.dispose();
+  }, undefined, (error) => console.error('Error loading island model:', error));
 }
 
-// ─── EventLabel — High-quality Treasure Map UI ──────────────────────────────
-function EventLabel({
-  event,
-  isFirstOfDay,
-  onSelect,
-}: {
-  event: { day: number; title: string; time: string };
-  isFirstOfDay: boolean;
-  onSelect: (e: any) => void;
-}) {
-  const theme = DAY_THEMES[event.day] || DAY_THEMES[1];
-  const displayTitle = event.title.replace(/\\n/g, '\n').replace(/\n/g, ' ');
+// ─── Camera Presets — shifted left to leave room for book on right ───────────
+const CAMERA_PRESETS = [
+  { pos: [-20, 85, 110] as const, lookAt: [-25, 0, -15] as const },
+  { pos: [-50, 80, 105] as const, lookAt: [-20, 0, -15] as const },
+  { pos: [-30, 90, 110] as const, lookAt: [-25, 0, -15] as const },
+  { pos: [-45, 82, 108] as const, lookAt: [-15, 0, -15] as const },
+];
 
-  return (
-    <Html
-      center
-      distanceFactor={55}
-      position={[0, 18, 0]}
-      style={{
-        pointerEvents: 'none', // Wrapper is none
-        cursor: 'default',
-      }}
-      zIndexRange={[100, 0]}
-    >
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect(event);
-        }}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          userSelect: 'none',
-          filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))',
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-          transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        }}
-        className="hover:scale-110 active:scale-95"
-      >
-        {isFirstOfDay && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-10px',
-              width: '32px',
-              height: '32px',
-              background: `radial-gradient(circle at 30% 30%, ${theme.wax}, darken(${theme.wax}, 20%))`,
-              backgroundColor: theme.wax,
-              borderRadius: '50%',
-              border: '2px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10,
-              transform: 'rotate(15deg)',
-            }}
-          >
-            <div style={{
-              color: 'rgba(255,255,255,0.9)',
-              fontSize: '14px',
-              fontFamily: 'var(--font-cinzel), serif',
-              fontWeight: 700,
-              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-            }}>
-              {event.day}
-            </div>
-            <div style={{
-               position: 'absolute', inset: '3px', borderRadius: '50%',
-               border: '1px dashed rgba(255,255,255,0.4)',
-               opacity: 0.6
-            }} />
-          </div>
-        )}
-
-        {/* Parchment Card */}
-        <div
-          style={{
-            background: theme.parchment,
-            backgroundImage: `
-              linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent),
-              url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E")
-            `,
-            color: theme.ink,
-            padding: '12px 16px',
-            minWidth: '120px',
-            maxWidth: '180px',
-            textAlign: 'center',
-            position: 'relative',
-            borderRadius: '2px',
-            boxShadow: `
-              inset 0 0 20px rgba(139, 69, 19, 0.15),
-              0 0 0 1px rgba(0,0,0,0.1),
-              0 2px 4px rgba(0,0,0,0.1)
-            `,
-            clipPath: 'polygon(2% 0%, 98% 2%, 100% 98%, 0% 100%)',
-            border: `1px solid ${theme.border}`,
-          }}
-        >
-
-          {/* Decorative Corner Borders (SVG or CSS) */}
-          <div style={{
-            position: 'absolute', top: '4px', left: '4px',
-            width: '8px', height: '8px',
-            borderTop: `2px solid ${theme.border}`,
-            borderLeft: `2px solid ${theme.border}`,
-            opacity: 0.6
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '4px', right: '4px',
-            width: '8px', height: '8px',
-            borderBottom: `2px solid ${theme.border}`,
-            borderRight: `2px solid ${theme.border}`,
-            opacity: 0.6
-          }} />
-
-          {/* Event Title */}
-          <div
-            style={{
-              fontSize: '18px',
-              fontFamily: 'var(--font-pirata), serif',
-              fontWeight: 400,
-              lineHeight: '1.1',
-              marginBottom: '6px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            {displayTitle}
-          </div>
-
-          {/* Separator */}
-          <div style={{
-            height: '1px',
-            width: '60%',
-            margin: '0 auto 6px auto',
-            background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`,
-            opacity: 0.5,
-          }} />
-
-          {/* Time & Icon */}
-          <div
-            style={{
-              fontSize: '12px',
-              fontFamily: 'var(--font-cinzel), serif',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              color: '#5c4033', // Sepia-toned text
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>{theme.icon}</span>
-            {event.time}
-          </div>
-        </div>
-
-        {/* 'X' Marks the spot / Anchor Line */}
-        <div style={{
-          marginTop: '4px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-           {/* Dotted line */}
-           <div style={{
-             width: '2px',
-             height: '15px',
-             borderLeft: `2px dashed rgba(255, 255, 255, 0.6)`,
-             filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-           }} />
-           {/* Red X */}
-           <div style={{
-             color: '#d00',
-             fontSize: '16px',
-             fontWeight: 'bold',
-             fontFamily: 'var(--font-pirata), serif',
-             lineHeight: 1,
-             textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-             transform: 'translateY(-4px)'
-           }}>
-             X
-           </div>
-        </div>
-      </div>
-    </Html>
-  );
-}
-
-// ─── Island with label ───────────────────────────────────────────────────────
+// ─── Island with HTML Label (no reflection) ──────────────────────────────────
 function Island({
-  position,
-  event,
-  isFirstOfDay,
-  onSelect,
+  position, event, index,
 }: {
   position: [number, number, number];
   event?: { day: number; title: string; time: string };
-  isFirstOfDay?: boolean;
-  onSelect: (e: any) => void;
+  index: number;
 }) {
   const [model, setModel] = useState<THREE.Group | null>(null);
+  const [hovered, setHovered] = useState(false);
+  useCursor(hovered);
 
-  useEffect(() => {
-    loadIslandModel((m) => setModel(m));
-  }, []);
+  useEffect(() => { loadIslandModel((m) => setModel(m)); }, []);
+  const handleClick = useCallback((e: any) => {
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent('timeline-scroll-to', { detail: { index } }));
+  }, [index]);
 
   if (!model) return null;
 
   return (
     <group position={position}>
-      <primitive
-        object={model.clone()}
-        scale={[40, 40, 40]}
-      />
+      <primitive object={model.clone()} scale={[40, 40, 40]} />
+      {/* Transparent clickable sphere hitbox — reliable raycasting */}
+      <mesh
+        onClick={handleClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[18, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
       {event && (
-        <EventLabel
-          event={event}
-          isFirstOfDay={!!isFirstOfDay}
-          onSelect={onSelect}
-        />
+        <Html
+          position={[0, 22, 0]}
+          center
+          distanceFactor={80}
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          zIndexRange={[100, 0]}
+        >
+          <div style={{
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            fontFamily: "'Cinzel', 'Pirata One', serif",
+            textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{
+              fontSize: '18px',
+              fontWeight: 700,
+              color: hovered ? '#ffdd88' : '#fff',
+              lineHeight: 1.2,
+              transition: 'color 0.2s',
+            }}>
+              {event.title.replace(/\n/g, ' ')}
+            </div>
+            <div style={{ fontSize: '13px', color: '#ccc', marginTop: '4px', fontWeight: 500 }}>
+              {event.time}
+            </div>
+          </div>
+        </Html>
       )}
     </group>
   );
 }
 
-// ─── Island layout — one island per timeline event ───────────────────────────
-const ISLAND_POSITIONS: [number, number, number][] = (() => {
-  const random = seededRandom(12345);
-  const positions: [number, number, number][] = [];
-  const numIslands = events.length; // One island per event
-  const spacing = 130;
+// ─── Island layout — final positions ───────────────────────────────────────
+const ISLAND_POSITIONS: [number, number, number][] = [
+  [22.0, 10.0, -65.5],
+  [25.2, 10.0, -133.1],
+  [23.7, 10.0, -193.4],
+  [-8.4, 10.0, -251.4],
+  [14.1, 10.0, -313.9],
+  [-0.8, 10.0, -377.4],
+  [25.4, 10.0, -438.1],
+  [33.1, 10.0, -504.6],
+  [4.0, 10.0, -555.9],
+  [21.2, 10.0, -616.8],
+  [10.2, 10.0, -670.0],
+  [7.0, 10.0, -726.3],
+  [-17.0, 10.0, -785.5],
+  [8.2, 10.0, -845.1],
+  [22.3, 10.0, -902.7],
+  [27.8, 10.0, -952.4],
+  [-0.0, 10.0, -1009.9],
+  [-8.5, 10.0, -1070.4],
+  [13.4, 10.0, -1130.9],
+  [-8.8, 10.0, -1187.7],
+  [-13.2, 10.0, -1255.1],
+];
 
-  for (let i = 0; i < numIslands; i++) {
-    const x = 60 + i * spacing + (random() - 0.5) * 25;
-    const y = 10;
-    const side = i % 2 === 0 ? 1 : -1;
-    const z = side * (20 + random() * 25);
-    positions.push([x, y, z]);
-  }
-  return positions;
-})();
-
-function Islands({ onSelect }: { onSelect: (e: any) => void }) {
-  // Track which events are first of their day
-  const seenDays = new Set<number>();
-
+function Islands() {
   return (
     <>
-      {ISLAND_POSITIONS.map((pos, index) => {
-        const event = events[index];
-        const isFirstOfDay = event ? !seenDays.has(event.day) : false;
-        if (event) seenDays.add(event.day);
+      {ISLAND_POSITIONS.map((pos, index) => (
+        <Island key={index} position={pos} event={events[index]} index={index} />
+      ))}
+    </>
+  );
+}
 
+const DOCK_SIDE = 25;
+const DOCK_STOP_OFFSET = 0.008; // How far before the dock the ship stops (tune this!)
+
+// ─── Ship Path — accepts curve offsets for manual adjustment ────────────────
+function buildShipPath(
+  islandPositions: [number, number, number][],
+  curveOffsets?: [number, number][] // [dX, dZ] offset for each curve segment
+): { curve: THREE.CatmullRomCurve3; curvePoints: [number, number, number][] } {
+  const waypoints: THREE.Vector3[] = [];
+  const curveControlPositions: [number, number, number][] = [];
+
+  const first = islandPositions[0];
+  waypoints.push(new THREE.Vector3(first[0] + DOCK_SIDE, 5, first[2] + 50));
+
+  for (let i = 0; i < islandPositions.length; i++) {
+    const pos = islandPositions[i];
+    waypoints.push(new THREE.Vector3(pos[0] + DOCK_SIDE, 5, pos[2]));
+
+    if (i < islandPositions.length - 1) {
+      const next = islandPositions[i + 1];
+      const dx = next[0] - pos[0];
+      const dz = next[2] - pos[2];
+      const perpX = -dz;
+      const perpZ = dx;
+      const perpLen = Math.sqrt(perpX * perpX + perpZ * perpZ) || 1;
+      const arcAmount = 15; // Low arc for straighter paths
+
+      // User-adjustable offset for this curve segment
+      const offset = curveOffsets?.[i] || [0, 0];
+
+      const midX = (pos[0] + next[0]) / 2 + (perpX / perpLen) * arcAmount * 0.6 + DOCK_SIDE * 0.4 + offset[0];
+      const midZ = (pos[2] + next[2]) / 2 + (perpZ / perpLen) * arcAmount * 0.6 + offset[1];
+
+      waypoints.push(new THREE.Vector3(midX, 5, midZ));
+      curveControlPositions.push([midX, 5, midZ]);
+    }
+  }
+
+  const last = islandPositions[islandPositions.length - 1];
+  waypoints.push(new THREE.Vector3(last[0] + DOCK_SIDE, 5, last[2] - 50));
+
+  return {
+    curve: new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.3),
+    curvePoints: curveControlPositions,
+  };
+}
+
+// ─── Dock Markers ─────────────────────────────────────────────────────────────
+function DockMarkers({ activeIsland }: { activeIsland: number }) {
+  return (
+    <>
+      {ISLAND_POSITIONS.map((pos, i) => {
+        const isActive = i === activeIsland;
         return (
-          <Island
-            key={index}
-            position={pos}
-            event={event}
-            isFirstOfDay={isFirstOfDay}
-            onSelect={onSelect}
-          />
+          <group key={i} position={[pos[0] + DOCK_SIDE, 1.5, pos[2]]}>
+            <mesh>
+              <sphereGeometry args={[isActive ? 3 : 2, 12, 12]} />
+              <meshStandardMaterial
+                color={isActive ? '#ffdd44' : '#66ccff'}
+                emissive={isActive ? '#ffaa00' : '#44aaff'}
+                emissiveIntensity={isActive ? 2.5 : 1.2}
+                transparent
+                opacity={isActive ? 1 : 0.7}
+              />
+            </mesh>
+            <mesh rotation-x={-Math.PI / 2}>
+              <ringGeometry args={[isActive ? 3.5 : 2.5, isActive ? 5.5 : 4, 24]} />
+              <meshBasicMaterial
+                color={isActive ? '#ffaa00' : '#44aaff'}
+                transparent opacity={isActive ? 0.5 : 0.25} side={THREE.DoubleSide}
+              />
+            </mesh>
+          </group>
         );
       })}
     </>
   );
 }
 
-// ─── Ship (uses Ship.glb) ────────────────────────────────────────────────────
-function buildShipPath(islandPositions: [number, number, number][]): THREE.CatmullRomCurve3 {
-  const waypoints: THREE.Vector3[] = [];
+function PathLine({ curve }: { curve: THREE.CatmullRomCurve3 }) {
+  const lineRef = useRef<any>(null);
+  const points = useMemo(() => curve.getPoints(300), [curve]);
 
-  const first = islandPositions[0];
-  waypoints.push(new THREE.Vector3(first[0] - 60, 5, 0));
-
-  for (let i = 0; i < islandPositions.length; i++) {
-    const pos = islandPositions[i];
-    const zOffset = pos[2] > 0 ? -22 : 22;
-    waypoints.push(new THREE.Vector3(pos[0], 5, pos[2] + zOffset));
-  }
-
-  const last = islandPositions[islandPositions.length - 1];
-  waypoints.push(new THREE.Vector3(last[0] + 60, 5, 0));
-
-  return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
-}
-
-function Ship({ islandPositions }: { islandPositions: [number, number, number][] }) {
-  const shipRef = useRef<THREE.Group>(null);
-  const [shipModel, setShipModel] = useState<THREE.Group | null>(null);
-  const progressRef = useRef(0);
-  const targetProgressRef = useRef(0);
-  const { camera } = useThree();
-  const scrollAccumRef = useRef(0);
-  const zoomRef = useRef(1); // 1 = default, <1 = zoomed in, >1 = zoomed out
-
-  const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
-  const totalIslands = islandPositions.length;
-
-  // Load Ship.glb model
+  // Put path line on layer 1 so Water shader's reflection camera (layer 0 only) doesn't see it
   useEffect(() => {
-    const loader = new GLTFLoader();
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-    dracoLoader.setDecoderConfig({ type: 'js' });
-    loader.setDRACOLoader(dracoLoader);
-
-    loader.load(
-      '/models/Ship.glb',
-      (gltf) => {
-        const scene = gltf.scene;
-        scene.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            if (mesh.material) {
-              const mat = mesh.material as THREE.MeshStandardMaterial;
-              if (mat.map) mat.map.minFilter = THREE.LinearFilter;
-              mat.needsUpdate = true;
-            }
-          }
-        });
-        setShipModel(scene);
-        dracoLoader.dispose();
-      },
-      undefined,
-      (error) => console.error('Error loading ship model:', error)
-    );
+    if (lineRef.current) {
+      lineRef.current.layers.set(1);
+    }
   }, []);
 
-  // Scroll handling — pinch/ctrl+wheel = zoom, normal scroll = sail
-  useEffect(() => {
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-
-      // Pinch-to-zoom (trackpad pinch sends ctrlKey + wheel)
-      if (event.ctrlKey || event.metaKey) {
-        zoomRef.current = Math.max(0.4, Math.min(2.0, zoomRef.current + event.deltaY * 0.005));
-        return;
-      }
-
-      // Normal scroll = sail between islands (capped speed)
-      const clampedDelta = Math.max(-15, Math.min(15, event.deltaY));
-      scrollAccumRef.current += clampedDelta;
-
-      const segmentSize = 400;
-      const segments = totalIslands + 1;
-
-      const newTarget = Math.min(
-        1,
-        Math.max(0, scrollAccumRef.current / (segmentSize * segments))
-      );
-      targetProgressRef.current = newTarget;
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [totalIslands]);
-
-  useFrame((state) => {
-    const elapsed = state.clock.elapsedTime;
-
-    progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
-    const t = Math.max(0, Math.min(1, progressRef.current));
-
-    const point = curve.getPointAt(t);
-    const tangent = curve.getTangentAt(t);
-
-    if (shipRef.current) {
-      shipRef.current.position.set(point.x, point.y, point.z);
-      shipRef.current.position.y += Math.sin(elapsed * 1.5) * 0.4;
-
-      // Ship heading — atan2 gives angle, subtract PI/2 to align bow with travel direction
-      const angle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
-      const currentY = shipRef.current.rotation.y;
-      let diff = angle - currentY;
-      if (diff > Math.PI) diff -= Math.PI * 2;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      shipRef.current.rotation.y += diff * 0.15; // Snappier rotation
-      shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03;
-    }
-
-    // Camera follows ship — zoom factor modifies height and distance
-    const zoom = zoomRef.current;
-    const camHeight = 45 * zoom;
-    const camDistance = 65 * zoom;
-
-    const cameraTarget = new THREE.Vector3(
-      point.x + tangent.x * 15,
-      5,
-      point.z + tangent.z * 10
-    );
-
-    camera.position.x += (point.x - tangent.x * 30 - camera.position.x) * 0.06;
-    camera.position.y += (camHeight - camera.position.y) * 0.06;
-    camera.position.z += (point.z + camDistance - camera.position.z) * 0.06;
-
-    camera.lookAt(cameraTarget);
-  });
-
-  if (!shipModel) return null;
-
   return (
-    <group ref={shipRef} position={[0, 5, 0]}>
-      <primitive
-        object={shipModel}
-        scale={[15, 15, 15]}
-        rotation={[0, 0, 0]}
-      />
-      {/* Boat wake / foam trail */}
-      <WakeEffect />
-    </group>
+    <Line ref={lineRef} points={points} color="lightblue" lineWidth={3} dashed dashScale={2}
+      gapSize={1} opacity={0.5} transparent position={[0, 0.5, 0]} />
   );
 }
 
+// Enable main camera to see both layer 0 (normal) and layer 1 (path line)
+function CameraLayerSetup() {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.layers.enable(1);
+  }, [camera]);
+  return null;
+}
+
+// ─── Wake Effect (capped particles) ─────────────────────────────────────────
 function WakeEffect() {
   const wakeRef = useRef<THREE.Group>(null);
-  const particlesRef = useRef<{
-    mesh: THREE.Mesh;
-    age: number;
-    maxAge: number;
-  }[]>([]);
+  const particlesRef = useRef<{ mesh: THREE.Mesh; age: number; maxAge: number }[]>([]);
   const spawnTimer = useRef(0);
-
-  // Create reusable wake ring geometry + material
-  const geometry = useMemo(() => new THREE.RingGeometry(0.3, 1.2, 16), []);
-  const material = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.5,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      }),
-    []
-  );
+  const geometry = useMemo(() => new THREE.RingGeometry(0.3, 1.2, 12), []);
+  const material = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false,
+  }), []);
 
   useFrame((_, delta) => {
     if (!wakeRef.current) return;
-
     spawnTimer.current += delta;
 
-    if (spawnTimer.current > 0.15) {
+    if (spawnTimer.current > 0.2 && particlesRef.current.length < 25) {
       spawnTimer.current = 0;
-
       const ring = new THREE.Mesh(geometry.clone(), material.clone());
-      ring.position.set(0 + (Math.random() - 0.5) * 0.5, -4.5, 2);
       ring.rotation.x = -Math.PI / 2;
-      ring.scale.set(1, 1, 1);
-
       const worldPos = new THREE.Vector3();
-      ring.position.copy(ring.position);
-      wakeRef.current.localToWorld(worldPos.copy(ring.position));
-
+      wakeRef.current.localToWorld(worldPos.copy(new THREE.Vector3((Math.random() - 0.5) * 0.5, -4.5, 3)));
       const scene = wakeRef.current.parent?.parent;
       if (scene) {
         ring.position.copy(worldPos);
         ring.position.y = 0.3;
         scene.add(ring);
-        particlesRef.current.push({ mesh: ring, age: 0, maxAge: 2.5 });
+        particlesRef.current.push({ mesh: ring, age: 0, maxAge: 2.0 });
       }
     }
 
     particlesRef.current = particlesRef.current.filter((p) => {
       p.age += delta;
       const life = p.age / p.maxAge;
-
       if (life >= 1) {
         p.mesh.parent?.remove(p.mesh);
         p.mesh.geometry.dispose();
         (p.mesh.material as THREE.Material).dispose();
         return false;
       }
-      
-      const scale = 1 + life * 6;
+      const scale = 1 + life * 5;
       p.mesh.scale.set(scale, scale, scale);
-      (p.mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 * (1 - life);
-
+      (p.mesh.material as THREE.MeshBasicMaterial).opacity = 0.35 * (1 - life);
       return true;
     });
   });
@@ -640,161 +371,486 @@ function WakeEffect() {
   return <group ref={wakeRef} />;
 }
 
-// Main Scene
-export default function TimelineScene() {
-  const [selectedEvent, setSelectedEvent] = useState<{ day: number; title: string; time: string } | null>(null);
+// ─── Ship — snap-to-island scrolling, proper rotation ────────────────────────
+function Ship({ islandPositions, onIslandChange, curveOffsets }: {
+  islandPositions: [number, number, number][];
+  onIslandChange: (idx: number) => void;
+  curveOffsets?: [number, number][];
+}) {
+  const shipRef = useRef<THREE.Group>(null);
+  const [shipModel, setShipModel] = useState<THREE.Group | null>(null);
+  const lastIdx = islandPositions.length - 1;
+  const progressRef = useRef(0.95); // Will be synced to precise value below
+  const targetProgressRef = useRef(0.95);
+  const { camera } = useThree();
+  const zoomRef = useRef(1);
+  const facingForwardRef = useRef(false);
+  const currentIslandRef = useRef(lastIdx);
+  const scrollAccumRef = useRef(lastIdx);
+
+  const { curve } = useMemo(() => buildShipPath(islandPositions, curveOffsets), [islandPositions, curveOffsets]);
+
+  // Pre-compute precise t values for each island's dock point
+  const dockProgressValues = useMemo(() => {
+    const samples = 2000;
+    const dockTargets = islandPositions.map(pos =>
+      new THREE.Vector3(pos[0] + DOCK_SIDE, 5, pos[2])
+    );
+    const tValues: number[] = new Array(islandPositions.length).fill(0);
+    const bestDist: number[] = new Array(islandPositions.length).fill(Infinity);
+
+    for (let s = 0; s <= samples; s++) {
+      const t = s / samples;
+      const pt = curve.getPointAt(t);
+      for (let i = 0; i < dockTargets.length; i++) {
+        const d = pt.distanceTo(dockTargets[i]);
+        if (d < bestDist[i]) {
+          bestDist[i] = d;
+          tValues[i] = t;
+        }
+      }
+    }
+    return tValues;
+  }, [curve, islandPositions]);
+
+  const getProgressForIsland = (index: number) => {
+    const t = dockProgressValues[index] ?? 0.5;
+    return Math.max(0, Math.min(0.999, t - DOCK_STOP_OFFSET));
+  };
+
+  // Sync initial position with precise dock values
+  const initialSynced = useRef(false);
+  useEffect(() => {
+    if (!initialSynced.current && dockProgressValues.length > 0) {
+      const preciseT = dockProgressValues[lastIdx];
+      progressRef.current = preciseT;
+      targetProgressRef.current = preciseT;
+      initialSynced.current = true;
+    }
+  }, [dockProgressValues, lastIdx]);
+
+  // Listen for jump events (clicking islands)
+  useEffect(() => {
+    const handleJump = (e: any) => {
+      const index = e.detail.index;
+      currentIslandRef.current = index;
+      targetProgressRef.current = getProgressForIsland(index);
+      scrollAccumRef.current = index;
+    };
+    window.addEventListener('timeline-scroll-to', handleJump);
+    return () => window.removeEventListener('timeline-scroll-to', handleJump);
+  }, [islandPositions]);
+
+  // Load Ship.glb
+  useEffect(() => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    dracoLoader.setDecoderConfig({ type: 'js' });
+    loader.setDRACOLoader(dracoLoader);
+    loader.load('/models/Ship.glb', (gltf) => {
+      setShipModel(gltf.scene);
+      dracoLoader.dispose();
+    }, undefined, (error) => console.error('Error loading ship model:', error));
+  }, []);
+
+  // Scroll handling — snap to islands with speed limit
+  const scrollCooldownRef = useRef(0);
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+
+      if (event.ctrlKey || event.metaKey) {
+        zoomRef.current = Math.max(0.4, Math.min(2.0, zoomRef.current + event.deltaY * 0.005));
+        return;
+      }
+
+      // Speed limit: cooldown between island changes
+      const now = Date.now();
+      if (now - scrollCooldownRef.current < 200) return;
+
+      // Clamp delta so one scroll = max 1 island
+      const clampedDelta = Math.max(-60, Math.min(60, event.deltaY));
+      const scrollSensitivity = 0.008;
+      scrollAccumRef.current += clampedDelta * scrollSensitivity;
+
+      // Clamp to valid range: 0 to last island
+      scrollAccumRef.current = Math.max(0, Math.min(islandPositions.length - 1, scrollAccumRef.current));
+
+      // Round to nearest island for snapping
+      const targetIsland = Math.round(scrollAccumRef.current);
+      if (targetIsland !== currentIslandRef.current) {
+        currentIslandRef.current = targetIsland;
+        onIslandChange(targetIsland);
+        scrollCooldownRef.current = now; // Reset cooldown on island change
+      }
+      targetProgressRef.current = getProgressForIsland(targetIsland);
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [islandPositions]);
+
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+
+    const diff = targetProgressRef.current - progressRef.current;
+    if (Math.abs(diff) > 0.0001) {
+      facingForwardRef.current = diff > 0;
+    }
+
+    // Smooth lerp — no hard jumps
+    progressRef.current += diff * 0.04;
+    const t = Math.max(0, Math.min(0.999, progressRef.current));
+
+    const point = curve.getPointAt(t);
+    const tangent = curve.getTangentAt(t).normalize();
+
+    if (shipRef.current) {
+      shipRef.current.position.copy(point);
+      shipRef.current.position.y = 5 + Math.sin(elapsed * 1.5) * 0.4;
+
+      // Rotation: ship model's bow faces +Z, so atan2(x,z) aligns it with the tangent
+      // Add PI/2 to correct the 90° offset (ship was facing sideways)
+      const isForward = facingForwardRef.current;
+      const facingTangent = isForward ? tangent : tangent.clone().negate();
+      const targetRotation = Math.atan2(facingTangent.x, facingTangent.z) - Math.PI / 2;
+
+      const currentY = shipRef.current.rotation.y;
+      let rotDiff = targetRotation - currentY;
+      while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+      while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+      shipRef.current.rotation.y += rotDiff * 0.1;
+
+      // Subtle wave roll/pitch
+      shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03;
+      shipRef.current.rotation.x = Math.sin(elapsed * 1.2) * 0.02;
+    }
+
+    // Camera — stable, low angle, follows ship
+    const step = 1 / (islandPositions.length);
+    const currentSegmentIndex = Math.floor(t / step);
+    const presetIndex = currentSegmentIndex % CAMERA_PRESETS.length;
+    const nextPresetIndex = (currentSegmentIndex + 1) % CAMERA_PRESETS.length;
+
+    const segmentProgress = (t % step) / step;
+    const ease = segmentProgress * segmentProgress * (3 - 2 * segmentProgress);
+
+    const preset1 = CAMERA_PRESETS[presetIndex];
+    const preset2 = CAMERA_PRESETS[nextPresetIndex];
+
+    const targetRelPos = new THREE.Vector3().lerpVectors(
+      new THREE.Vector3(...preset1.pos), new THREE.Vector3(...preset2.pos), ease
+    );
+    const targetLookOffset = new THREE.Vector3().lerpVectors(
+      new THREE.Vector3(...preset1.lookAt), new THREE.Vector3(...preset2.lookAt), ease
+    );
+
+    targetRelPos.multiplyScalar(zoomRef.current);
+
+    const pathAngle = Math.atan2(tangent.x, tangent.z);
+    const offsetRotated = targetRelPos.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), pathAngle);
+    const lookOffsetRotated = targetLookOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), pathAngle);
+
+    const desiredCamPos = point.clone().add(offsetRotated);
+    const desiredLookAt = point.clone().add(lookOffsetRotated);
+
+    // Slower camera lerp for more stable movement (less jarring)
+    camera.position.lerp(desiredCamPos, 0.03);
+    camera.lookAt(desiredLookAt);
+  });
+
+  if (!shipModel) return null;
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+    <group>
+      <group ref={shipRef}>
+        <primitive object={shipModel} scale={[15, 15, 15]} />
+        <WakeEffect />
+      </group>
+      <PathLine curve={curve} />
+    </group>
+  );
+}
+
+// ─── Treasure Book Component ───────────────────────────────────────────────
+function TreasureBook({ activeIsland }: { activeIsland: number }) {
+  const event = events[activeIsland];
+  const theme = DAY_THEMES[event?.day] || DAY_THEMES[1];
+  const [flipping, setFlipping] = useState(false);
+  const prevIsland = useRef(activeIsland);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Trigger page-turn on island change
+  useEffect(() => {
+    if (prevIsland.current !== activeIsland) {
+      setFlipping(true);
+      prevIsland.current = activeIsland;
+      const timer = setTimeout(() => setFlipping(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeIsland]);
+
+  if (!event) return null;
+
+  // ─── MOBILE: Single parchment page ───────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{
+        position: 'fixed', bottom: '80px', right: '10px', zIndex: 50,
+        width: '160px', height: '220px',
+        perspective: '800px',
+      }}>
+        <div style={{
+          width: '100%', height: '100%',
+          backgroundImage: 'url(/images/MB-Timeline.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '25px 15px 20px',
+          transform: flipping ? 'rotateY(-90deg)' : 'rotateY(0deg)',
+          transition: 'transform 0.25s ease-in',
+          transformOrigin: 'left center',
+          boxSizing: 'border-box',
+        }}>
+          {/* Wax seal badge */}
+          <div style={{
+            width: '36px', height: '36px', borderRadius: '50%',
+            background: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), ${theme.wax} 60%)`,
+            border: '1.5px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '8px',
+          }}>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-cinzel), serif', fontWeight: 700 }}>
+              Day {event.day}
+            </span>
+          </div>
+          <div style={{
+            fontFamily: 'var(--font-pirata), serif', fontSize: '16px',
+            color: theme.ink, textAlign: 'center', lineHeight: 1.2,
+            marginBottom: '6px',
+          }}>
+            {event.title.replace(/\n/g, ' ')}
+          </div>
+          <div style={{ width: '60%', height: '1px', background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`, margin: '4px 0' }} />
+          <div style={{
+            fontFamily: 'var(--font-cinzel), serif', fontSize: '13px',
+            color: theme.ink, opacity: 0.8, textAlign: 'center',
+          }}>
+            {theme.icon} {event.time}
+          </div>
+          <div style={{
+            fontFamily: 'monospace', fontSize: '9px',
+            color: theme.ink, opacity: 0.4, marginTop: '8px',
+          }}>
+            Stop {activeIsland + 1} of {events.length}
+          </div>
+        </div>
+        {/* Flip-back animation */}
+        {flipping && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+            backgroundImage: 'url(/images/MB-Timeline.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            transform: 'rotateY(90deg)',
+            transition: 'transform 0.25s ease-out 0.25s',
+            transformOrigin: 'left center',
+          }} />
+        )}
+      </div>
+    );
+  }
+
+  // ─── PC: Open book with two pages ────────────────────────────────
+  return (
+    <div style={{
+      position: 'fixed', top: '50%', right: '20px', transform: 'translateY(-50%)',
+      zIndex: 50, width: '420px', height: '300px',
+      perspective: '1200px',
+    }}>
+      <div style={{
+        width: '100%', height: '100%',
+        backgroundImage: 'url(/images/PC-Timeline.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        display: 'flex', position: 'relative',
+      }}>
+        {/* Left page — decorative */}
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '40px 20px 30px',
+        }}>
+          {/* Wax seal */}
+          <div style={{
+            width: '50px', height: '50px', borderRadius: '50%',
+            background: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.3), ${theme.wax} 60%)`,
+            border: '2px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4), inset 0 -2px 6px rgba(0,0,0,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '12px',
+          }}>
+            <span style={{ fontSize: '18px' }}>{theme.icon}</span>
+          </div>
+          <div style={{
+            fontFamily: 'var(--font-cinzel), serif', fontSize: '13px',
+            color: theme.ink, opacity: 0.5, textAlign: 'center',
+            letterSpacing: '2px', textTransform: 'uppercase',
+          }}>
+            Day {event.day}
+          </div>
+          <div style={{
+            fontFamily: 'monospace', fontSize: '10px',
+            color: theme.ink, opacity: 0.3, marginTop: '8px',
+          }}>
+            Stop {activeIsland + 1} / {events.length}
+          </div>
+        </div>
+
+        {/* Right page — event details with page-turn */}
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '35px 25px 30px',
+          transformStyle: 'preserve-3d',
+          transform: flipping ? 'rotateY(-90deg)' : 'rotateY(0deg)',
+          transition: 'transform 0.3s ease-in-out',
+          transformOrigin: 'left center',
+        }}>
+          <div style={{
+            fontFamily: 'var(--font-pirata), serif', fontSize: '24px',
+            color: theme.ink, textAlign: 'center', lineHeight: 1.2,
+            marginBottom: '12px',
+          }}>
+            {event.title.replace(/\n/g, ' ')}
+          </div>
+          <div style={{
+            width: '70%', height: '1px', margin: '8px 0',
+            background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`,
+            opacity: 0.5,
+          }} />
+          <div style={{
+            fontFamily: 'var(--font-cinzel), serif', fontSize: '18px',
+            color: theme.ink, fontWeight: 700, textAlign: 'center',
+          }}>
+            {event.time}
+          </div>
+          <div style={{
+            fontFamily: 'var(--font-cinzel), serif', fontSize: '12px',
+            color: theme.ink, opacity: 0.5, marginTop: '8px',
+          }}>
+            • Day {event.day} •
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Mobile Navigation Arrows ──────────────────────────────────────────
+function MobileNavArrows({ activeIsland, onNavigate }: {
+  activeIsland: number;
+  onNavigate: (index: number) => void;
+}) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  if (!isMobile) return null;
+
+  const btnStyle: React.CSSProperties = {
+    width: '50px', height: '50px', borderRadius: '50%',
+    background: 'rgba(0,0,0,0.5)', border: '2px solid rgba(255,255,255,0.3)',
+    color: '#fff', fontSize: '22px', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backdropFilter: 'blur(4px)',
+    transition: 'background 0.2s',
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: '20px', left: '20px', zIndex: 100,
+      display: 'flex', flexDirection: 'column', gap: '10px',
+    }}>
+      <button
+        style={{ ...btnStyle, opacity: activeIsland > 0 ? 1 : 0.3 }}
+        onClick={() => activeIsland > 0 && onNavigate(activeIsland - 1)}
+      >▲</button>
+      <button
+        style={{ ...btnStyle, opacity: activeIsland < events.length - 1 ? 1 : 0.3 }}
+        onClick={() => activeIsland < events.length - 1 && onNavigate(activeIsland + 1)}
+      >▼</button>
+    </div>
+  );
+}
+
+// ─── Main Scene ──────────────────────────────────────────────────────────────
+export default function TimelineScene() {
+  const [activeIsland, setActiveIsland] = useState(ISLAND_POSITIONS.length - 1);
+
+  const handleMobileNav = useCallback((index: number) => {
+    setActiveIsland(index);
+    window.dispatchEvent(new CustomEvent('timeline-scroll-to', { detail: { index } }));
+  }, []);
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0,
+      backgroundImage: 'url(/sunny.jpeg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center top',
+    }}>
       <Canvas
-        camera={{ fov: 55, near: 1, far: 3000 }}
+        camera={{ fov: 55, near: 0.1, far: 3000, position: [0, 50, 100] }}
         gl={{
           powerPreference: 'high-performance',
           antialias: true,
           stencil: false,
           depth: true,
+          alpha: true,
         }}
-        style={{ background: '#87CEEB' }}
+        dpr={[1, 1.5]}
+        style={{ background: 'transparent' }}
         onCreated={({ gl, scene }) => {
-          scene.fog = new THREE.Fog(0x87CEEB, 200, 800);
+          gl.setClearColor(0x000000, 0);
+          scene.fog = new THREE.Fog(0x1a2a3a, 400, 1200);
           gl.domElement.addEventListener('webglcontextlost', (event) => {
+            console.warn('WebGL context lost — allowing recovery');
             event.preventDefault();
-            console.log('WebGL context lost, attempting recovery...');
-            setTimeout(() => window.location.reload(), 1000);
+          });
+          gl.domElement.addEventListener('webglcontextrestored', () => {
+            console.log('WebGL context restored');
           });
         }}
       >
+        <CameraLayerSetup />
         <ambientLight intensity={3} />
         <directionalLight position={[100, 100, 100]} intensity={8} />
         <directionalLight position={[-100, 80, -50]} intensity={5} />
         <directionalLight position={[0, 60, 100]} intensity={5} />
 
         <Ocean />
-        <Islands onSelect={setSelectedEvent} />
-        <Ship islandPositions={ISLAND_POSITIONS} />
+        <Islands />
+        <DockMarkers activeIsland={activeIsland} />
+        <Ship islandPositions={ISLAND_POSITIONS} onIslandChange={setActiveIsland} />
       </Canvas>
 
-      {/* Event Details Modal */}
-      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <DialogContent
-          className="sm:max-w-[380px] border-none bg-transparent shadow-none p-0 overflow-visible [&>button]:hidden"
-          style={{ perspective: '1000px' }}
-        >
-          {selectedEvent && (() => {
-             const theme = DAY_THEMES[selectedEvent.day] || DAY_THEMES[1];
-             return (
-               <div
-                  style={{
-                    background: theme.parchment,
-                    backgroundImage: `
-                      linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent),
-                      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E")
-                    `,
-                    borderRadius: '6px',
-                    padding: '36px 30px 30px',
-                    position: 'relative',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 60px rgba(139, 69, 19, 0.2)',
-                    border: `3px solid ${theme.border}`,
-                  }}
-               >
-                 {/* Wax Seal — top-left */}
-                 <div
-                   style={{
-                     position: 'absolute',
-                     top: '-18px',
-                     left: '-18px',
-                     width: '56px',
-                     height: '56px',
-                     backgroundColor: theme.wax,
-                     backgroundImage: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), transparent 60%)`,
-                     borderRadius: '50%',
-                     border: '2px solid rgba(255,255,255,0.15)',
-                     boxShadow: '0 4px 12px rgba(0,0,0,0.5), inset 0 -2px 6px rgba(0,0,0,0.3)',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     transform: 'rotate(-10deg)',
-                     zIndex: 20,
-                   }}
-                 >
-                    <div style={{
-                      color: 'rgba(255,255,255,0.9)',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-cinzel), serif',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                      letterSpacing: '1px',
-                    }}>
-                      Day {selectedEvent.day}
-                    </div>
-                    <div style={{
-                       position: 'absolute', inset: '4px', borderRadius: '50%',
-                       border: '1.5px dashed rgba(255,255,255,0.35)',
-                    }} />
-                 </div>
+      {/* Treasure Book */}
+      <TreasureBook activeIsland={activeIsland} />
 
-                 {/* Custom close button */}
-                 <button
-                   onClick={() => setSelectedEvent(null)}
-                   style={{
-                     position: 'absolute',
-                     top: '10px',
-                     right: '12px',
-                     width: '28px',
-                     height: '28px',
-                     borderRadius: '50%',
-                     border: `1.5px solid ${theme.border}`,
-                     background: 'rgba(0,0,0,0.08)',
-                     color: theme.ink,
-                     fontSize: '16px',
-                     fontFamily: 'var(--font-pirata), serif',
-                     cursor: 'pointer',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     transition: 'background 0.2s',
-                     zIndex: 20,
-                   }}
-                   onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.15)')}
-                   onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.08)')}
-                 >
-                   ✕
-                 </button>
-
-                 {/* Corner decorations */}
-                 <div style={{ position: 'absolute', top: '8px', left: '8px', width: '16px', height: '16px', borderTop: `2px solid ${theme.border}`, borderLeft: `2px solid ${theme.border}`, opacity: 0.4 }} />
-                 <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '16px', height: '16px', borderBottom: `2px solid ${theme.border}`, borderRight: `2px solid ${theme.border}`, opacity: 0.4 }} />
-
-                 {/* Title */}
-                 <DialogHeader>
-                   <DialogTitle
-                     className="text-center text-3xl mb-2 mt-2"
-                     style={{
-                       fontFamily: 'var(--font-pirata), serif',
-                       color: theme.ink,
-                       lineHeight: 1.2,
-                     }}
-                   >
-                     {selectedEvent.title.replace(/\\n/g, ' ')}
-                   </DialogTitle>
-                   <DialogDescription className="sr-only">Event details</DialogDescription>
-                 </DialogHeader>
-
-                 {/* Divider */}
-                 <div className="w-4/5 mx-auto h-px my-4" style={{ background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`, opacity: 0.5 }} />
-
-                 {/* Time + Day */}
-                 <div className="flex items-center justify-center gap-3" style={{ color: theme.ink, fontFamily: 'var(--font-cinzel), serif' }}>
-                    <span style={{ fontSize: '20px' }}>{theme.icon}</span>
-                    <span style={{ fontSize: '18px', fontWeight: 700 }}>{selectedEvent.time}</span>
-                    <span style={{ fontSize: '14px', opacity: 0.6 }}>• Day {selectedEvent.day}</span>
-                 </div>
-               </div>
-             );
-          })()}
-        </DialogContent>
-      </Dialog>
+      {/* Mobile Navigation Arrows */}
+      <MobileNavArrows activeIsland={activeIsland} onNavigate={handleMobileNav} />
     </div>
   );
 }
