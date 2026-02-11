@@ -298,7 +298,9 @@ export async function getPayments({
           columns: { id: true, name: true, email: true },
         },
       },
-      orderBy: [sortOrder === "asc" ? asc(payment.createdAt) : desc(payment.createdAt)],
+      orderBy: [
+        sortOrder === "asc" ? asc(payment.createdAt) : desc(payment.createdAt),
+      ],
       limit,
       offset,
     }),

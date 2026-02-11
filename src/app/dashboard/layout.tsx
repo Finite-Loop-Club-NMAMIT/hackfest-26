@@ -3,19 +3,22 @@ import { CommandMenu } from "~/components/ui/command-menu";
 import { isAdmin } from "~/lib/auth/check-access";
 
 export default async function DashboardLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const session = await auth();
-    const userIsAdmin = session?.dashboardUser
-        ? isAdmin(session.dashboardUser)
-        : false;
+  const session = await auth();
+  const userIsAdmin = session?.dashboardUser
+    ? isAdmin(session.dashboardUser)
+    : false;
 
-    return (
-        <>
-            <CommandMenu isAdmin={userIsAdmin} dashboardUser={session?.dashboardUser} />
-            {children}
-        </>
-    );
+  return (
+    <>
+      <CommandMenu
+        isAdmin={userIsAdmin}
+        dashboardUser={session?.dashboardUser}
+      />
+      {children}
+    </>
+  );
 }

@@ -3,7 +3,6 @@
 
 import { relations } from "drizzle-orm";
 import {
-  accounts,
   colleges,
   dashboardUserRoles,
   dashboardUsers,
@@ -19,7 +18,6 @@ import {
   permissions,
   rolePermissions,
   roles,
-  sessions,
   teams,
   tracks,
 } from "./schema";

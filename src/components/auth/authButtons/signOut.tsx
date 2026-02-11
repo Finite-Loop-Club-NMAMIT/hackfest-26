@@ -3,12 +3,23 @@ import { Button } from "~/components/ui/button";
 
 interface SignOutProps {
   className?: string;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
   size?: "default" | "sm" | "lg" | "icon";
   children?: React.ReactNode;
 }
 
-export default function SignOut({ className, variant, size, children }: SignOutProps) {
+export default function SignOut({
+  className,
+  variant,
+  size,
+  children,
+}: SignOutProps) {
   return (
     <form
       action={async () => {

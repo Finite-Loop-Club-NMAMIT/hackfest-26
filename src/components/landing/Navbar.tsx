@@ -2,14 +2,14 @@
 
 import { type ClassValue, clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
+import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

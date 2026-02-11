@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Html,
   Scroll,
   ScrollControls,
   useScroll,
@@ -13,11 +12,11 @@ import Link from "next/link";
 import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { Button } from "~/components/ui/button";
 import Footer from "./Footer";
 import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import TracksSection from "./Tracks";
-import { Button } from "~/components/ui/button";
 
 // Register the custom shader material
 extend({ TransitionMaterial });
@@ -356,7 +355,7 @@ export default function Scene({ session }: { session: Session | null }) {
       </Canvas>
 
       {/* Fixed UI Overlay (Navbar/Auth) - Only visible when loaded */}
-      <motion.div
+      {/* <motion.div
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end p-6 bg-linear-to-b from-black/50 to-transparent pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: loaded ? 1 : 0 }}
@@ -384,7 +383,7 @@ export default function Scene({ session }: { session: Session | null }) {
             </Button>
           )}
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* CSS for custom keyframe animations if not in tailwind config */}
       <style jsx global>{`
