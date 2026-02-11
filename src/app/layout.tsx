@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { SessionProvider } from "next-auth/react";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import "./globals.css";
 

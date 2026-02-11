@@ -10,9 +10,11 @@ import {
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import Footer from "./Footer";
+import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import TracksSection from "./Tracks";
 
@@ -278,10 +280,26 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
   );
 }
 
-export default function Scene() {
+export default function Scene({ session }: { session: Session | null }) {
   const [loaded, setLoaded] = useState(false);
   const [pages, setPages] = useState(3);
   const [progress, setProgress] = useState(0);
+  const [isUnderwater, setIsUnderwater] = useState(false);
+
+  function ScrollSync({
+    setUnderwater,
+  }: {
+    setUnderwater: (v: boolean) => void;
+  }) {
+    const scroll = useScroll();
+
+    useFrame(() => {
+      const offset = scroll.offset; // 0 → 1
+      setUnderwater(offset > 0.15);
+    });
+
+    return null;
+  }
 
   useEffect(() => {
     // Simulate loading progress
@@ -308,9 +326,17 @@ export default function Scene() {
         {!loaded && <LoadingScreen progress={progress} />}
       </AnimatePresence>
 
+      {loaded && (
+        <div className="absolute inset-0 pointer-events-none z-40">
+          {/* The Navbar component itself handles pointer-events-auto for buttons */}
+          <Navbar isUnderwater={isUnderwater} session={session} />
+        </div>
+      )}
+
       <Canvas gl={{ antialias: true, alpha: false }} dpr={[1, 1.5]}>
         <Suspense fallback={null}>
           <ScrollControls pages={pages} damping={0.3}>
+            <ScrollSync setUnderwater={setIsUnderwater} />
             <Background loaded={loaded} loadingProgress={progress} />
             {/* Scroll content: Only visible when loaded, but mounted so scroll works */}
             <Scroll
