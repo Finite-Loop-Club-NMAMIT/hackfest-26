@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -23,15 +24,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakarta.variable} antialiased dark`}>
-        {children}
-        <ToasterWrapper />
-        {/* Umami Analytics */}
-        <Script
-          defer
-          src="https://analytics.finiteloop.club/script.js"
-          data-website-id="3c904eb5-16f5-428c-9c63-146a683de618"
-          strategy="afterInteractive"
-        />
+        <SessionProvider>
+          {children}
+          <ToasterWrapper />
+          {/* Umami Analytics */}
+          <Script
+            defer
+            src="https://analytics.finiteloop.club/script.js"
+            data-website-id="3c904eb5-16f5-428c-9c63-146a683de618"
+            strategy="afterInteractive"
+          />
+        </SessionProvider>
       </body>
     </html>
   );
