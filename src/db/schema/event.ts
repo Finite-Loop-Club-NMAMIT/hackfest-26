@@ -38,12 +38,12 @@ export const eventParticipants = pgTable("event_participant", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  eventId: text("event_id")
-    .notNull()
-    .references(() => events.id),
   participantId: text("participant_id")
     .notNull()
     .references((): PgColumn => participants.id),
+  teamId: text("team_id")
+    .notNull()
+    .references(() => eventTeams.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -57,6 +57,9 @@ export const eventTeams = pgTable("event_teams", {
   leaderId: text("leader_id")
     .notNull()
     .references((): PgColumn => participants.id),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => events.id),
   attended: boolean("attended").notNull().default(false),
   isComplete: boolean("is_complete").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
