@@ -6,8 +6,8 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from 'framer-motion';
+import { type Session } from "next-auth";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -20,8 +20,7 @@ const NAV_LINKS = [
     { name: 'Prizes', href: '/#' },
 ];
 
-export function Navbar({ isUnderwater }: { isUnderwater: boolean }) {
-    const { data: session } = useSession();
+export function Navbar({ isUnderwater, session }: { isUnderwater: boolean; session: Session | null}) {
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -16,6 +16,7 @@ import Footer from "./Footer";
 import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import TracksSection from "./Tracks";
+import { type Session } from "next-auth";
 
 // Register the custom shader material
 extend({ TransitionMaterial });
@@ -279,7 +280,7 @@ function LandingContent({ setPages }: { setPages: (pages: number) => void }) {
   );
 }
 
-export default function Scene() {
+export default function Scene({ session }: { session: Session | null }) {
   const [loaded, setLoaded] = useState(false);
   const [pages, setPages] = useState(3);
   const [progress, setProgress] = useState(0);
@@ -328,7 +329,7 @@ export default function Scene() {
       {loaded && (
         <div className="absolute inset-0 pointer-events-none z-40">
           {/* The Navbar component itself handles pointer-events-auto for buttons */}
-          <Navbar isUnderwater={isUnderwater}/>
+          <Navbar isUnderwater={isUnderwater} session={session}/>
         </div>
       )}
 

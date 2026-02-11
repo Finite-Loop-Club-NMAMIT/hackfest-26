@@ -24,7 +24,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakarta.variable} antialiased dark`}>
-        <SessionProvider>
           {children}
           <ToasterWrapper />
           {/* Umami Analytics */}
@@ -34,7 +33,6 @@ export default function RootLayout({
             data-website-id="3c904eb5-16f5-428c-9c63-146a683de618"
             strategy="afterInteractive"
           />
-        </SessionProvider>
       </body>
     </html>
   );
