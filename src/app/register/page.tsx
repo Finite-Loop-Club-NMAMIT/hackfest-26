@@ -13,11 +13,11 @@ import * as userData from "~/db/data/participant";
 export default async function RegisterPage() {
   const session = await auth();
   if (!session?.user?.email) {
-    redirect("/");
+    redirect("/api/auth/signin");
   }
 
   if (session.user.isRegistrationComplete) {
-    redirect("/");
+    redirect("/teams");
   }
 
   const user = await userData.findByEmail(session.user.email);

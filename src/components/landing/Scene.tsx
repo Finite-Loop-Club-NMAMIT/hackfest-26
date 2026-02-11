@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Html,
   Scroll,
   ScrollControls,
   useScroll,
@@ -13,6 +12,7 @@ import Link from "next/link";
 import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { Button } from "~/components/ui/button";
 import Footer from "./Footer";
 import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
@@ -353,6 +353,37 @@ export default function Scene({ session }: { session: Session | null }) {
           </ScrollControls>
         </Suspense>
       </Canvas>
+
+      {/* Fixed UI Overlay (Navbar/Auth) - Only visible when loaded */}
+      {/* <motion.div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end p-6 bg-linear-to-b from-black/50 to-transparent pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: loaded ? 1 : 0 }}
+        transition={{ duration: 1, delay: 0.5 }}
+      >
+        <div className="pointer-events-auto">
+          {session?.user ? (
+            <Button
+              asChild
+              variant="outline"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md transition-all"
+            >
+              {session.user.isRegistrationComplete ? (
+                <Link href="/teams">Your Team</Link>
+              ) : (
+                <Link href="/register">Register Now</Link>
+              )}
+            </Button>
+          ) : (
+            <Button
+              asChild
+              className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_20px_rgba(8,145,178,0.5)] border-none transition-all hover:scale-105"
+            >
+              <Link href="/register">Register Now</Link>
+            </Button>
+          )}
+        </div>
+      </motion.div> */}
 
       {/* CSS for custom keyframe animations if not in tailwind config */}
       <style jsx global>{`

@@ -137,11 +137,6 @@ jobs:
 
       - name: Trigger Dokploy deployment
         run: |
-          curl -X POST https://vps.finiteloop.club/api/application.deploy \
-          -H 'accept: application/json' \
-          -H 'Content-Type: application/json' \
-          -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-          -d '{
-          "applicationId": "in8UxOnCmW2eU6HKY5Zz2"
-          }'
+          curl https://vps.finiteloop.club/api/v1/deploy?uuid=ugckk0ko8400444w0c4ks4ss&force=false \
+          -H 'Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}'
         continue-on-error: false

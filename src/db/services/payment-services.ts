@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, type SQL } from "drizzle-orm";
 import db from "~/db";
 import { participants, payment, teams } from "~/db/schema";
 import { env } from "~/env";
@@ -260,5 +260,74 @@ export async function webhookCapture(
 
   return {
     success: false,
+  };
+}
+
+export async function getPayments({
+  page = 1,
+  limit = 20,
+  status,
+  search,
+  sortOrder = "desc",
+}: {
+  page?: number;
+  limit?: number;
+  status?: "Pending" | "Paid" | "Refunded";
+  search?: string;
+  sortOrder?: "asc" | "desc";
+}) {
+  const conditions: SQL[] = [];
+
+  if (status) {
+    conditions.push(eq(payment.paymentStatus, status));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const offset = (page - 1) * limit;
+
+  const [totalResult, paymentsResult] = await Promise.all([
+    db.select({ total: count() }).from(payment).where(where),
+    db.query.payment.findMany({
+      where,
+      with: {
+        team: {
+          columns: { id: true, name: true },
+        },
+        user: {
+          columns: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: [
+        sortOrder === "asc" ? asc(payment.createdAt) : desc(payment.createdAt),
+      ],
+      limit,
+      offset,
+    }),
+  ]);
+
+  let filteredPayments = paymentsResult;
+
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredPayments = paymentsResult.filter(
+      (p) =>
+        p.team?.name?.toLowerCase().includes(searchLower) ||
+        p.user?.name?.toLowerCase().includes(searchLower) ||
+        p.user?.email?.toLowerCase().includes(searchLower) ||
+        p.razorpayOrderId?.toLowerCase().includes(searchLower),
+    );
+  }
+
+  const total = totalResult[0]?.total ?? 0;
+
+  return {
+    payments: filteredPayments,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
   };
 }
