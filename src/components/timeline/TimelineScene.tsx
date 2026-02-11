@@ -34,34 +34,60 @@ const DAY_THEMES: Record<number, { parchment: string; border: string; ink: strin
   3: { parchment: '#e3dcd2', border: '#556B2F', ink: '#2A1A0A', wax: '#228822', icon: '💎' },
 };
 
-//Ocean
+//Ocean — enhanced realistic water
 function Ocean() {
   const waterRef = useRef<any>(null);
 
-  const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000), []);
+  const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000, 2, 2), []);
+
+  // Compute a proper sun direction for specular highlights
+  const sunDirection = useMemo(() => {
+    const dir = new THREE.Vector3();
+    const theta = Math.PI * (0.45 - 0.5); // Sun elevation
+    const phi = 2 * Math.PI * (0.205 - 0.5); // Sun azimuth
+    dir.x = Math.cos(phi);
+    dir.y = Math.sin(theta);
+    dir.z = Math.sin(phi);
+    dir.normalize();
+    return dir;
+  }, []);
 
   const water = useMemo(() => {
     const waterInstance = new Water(waterGeometry, {
-      textureWidth: 128,
-      textureHeight: 128,
+      textureWidth: 512,
+      textureHeight: 512,
       waterNormals: new THREE.TextureLoader().load(
         'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/waternormals.jpg',
         (texture) => {
           texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         }
       ),
-      sunDirection: new THREE.Vector3(),
-      sunColor: 0xffffff,
-      waterColor: 0x0a4d8c,
-      distortionScale: 6.0,
-      fog: false,
+      sunDirection: sunDirection,
+      sunColor: 0xfff5e0,      // Warm golden sunlight
+      waterColor: 0x006994,     // Vibrant ocean blue
+      distortionScale: 4.0,     // Moderate distortion for realism
+      fog: true,                // Blend with scene fog
+      alpha: 0.95,              // Slight transparency at edges
     });
+    // Enhance material for realism
+    waterInstance.material.transparent = true;
     return waterInstance;
-  }, [waterGeometry]);
+  }, [waterGeometry, sunDirection]);
 
   useFrame((state, delta) => {
     if (waterRef.current?.material?.uniforms) {
-      waterRef.current.material.uniforms.time.value += delta * 0.4;
+      // Animate water at a natural pace
+      waterRef.current.material.uniforms.time.value += delta * 0.6;
+
+      // Subtle sun direction shift over time for dynamic lighting
+      const elapsed = state.clock.elapsedTime;
+      const dynamicSun = waterRef.current.material.uniforms.sunDirection.value;
+      dynamicSun.x = Math.cos(elapsed * 0.02) * 0.8;
+      dynamicSun.y = 0.45 + Math.sin(elapsed * 0.01) * 0.05;
+      dynamicSun.z = Math.sin(elapsed * 0.02) * 0.8;
+      dynamicSun.normalize();
+
+      // Follow camera for infinite ocean illusion
       waterRef.current.position.x = state.camera.position.x;
       waterRef.current.position.z = state.camera.position.z;
     }
@@ -469,10 +495,11 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
         return;
       }
 
-      // Normal scroll = sail between islands
-      scrollAccumRef.current += event.deltaY;
+      // Normal scroll = sail between islands (capped speed)
+      const clampedDelta = Math.max(-15, Math.min(15, event.deltaY));
+      scrollAccumRef.current += clampedDelta;
 
-      const segmentSize = 250;
+      const segmentSize = 400;
       const segments = totalIslands + 1;
 
       const newTarget = Math.min(
@@ -489,7 +516,7 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
 
-    progressRef.current += (targetProgressRef.current - progressRef.current) * 0.08;
+    progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
     const t = Math.max(0, Math.min(1, progressRef.current));
 
     const point = curve.getPointAt(t);
@@ -536,8 +563,81 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
         scale={[15, 15, 15]}
         rotation={[0, 0, 0]}
       />
+      {/* Boat wake / foam trail */}
+      <WakeEffect />
     </group>
   );
+}
+
+function WakeEffect() {
+  const wakeRef = useRef<THREE.Group>(null);
+  const particlesRef = useRef<{
+    mesh: THREE.Mesh;
+    age: number;
+    maxAge: number;
+  }[]>([]);
+  const spawnTimer = useRef(0);
+
+  // Create reusable wake ring geometry + material
+  const geometry = useMemo(() => new THREE.RingGeometry(0.3, 1.2, 16), []);
+  const material = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }),
+    []
+  );
+
+  useFrame((_, delta) => {
+    if (!wakeRef.current) return;
+
+    spawnTimer.current += delta;
+
+    if (spawnTimer.current > 0.15) {
+      spawnTimer.current = 0;
+
+      const ring = new THREE.Mesh(geometry.clone(), material.clone());
+      ring.position.set(0 + (Math.random() - 0.5) * 0.5, -4.5, 2);
+      ring.rotation.x = -Math.PI / 2;
+      ring.scale.set(1, 1, 1);
+
+      const worldPos = new THREE.Vector3();
+      ring.position.copy(ring.position);
+      wakeRef.current.localToWorld(worldPos.copy(ring.position));
+
+      const scene = wakeRef.current.parent?.parent;
+      if (scene) {
+        ring.position.copy(worldPos);
+        ring.position.y = 0.3;
+        scene.add(ring);
+        particlesRef.current.push({ mesh: ring, age: 0, maxAge: 2.5 });
+      }
+    }
+
+    particlesRef.current = particlesRef.current.filter((p) => {
+      p.age += delta;
+      const life = p.age / p.maxAge;
+
+      if (life >= 1) {
+        p.mesh.parent?.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        (p.mesh.material as THREE.Material).dispose();
+        return false;
+      }
+      
+      const scale = 1 + life * 6;
+      p.mesh.scale.set(scale, scale, scale);
+      (p.mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 * (1 - life);
+
+      return true;
+    });
+  });
+
+  return <group ref={wakeRef} />;
 }
 
 // Main Scene
