@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const TimelineScene = dynamic(() => import('../../components/timeline/TimelineScene'), {
+const TimelineScene = dynamic(() => import('../../components/timeline/components/TimelineScene'), {
   ssr: false,
 });
 
