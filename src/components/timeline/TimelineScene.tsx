@@ -151,7 +151,54 @@ function loadIslandModel(callback: (model: THREE.Group) => void) {
   );
 }
 
-// ─── EventLabel — High-quality Treasure Map UI ──────────────────────────────
+// Final Island Model Loader
+const finalIslandModelCache: { model: THREE.Group | null; loading: boolean; callbacks: ((m: THREE.Group) => void)[] } = {
+  model: null,
+  loading: false,
+  callbacks: [],
+};
+
+function loadFinalIslandModel(callback: (model: THREE.Group) => void) {
+  if (finalIslandModelCache.model) {
+    callback(finalIslandModelCache.model);
+    return;
+  }
+  finalIslandModelCache.callbacks.push(callback);
+  if (finalIslandModelCache.loading) return;
+
+  finalIslandModelCache.loading = true;
+  const loader = new GLTFLoader();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+  dracoLoader.setDecoderConfig({ type: 'js' });
+  loader.setDRACOLoader(dracoLoader);
+
+  loader.load(
+    '/models/Island-Final.glb',
+    (gltf) => {
+      const scene = gltf.scene;
+      scene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) mesh.material = mesh.material[0];
+            const mat = mesh.material as THREE.MeshStandardMaterial;
+            if (mat.map) mat.map.minFilter = THREE.LinearFilter;
+            mat.needsUpdate = true;
+          }
+          if (mesh.geometry) mesh.geometry.computeBoundingSphere();
+        }
+      });
+      finalIslandModelCache.model = scene;
+      finalIslandModelCache.callbacks.forEach((cb) => cb(scene));
+      finalIslandModelCache.callbacks = [];
+      dracoLoader.dispose();
+    },
+    undefined,
+    (error) => console.error('Error loading final island model:', error)
+  );
+}
+
 function EventLabel({
   event,
   isFirstOfDay,
@@ -381,26 +428,62 @@ function Island({
   );
 }
 
-// ─── Island layout — one island per timeline event ───────────────────────────
+function FinalIsland({
+  position,
+  event,
+  isFirstOfDay,
+  onSelect,
+}: {
+  position: [number, number, number];
+  event?: { day: number; title: string; time: string };
+  isFirstOfDay?: boolean;
+  onSelect: (e: any) => void;
+}) {
+  const [model, setModel] = useState<THREE.Group | null>(null);
+
+  useEffect(() => {
+    loadFinalIslandModel((m) => setModel(m));
+  }, []);
+
+  if (!model) return null;
+
+  return (
+    <group position={position}>
+      <primitive
+        object={model.clone()}
+        scale={[90, 90, 90]}
+      />
+      {event && (
+        <EventLabel
+          event={event}
+          isFirstOfDay={!!isFirstOfDay}
+          onSelect={onSelect}
+        />
+      )}
+    </group>
+  );
+}
+
 const ISLAND_POSITIONS: [number, number, number][] = (() => {
   const random = seededRandom(12345);
   const positions: [number, number, number][] = [];
-  const numIslands = events.length; // One island per event
+  const numIslands = events.length;
   const spacing = 130;
 
   for (let i = 0; i < numIslands; i++) {
-    const x = 60 + i * spacing + (random() - 0.5) * 25;
-    const y = 10;
+    const isLast = i === numIslands - 1;
+    const x = 60 + i * spacing + (isLast ? 0 : (random() - 0.5) * 25);
+    const y = isLast ? 25 : 10;
     const side = i % 2 === 0 ? 1 : -1;
-    const z = side * (20 + random() * 25);
+    const z = isLast ? 0 : side * (20 + random() * 25);
     positions.push([x, y, z]);
   }
   return positions;
 })();
 
 function Islands({ onSelect }: { onSelect: (e: any) => void }) {
-  // Track which events are first of their day
   const seenDays = new Set<number>();
+  const lastIndex = ISLAND_POSITIONS.length - 1;
 
   return (
     <>
@@ -408,6 +491,19 @@ function Islands({ onSelect }: { onSelect: (e: any) => void }) {
         const event = events[index];
         const isFirstOfDay = event ? !seenDays.has(event.day) : false;
         if (event) seenDays.add(event.day);
+        const isLast = index === lastIndex;
+
+        if (isLast) {
+          return (
+            <FinalIsland
+              key={index}
+              position={pos}
+              event={event}
+              isFirstOfDay={isFirstOfDay}
+              onSelect={onSelect}
+            />
+          );
+        }
 
         return (
           <Island
@@ -423,7 +519,6 @@ function Islands({ onSelect }: { onSelect: (e: any) => void }) {
   );
 }
 
-// ─── Ship (uses Ship.glb) ────────────────────────────────────────────────────
 function buildShipPath(islandPositions: [number, number, number][]): THREE.CatmullRomCurve3 {
   const waypoints: THREE.Vector3[] = [];
 
@@ -432,12 +527,14 @@ function buildShipPath(islandPositions: [number, number, number][]): THREE.Catmu
 
   for (let i = 0; i < islandPositions.length; i++) {
     const pos = islandPositions[i];
+    const isLast = i === islandPositions.length - 1;
+    if (isLast) {
+      waypoints.push(new THREE.Vector3(pos[0] - 40, 5, pos[2]));
+      break;
+    }
     const zOffset = pos[2] > 0 ? -22 : 22;
     waypoints.push(new THREE.Vector3(pos[0], 5, pos[2] + zOffset));
   }
-
-  const last = islandPositions[islandPositions.length - 1];
-  waypoints.push(new THREE.Vector3(last[0] + 60, 5, 0));
 
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
 }
@@ -449,12 +546,11 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
   const targetProgressRef = useRef(0);
   const { camera } = useThree();
   const scrollAccumRef = useRef(0);
-  const zoomRef = useRef(1); // 1 = default, <1 = zoomed in, >1 = zoomed out
+  const zoomRef = useRef(1);
 
   const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
   const totalIslands = islandPositions.length;
 
-  // Load Ship.glb model
   useEffect(() => {
     const loader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
@@ -489,13 +585,11 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
 
-      // Pinch-to-zoom (trackpad pinch sends ctrlKey + wheel)
       if (event.ctrlKey || event.metaKey) {
         zoomRef.current = Math.max(0.4, Math.min(2.0, zoomRef.current + event.deltaY * 0.005));
         return;
       }
 
-      // Normal scroll = sail between islands (capped speed)
       const clampedDelta = Math.max(-15, Math.min(15, event.deltaY));
       scrollAccumRef.current += clampedDelta;
 
@@ -509,8 +603,63 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
       targetProgressRef.current = newTarget;
     };
 
+    let touchStartY = 0;
+    let touchStartDist = 0;
+
+    const getTouchDist = (touches: TouchList) => {
+      if (touches.length < 2) return 0;
+      const dx = touches[1].clientX - touches[0].clientX;
+      const dy = touches[1].clientY - touches[0].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        touchStartY = event.touches[0].clientY;
+      } else if (event.touches.length === 2) {
+        touchStartDist = getTouchDist(event.touches);
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
+
+      if (event.touches.length === 2) {
+        // Pinch to zoom
+        const dist = getTouchDist(event.touches);
+        const delta = (touchStartDist - dist) * 0.01;
+        zoomRef.current = Math.max(0.4, Math.min(2.0, zoomRef.current + delta));
+        touchStartDist = dist;
+        return;
+      }
+
+      if (event.touches.length === 1) {
+        const currentY = event.touches[0].clientY;
+        const deltaY = touchStartY - currentY;
+        touchStartY = currentY;
+
+        const clampedDelta = Math.max(-15, Math.min(15, deltaY * 2.0));
+        scrollAccumRef.current += clampedDelta;
+
+        const segmentSize = 400;
+        const segments = totalIslands + 1;
+
+        const newTarget = Math.min(
+          1,
+          Math.max(0, scrollAccumRef.current / (segmentSize * segments))
+        );
+        targetProgressRef.current = newTarget;
+      }
+    };
+
     window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
   }, [totalIslands]);
 
   useFrame((state) => {
