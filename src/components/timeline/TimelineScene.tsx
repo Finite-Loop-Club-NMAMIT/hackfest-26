@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, createContext, useContext } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { Water } from 'three/examples/jsm/objects/Water.js';
@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { extend } from '@react-three/fiber';
+import gsap from 'gsap';
 import { events } from '~/constants/timeline';
 import {
   Dialog,
@@ -199,17 +200,33 @@ function loadFinalIslandModel(callback: (model: THREE.Group) => void) {
   );
 }
 
+// Shared ship progress ref
+let globalShipProgress = 0;
+let globalPausedIsland: number | null = null; // Track which island is currently focused
+
 function EventLabel({
   event,
   isFirstOfDay,
   onSelect,
+  islandIndex,
+  totalIslands,
 }: {
   event: { day: number; title: string; time: string };
   isFirstOfDay: boolean;
   onSelect: (e: any) => void;
+  islandIndex: number;
+  totalIslands: number;
 }) {
   const theme = DAY_THEMES[event.day] || DAY_THEMES[1];
   const displayTitle = event.title.replace(/\\n/g, '\n').replace(/\n/g, ' ');
+  const [isNearShip, setIsNearShip] = useState(false);
+  
+  // Check if THIS island is currently in focus
+  useFrame(() => {
+    // The island glows only when it's the focused island
+    const isFocused = globalPausedIsland === islandIndex;
+    setIsNearShip(isFocused);
+  });
 
   return (
     <Html
@@ -236,6 +253,7 @@ function EventLabel({
           cursor: 'pointer',
           pointerEvents: 'auto',
           transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          animation: isNearShip ? 'noteGlow 2s ease-in-out infinite' : 'none',
         }}
         className="hover:scale-110 active:scale-95"
       >
@@ -397,11 +415,13 @@ function Island({
   event,
   isFirstOfDay,
   onSelect,
+  islandIndex,
 }: {
   position: [number, number, number];
   event?: { day: number; title: string; time: string };
   isFirstOfDay?: boolean;
   onSelect: (e: any) => void;
+  islandIndex: number;
 }) {
   const [model, setModel] = useState<THREE.Group | null>(null);
 
@@ -422,6 +442,8 @@ function Island({
           event={event}
           isFirstOfDay={!!isFirstOfDay}
           onSelect={onSelect}
+          islandIndex={islandIndex}
+          totalIslands={ISLAND_POSITIONS.length}
         />
       )}
     </group>
@@ -433,11 +455,13 @@ function FinalIsland({
   event,
   isFirstOfDay,
   onSelect,
+  islandIndex,
 }: {
   position: [number, number, number];
   event?: { day: number; title: string; time: string };
   isFirstOfDay?: boolean;
   onSelect: (e: any) => void;
+  islandIndex: number;
 }) {
   const [model, setModel] = useState<THREE.Group | null>(null);
 
@@ -458,6 +482,8 @@ function FinalIsland({
           event={event}
           isFirstOfDay={!!isFirstOfDay}
           onSelect={onSelect}
+          islandIndex={islandIndex}
+          totalIslands={ISLAND_POSITIONS.length}
         />
       )}
     </group>
@@ -468,14 +494,34 @@ const ISLAND_POSITIONS: [number, number, number][] = (() => {
   const random = seededRandom(12345);
   const positions: [number, number, number][] = [];
   const numIslands = events.length;
-  const spacing = 130;
+  const spacing = 180; // Increased from 130 for more distance between islands
 
   for (let i = 0; i < numIslands; i++) {
     const isLast = i === numIslands - 1;
-    const x = 60 + i * spacing + (isLast ? 0 : (random() - 0.5) * 25);
+    
+    // Create Candy Crush style winding pattern
+    // Islands alternate: left -> center -> right -> center -> left (like the image)
+    const baseX = 60 + i * spacing;
+    
+    // Determine which "lane" this island is in (left, center, or right)
+    const cycle = i % 6; // 6-island cycle for smooth winding
+    let laneZ = 0;
+    
+    if (cycle === 0 || cycle === 1) {
+      laneZ = -60; // Left lane
+    } else if (cycle === 2 || cycle === 3) {
+      laneZ = 0; // Center lane
+    } else {
+      laneZ = 60; // Right lane
+    }
+    
+    // Add some randomness within the lane
+    const randomOffset = (random() - 0.5) * 20;
+    
+    const x = baseX;
     const y = isLast ? 25 : 10;
-    const side = i % 2 === 0 ? 1 : -1;
-    const z = isLast ? 0 : side * (20 + random() * 25);
+    const z = laneZ + randomOffset;
+    
     positions.push([x, y, z]);
   }
   return positions;
@@ -501,6 +547,7 @@ function Islands({ onSelect }: { onSelect: (e: any) => void }) {
               event={event}
               isFirstOfDay={isFirstOfDay}
               onSelect={onSelect}
+              islandIndex={index}
             />
           );
         }
@@ -512,6 +559,7 @@ function Islands({ onSelect }: { onSelect: (e: any) => void }) {
             event={event}
             isFirstOfDay={isFirstOfDay}
             onSelect={onSelect}
+            islandIndex={index}
           />
         );
       })}
@@ -522,18 +570,37 @@ function Islands({ onSelect }: { onSelect: (e: any) => void }) {
 function buildShipPath(islandPositions: [number, number, number][]): THREE.CatmullRomCurve3 {
   const waypoints: THREE.Vector3[] = [];
 
+  // Start point before first island
   const first = islandPositions[0];
-  waypoints.push(new THREE.Vector3(first[0] - 60, 5, 0));
+  waypoints.push(new THREE.Vector3(first[0] - 80, 5, first[2]));
 
+  // Create smooth winding path that passes near each island
   for (let i = 0; i < islandPositions.length; i++) {
-    const pos = islandPositions[i];
+    const island = islandPositions[i];
     const isLast = i === islandPositions.length - 1;
-    if (isLast) {
-      waypoints.push(new THREE.Vector3(pos[0] - 40, 5, pos[2]));
-      break;
+    
+    // Ship approaches island from the side (offset perpendicular to travel direction)
+    // Island is positioned to the LEFT of the path
+    const approachX = island[0] - 12; // Before island
+    const approachZ = island[2] + 25; // Ship passes close on the RIGHT side (25 units offset)
+    
+    waypoints.push(new THREE.Vector3(approachX, 5, approachZ));
+    
+    if (!isLast) {
+      // Add waypoint passing by the island
+      const passX = island[0] + 12; // After island
+      const passZ = island[2] + 25; // Maintain 25-unit offset
+      waypoints.push(new THREE.Vector3(passX, 5, passZ));
+      
+      // Add intermediate waypoint between this island and next for smooth curve
+      const nextIsland = islandPositions[i + 1];
+      const midX = (island[0] + nextIsland[0]) / 2;
+      const midZ = (island[2] + nextIsland[2]) / 2 + 25; // Keep 25-unit offset
+      waypoints.push(new THREE.Vector3(midX, 5, midZ));
+    } else {
+      // Final island - add ending waypoint
+      waypoints.push(new THREE.Vector3(island[0] + 30, 5, island[2] + 25));
     }
-    const zOffset = pos[2] > 0 ? -22 : 22;
-    waypoints.push(new THREE.Vector3(pos[0], 5, pos[2] + zOffset));
   }
 
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
@@ -546,7 +613,25 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
   const targetProgressRef = useRef(0);
   const { camera } = useThree();
   const scrollAccumRef = useRef(0);
-  const zoomRef = useRef(1);
+  const zoomRef = useRef(0.3); // Start zoomed in
+  const hasScrolledRef = useRef(false);
+  const zoomOutProgressRef = useRef(0);
+  const autoZoomRef = useRef(1.0); // Auto-zoom when near islands
+  
+  // Island pause states
+  const [pausedAtIsland, setPausedAtIsland] = useState<number | null>(null);
+  const scrollAccumAtIsland = useRef(0);
+  const SCROLL_THRESHOLD_TO_CONTINUE = 100; // Reduced scroll amount needed to continue from island
+  
+  // U-turn states
+  const lastScrollDelta = useRef(0);
+  const isReversingRef = useRef(false);
+  const uTurnProgressRef = useRef(0);
+  const uTurnRotationRef = useRef(0);
+  
+  // Camera lookAt smoothing and focus blend
+  const cameraLookAtTarget = useRef(new THREE.Vector3(0, 0, 0));
+  const focusBlendRef = useRef(0); // 0 = route view, 1 = island focus
 
   const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
   const totalIslands = islandPositions.length;
@@ -572,6 +657,14 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
             }
           }
         });
+        
+        // Set initial rotation to face forward along the path
+        if (curve) {
+          const initialTangent = curve.getTangentAt(0);
+          const initialAngle = Math.atan2(initialTangent.x, initialTangent.z) - Math.PI / 2;
+          scene.rotation.y = initialAngle;
+        }
+        
         setShipModel(scene);
         dracoLoader.dispose();
       },
@@ -590,8 +683,35 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
         return;
       }
 
-      const clampedDelta = Math.max(-15, Math.min(15, event.deltaY));
-      scrollAccumRef.current += clampedDelta;
+      const clampedDelta = Math.max(-8, Math.min(8, event.deltaY)); // Further reduced for even higher sensitivity
+      
+      // Detect direction change for U-turn
+      // Positive deltaY = scroll down = forward, Negative deltaY = scroll up = backward
+      const isScrollingForward = clampedDelta > 0;
+      const wasScrollingForward = lastScrollDelta.current > 0;
+      
+      if (lastScrollDelta.current !== 0 && isScrollingForward !== wasScrollingForward) {
+        // Direction changed - trigger U-turn
+        uTurnProgressRef.current = 0;
+        isReversingRef.current = !isScrollingForward; // Reversing when scrolling up (backward)
+      }
+      lastScrollDelta.current = clampedDelta;
+
+      // If paused at island, accumulate scroll to continue
+      if (pausedAtIsland !== null) {
+        scrollAccumAtIsland.current += Math.abs(clampedDelta);
+        if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
+          // Resume movement
+          setPausedAtIsland(null);
+          scrollAccumAtIsland.current = 0;
+        }
+        return; // Don't move ship while paused
+      }
+
+      scrollAccumRef.current += clampedDelta * 1.5; // Increased multiplier for more travel per scroll
+      
+      // Prevent negative scroll accumulation at start
+      scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
 
       const segmentSize = 400;
       const segments = totalIslands + 1;
@@ -601,6 +721,11 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
         Math.max(0, scrollAccumRef.current / (segmentSize * segments))
       );
       targetProgressRef.current = newTarget;
+      
+      // On first scroll, trigger zoom out animation
+      if (!hasScrolledRef.current) {
+        hasScrolledRef.current = true;
+      }
     };
 
     let touchStartY = 0;
@@ -640,6 +765,9 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
 
         const clampedDelta = Math.max(-15, Math.min(15, deltaY * 2.0));
         scrollAccumRef.current += clampedDelta;
+        
+        // Prevent negative scroll accumulation at start
+        scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
 
         const segmentSize = 400;
         const segments = totalIslands + 1;
@@ -662,8 +790,15 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
     };
   }, [totalIslands]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const elapsed = state.clock.elapsedTime;
+    
+    // Handle U-turn animation
+    if (uTurnProgressRef.current < 1.0) {
+      uTurnProgressRef.current = Math.min(1.0, uTurnProgressRef.current + delta * 2); // 0.5 second turn
+      const turnEase = 1 - Math.pow(1 - uTurnProgressRef.current, 3); // Ease out cubic
+      uTurnRotationRef.current = turnEase * Math.PI; // 180 degree turn
+    }
 
     progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
     const t = Math.max(0, Math.min(1, progressRef.current));
@@ -675,32 +810,205 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
       shipRef.current.position.set(point.x, point.y, point.z);
       shipRef.current.position.y += Math.sin(elapsed * 1.5) * 0.4;
 
-      // Ship heading — atan2 gives angle, subtract PI/2 to align bow with travel direction
-      const angle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
+      // Ship heading with U-turn rotation
+      let baseAngle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
+      
+      // If reversing, face the opposite direction
+      if (isReversingRef.current) {
+        baseAngle += Math.PI;
+      }
+      
+      // Only apply U-turn rotation during the actual turn animation
+      if (uTurnProgressRef.current < 1.0) {
+        baseAngle += uTurnRotationRef.current; // Add U-turn rotation only while turning
+      }
+      
       const currentY = shipRef.current.rotation.y;
-      let diff = angle - currentY;
+      let diff = baseAngle - currentY;
       if (diff > Math.PI) diff -= Math.PI * 2;
       if (diff < -Math.PI) diff += Math.PI * 2;
-      shipRef.current.rotation.y += diff * 0.15; // Snappier rotation
+      shipRef.current.rotation.y += diff * 0.15;
       shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03;
+    }
+    
+    // Check if ship has reached an island and should pause
+    if (pausedAtIsland === null) {
+      for (let i = 0; i < islandPositions.length; i++) {
+        const island = islandPositions[i];
+        const distToIsland = Math.sqrt(
+          Math.pow(point.x - island[0], 2) +
+          Math.pow(point.z - island[2], 2)
+        );
+        
+        // If very close to island, pause here
+        if (distToIsland < 35) {
+          setPausedAtIsland(i);
+          globalPausedIsland = i; // Update global for glow effect
+          scrollAccumAtIsland.current = 0;
+          break;
+        }
+      }
+    } else {
+      // Check if ship has moved away from paused island (allow exit)
+      const pausedIsland = islandPositions[pausedAtIsland];
+      const distToPausedIsland = Math.sqrt(
+        Math.pow(point.x - pausedIsland[0], 2) +
+        Math.pow(point.z - pausedIsland[2], 2)
+      );
+      
+      // If ship is far enough from island, clear pause immediately
+      // The blend factor will still smoothly transition the camera back
+      if (distToPausedIsland > 40) {
+        setPausedAtIsland(null);
+        globalPausedIsland = null;
+      }
     }
 
     // Camera follows ship — zoom factor modifies height and distance
-    const zoom = zoomRef.current;
+    // Check if ship is near any island and auto-zoom
+    let nearestIslandDist = Infinity;
+    islandPositions.forEach((islandPos) => {
+      const dist = Math.sqrt(
+        Math.pow(point.x - islandPos[0], 2) +
+        Math.pow(point.z - islandPos[2], 2)
+      );
+      if (dist < nearestIslandDist) {
+        nearestIslandDist = dist;
+      }
+    });
+    
+    // Dynamic zoom based on distance to nearest island
+    // Closer = more zoom, farther = less zoom
+    let targetAutoZoom = 1.0;
+    let nearestIslandPos = null;
+    
+    islandPositions.forEach((islandPos) => {
+      const dist = Math.sqrt(
+        Math.pow(point.x - islandPos[0], 2) +
+        Math.pow(point.z - islandPos[2], 2)
+      );
+      if (dist < nearestIslandDist) {
+        nearestIslandDist = dist;
+        nearestIslandPos = islandPos;
+      }
+    });
+    
+    if (nearestIslandDist < 40) {
+      targetAutoZoom = 0.65; // Very close - zoom in a lot
+    } else if (nearestIslandDist < 70) {
+      targetAutoZoom = 0.75; // Medium distance - zoom in moderately
+    } else if (nearestIslandDist < 100) {
+      targetAutoZoom = 0.9; // Far - slight zoom
+    } else {
+      targetAutoZoom = 1.1; // Very far (moving between islands) - zoom out more
+    }
+    autoZoomRef.current += (targetAutoZoom - autoZoomRef.current) * 0.05;
+    
+    // Update global ship progress for EventLabel components
+    globalShipProgress = t;
+    
+    const zoom = zoomRef.current * autoZoomRef.current;
     const camHeight = 45 * zoom;
     const camDistance = 65 * zoom;
 
-    const cameraTarget = new THREE.Vector3(
-      point.x + tangent.x * 15,
-      5,
-      point.z + tangent.z * 10
-    );
-
-    camera.position.x += (point.x - tangent.x * 30 - camera.position.x) * 0.06;
-    camera.position.y += (camHeight - camera.position.y) * 0.06;
-    camera.position.z += (point.z + camDistance - camera.position.z) * 0.06;
-
-    camera.lookAt(cameraTarget);
+    // Camera behavior with GSAP-based smooth blending
+    if (pausedAtIsland !== null && pausedAtIsland < islandPositions.length) {
+      // Blend towards island focus using GSAP
+      gsap.to(focusBlendRef, {
+        current: 1,
+        duration: 0.8,
+        ease: 'power2.out',
+        overwrite: true
+      });
+    } else {
+      // Blend back to route view using GSAP
+      gsap.to(focusBlendRef, {
+        current: 0,
+        duration: 0.8,
+        ease: 'power2.inOut',
+        overwrite: true
+      });
+    }
+    
+    // Calculate route camera position (normal following)
+    const routeCamX = point.x - tangent.x * 30;
+    const routeCamY = camHeight;
+    const routeCamZ = point.z + camDistance;
+    
+    // Calculate route lookAt target
+    let routeLookAt;
+    if (progressRef.current < 0.05) {
+      routeLookAt = new THREE.Vector3(
+        point.x + tangent.x * 15,
+        5,
+        point.z + tangent.z * 10
+      );
+    } else if (nearestIslandDist < 60 && nearestIslandPos) {
+      routeLookAt = new THREE.Vector3(
+        nearestIslandPos[0],
+        nearestIslandPos[1] + 5,
+        nearestIslandPos[2]
+      );
+    } else {
+      routeLookAt = new THREE.Vector3(
+        point.x + tangent.x * 15,
+        5,
+        point.z + tangent.z * 10
+      );
+    }
+    
+    // Calculate island focus camera position and lookAt
+    let islandCamX = routeCamX;
+    let islandCamY = routeCamY;
+    let islandCamZ = routeCamZ;
+    let islandLookAt = routeLookAt;
+    
+    if (pausedAtIsland !== null && pausedAtIsland < islandPositions.length) {
+      const island = islandPositions[pausedAtIsland];
+      islandCamX = island[0] - 40;
+      islandCamY = 45;
+      islandCamZ = island[2] + 40;
+      islandLookAt = new THREE.Vector3(island[0], island[1], island[2]);
+    }
+    
+    // Blend between route and island camera
+    const blend = focusBlendRef.current;
+    const targetCamX = routeCamX + (islandCamX - routeCamX) * blend;
+    const targetCamY = routeCamY + (islandCamY - routeCamY) * blend;
+    const targetCamZ = routeCamZ + (islandCamZ - routeCamZ) * blend;
+    
+    const targetLookX = routeLookAt.x + (islandLookAt.x - routeLookAt.x) * blend;
+    const targetLookY = routeLookAt.y + (islandLookAt.y - routeLookAt.y) * blend;
+    const targetLookZ = routeLookAt.z + (islandLookAt.z - routeLookAt.z) * blend;
+    
+    // Smooth camera movement with GSAP
+    gsap.to(camera.position, {
+      x: targetCamX,
+      y: targetCamY,
+      z: targetCamZ,
+      duration: 0.6,
+      ease: 'power1.out',
+      overwrite: true
+    });
+    
+    // Smooth lookAt with GSAP
+    gsap.to(cameraLookAtTarget.current, {
+      x: targetLookX,
+      y: targetLookY,
+      z: targetLookZ,
+      duration: 0.6,
+      ease: 'power1.out',
+      overwrite: true,
+      onUpdate: () => {
+        camera.lookAt(cameraLookAtTarget.current);
+      }
+    });
+    
+    // Smooth zoom out on first scroll
+    if (hasScrolledRef.current && zoomRef.current < 1.0) {
+      zoomOutProgressRef.current += 0.015;
+      zoomRef.current = 0.3 + (0.7 * Math.min(1, zoomOutProgressRef.current));
+    }
   });
 
   if (!shipModel) return null;
@@ -795,6 +1103,16 @@ export default function TimelineScene() {
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      <style>{`
+        @keyframes noteGlow {
+          0%, 100% {
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+          }
+          50% {
+            filter: drop-shadow(0 8px 24px rgba(255,215,0,0.8)) drop-shadow(0 0 12px rgba(255,215,0,0.6));
+          }
+        }
+      `}</style>
       <Canvas
         camera={{ fov: 55, near: 1, far: 3000 }}
         gl={{
