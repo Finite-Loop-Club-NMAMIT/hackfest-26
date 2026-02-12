@@ -3,7 +3,7 @@
 import { Html } from '@react-three/drei';
 import { Canvas, extend, useFrame, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -626,7 +626,78 @@ function buildShipPath(islandPositions: [number, number, number][]): THREE.Catmu
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
 }
 
-function Ship({ islandPositions }: { islandPositions: [number, number, number][] }) {
+function PathVisualizer({
+  islandPositions,
+  progressRef,
+}: {
+  islandPositions: [number, number, number][];
+  progressRef: React.MutableRefObject<number>;
+}) {
+  const bgLineRef = useRef<THREE.Line>(null);
+  const fgLineRef = useRef<THREE.Line>(null);
+  const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
+
+  const points = useMemo(() => {
+    const pts = curve.getPoints(2000);
+    return pts.map((p) => new THREE.Vector3(p.x, 5.2, p.z));
+  }, [curve]);
+
+  const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
+
+  const fgGeometry = useMemo(() => geometry.clone(), [geometry]);
+
+  // Compute dashing
+  useLayoutEffect(() => {
+    bgLineRef.current?.computeLineDistances();
+    fgLineRef.current?.computeLineDistances();
+  }, [geometry, fgGeometry]);
+
+  useFrame(() => {
+    if (fgLineRef.current) {
+      const t = Math.max(0, Math.min(1, progressRef.current));
+      const totalPoints = points.length;
+      const visiblePoints = Math.floor(t * totalPoints);
+      fgGeometry.setDrawRange(0, visiblePoints);
+    }
+  });
+
+  return (
+    <group>
+      {/* @ts-ignore */}
+      <line ref={bgLineRef} geometry={geometry}>
+        <lineDashedMaterial
+          color="white"
+          dashSize={4}
+          gapSize={3}
+          opacity={0.2}
+          transparent
+          depthWrite={false}
+        />
+      </line>
+
+      {/* @ts-ignore */}
+      <line ref={fgLineRef} geometry={fgGeometry}>
+        <lineDashedMaterial
+          color="#4deeea"
+          dashSize={4}
+          gapSize={3}
+          opacity={1}
+          transparent
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </line>
+    </group>
+  );
+}
+
+function Ship({
+  islandPositions,
+  sharedProgressRef,
+}: {
+  islandPositions: [number, number, number][];
+  sharedProgressRef?: React.MutableRefObject<number>;
+}) {
   const shipRef = useRef<THREE.Group>(null);
   const [shipModel, setShipModel] = useState<THREE.Group | null>(null);
   const progressRef = useRef(0);
@@ -820,6 +891,11 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
 
     progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
     const t = Math.max(0, Math.min(1, progressRef.current));
+
+    // Sync to shared ref for the PathVisualizer
+    if (sharedProgressRef) {
+      sharedProgressRef.current = t;
+    }
 
     const point = curve.getPointAt(t);
     const tangent = curve.getTangentAt(t);
@@ -1155,6 +1231,8 @@ function WakeEffect() {
 export default function TimelineScene() {
   const [selectedEvent, setSelectedEvent] = useState<{ day: number; title: string; time: string } | null>(null);
   const isMobile = useIsMobile();
+  // Shared ref to track ship progress for the glowing path
+  const shipProgressRef = useRef(0);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -1193,7 +1271,8 @@ export default function TimelineScene() {
 
         <Ocean />
         <Islands onSelect={setSelectedEvent} />
-        <Ship islandPositions={ISLAND_POSITIONS} />
+        <PathVisualizer islandPositions={ISLAND_POSITIONS} progressRef={shipProgressRef} />
+        <Ship islandPositions={ISLAND_POSITIONS} sharedProgressRef={shipProgressRef} />
       </Canvas>
 
       {/* Event Details Modal */}
