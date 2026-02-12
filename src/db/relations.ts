@@ -158,9 +158,9 @@ export const eventTeamRelations = relations(eventTeams, ({ many, one }) => ({
     fields: [eventTeams.eventId],
     references: [events.id],
   }),
-  leader: one(participants, {
+  leader: one(eventParticipants, {
     fields: [eventTeams.leaderId],
-    references: [participants.id],
+    references: [eventParticipants.id],
   }),
   members: many(eventParticipants),
 }));
