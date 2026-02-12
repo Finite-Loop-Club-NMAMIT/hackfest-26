@@ -1,10 +1,9 @@
 'use client';
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Water } from 'three/examples/jsm/objects/Water.js';
+import { Canvas, extend, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useRef, useMemo, useEffect } from 'react';
-import { extend } from '@react-three/fiber';
+import { Water } from 'three/examples/jsm/objects/Water.js';
 
 extend({ Water });
 
