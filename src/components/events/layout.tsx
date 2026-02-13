@@ -34,24 +34,11 @@ type Event = {
 };
 
 const Events = ({ session }: { session: Session | null }) => {
-  const isLoggedIn = !!session?.eventUser?.email;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>();
   const [drawerDirection, setDrawerDirection] = useState<"right" | "bottom">(
     "right",
   );
-  const [loading, setLoading] = useState({
-    events: true,
-    checkingRegistration: false,
-    register: false,
-    createTeam: false,
-    confirmTeam: false,
-    deleteTeam: false,
-    leaveTeam: false,
-    joinTeam: false,
-    removeMember: false,
-    checkAvailable: false,
-  });
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
@@ -87,16 +74,6 @@ const Events = ({ session }: { session: Session | null }) => {
 
     fetchEvents();
   }, []);
-
-  useEffect(() => {
-    if (!loading.register) return;
-
-    if (isLoggedIn) {
-      //
-    } else {
-      redirect("/api/auth/event/signin");
-    }
-  }, [loading.register, isLoggedIn]);
 
   const getTeamSize = (minSize: number, maxSize: number) => {
     if (minSize === maxSize) {
@@ -335,22 +312,20 @@ const Events = ({ session }: { session: Session | null }) => {
                   {event.title}
                 </div>
                 <div className="flex flex-col w-full gap-2 text-white px-1 py-3 justify-center items-start md:w-full h-[9rem]">
-                  {getEventAttributes(event).map((attr) =>
-                    attr.name ? (
-                      <div
-                        className="w-full flex items-center border border-[#f4d35e]/20 gap-2 text-left bg-[#1c4966]/30 p-1 rounded-xl backdrop-blur-sm px-2"
-                        key={attr.name}
+                  {getEventAttributes(event).map((attr) => (
+                    <div
+                      className="w-full flex items-center border border-[#f4d35e]/20 gap-2 text-left bg-[#1c4966]/30 p-1 rounded-xl backdrop-blur-sm px-2"
+                      key={attr.name}
+                    >
+                      <attr.Icon />
+                      <span
+                        suppressHydrationWarning
+                        className="text-sm truncate"
                       >
-                        <attr.Icon />
-                        <span
-                          suppressHydrationWarning
-                          className="text-sm truncate"
-                        >
-                          {attr.text}
-                        </span>
-                      </div>
-                    ) : null,
-                  )}
+                        {attr.text}
+                      </span>
+                    </div>
+                  ))}
                 </div>
                 <div className="w-full mt-2">
                   <Button
@@ -366,7 +341,7 @@ const Events = ({ session }: { session: Session | null }) => {
           </div>
         ) : (
           <div className="flex justify-center items-center">
-            <div className="w-full max-w-md flex flex-col bg-black/30 p-10 rounded-xl gap-5 justify-center items-center text-center text-white text-xl border border-primary-200/80">
+            <div className="w-full max-w-md flex flex-col p-10 rounded-xl gap-5 justify-center items-center text-center text-white text-xl">
               <TriangleAlert size={50} />
               No events found
             </div>
