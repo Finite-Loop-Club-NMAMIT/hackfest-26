@@ -8,7 +8,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { paymentStatusEnum } from "../enum";
-import { participants } from "./participant";
+import { eventUsers } from "./event-auth";
 
 export const events = pgTable(
   "event",
@@ -40,7 +40,7 @@ export const eventParticipants = pgTable("event_participant", {
     .$defaultFn(() => crypto.randomUUID()),
   participantId: text("participant_id")
     .notNull()
-    .references((): PgColumn => participants.id),
+    .references((): PgColumn => eventUsers.id),
   teamId: text("team_id")
     .notNull()
     .references(() => eventTeams.id),
@@ -56,7 +56,7 @@ export const eventTeams = pgTable("event_teams", {
   paymentStatus: paymentStatusEnum("payment_status").default("Pending"),
   leaderId: text("leader_id")
     .notNull()
-    .references((): PgColumn => participants.id),
+    .references((): PgColumn => eventUsers.id),
   eventId: text("event_id")
     .notNull()
     .references(() => events.id),
