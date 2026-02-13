@@ -107,7 +107,6 @@ export default async function TeamDetailsPage({
             </Card>
           );
 
-        // --- STATUS: PAYMENT PENDING (Yellow Glass) ---
         case "PAYMENT_PENDING":
           return (
             <Card className="border-yellow-500/30 bg-yellow-900/30 backdrop-blur-md shadow-lg">
@@ -149,7 +148,6 @@ export default async function TeamDetailsPage({
             </Card>
           );
 
-        // --- STATUS: PAID (Green Glass) ---
         case "PAYMENT_PAID":
           return (
             <Card className="border-green-500/30 bg-green-900/30 backdrop-blur-md shadow-lg">
@@ -170,7 +168,6 @@ export default async function TeamDetailsPage({
             </Card>
           );
 
-        // --- STATUS: PAYMENT NOT OPEN (Blue Glass) ---
         case "PAYMENT_NOT_OPEN":
           return (
             <Card className="border-blue-500/30 bg-blue-900/30 backdrop-blur-md shadow-lg">
@@ -191,7 +188,6 @@ export default async function TeamDetailsPage({
             </Card>
           );
 
-        // --- STATUS: MISSED SUBMISSION (Orange Glass) ---
         case "IDEA_NOT_SUBMITTED":
           return (
             <Card className="border-orange-500/30 bg-orange-900/30 backdrop-blur-md shadow-lg">
@@ -214,7 +210,6 @@ export default async function TeamDetailsPage({
       }
     }
 
-    // --- AWAITING RESULTS / SUBMISSION MISSED (Intermediate) ---
     if (!resultsOut && !registrationsOpen && team.isCompleted) {
       if (teamStatus === "IDEA_SUBMITTED") {
         return (
@@ -258,7 +253,6 @@ export default async function TeamDetailsPage({
       }
     }
 
-    // --- TEAM ACTIONS (Main Glass Card) ---
     if (!resultsOut && registrationsOpen) {
       return (
         <Card className="border-white/30 bg-black/20 backdrop-blur-xl shadow-2xl">
@@ -275,8 +269,6 @@ export default async function TeamDetailsPage({
                     leave the team.
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {/* Assuming these components have their own buttons. 
-                        Ideally, they should be styled to match, but we wrap them here. */}
                     <div className="[&_button]:w-full [&_button]:bg-white [&_button]:text-[#10569c] [&_button]:font-bold [&_button]:hover:bg-white/90">
                       <ConfirmTeamButton teamId={team.id} />
                     </div>
@@ -309,7 +301,6 @@ export default async function TeamDetailsPage({
 
                 {teamStatus === "IDEA_SUBMITTED" && submission ? (
                   <div className="text-white">
-                    {/* Pass white styling down if possible, or wrap */}
                     <TeamSubmissionForm
                       teamId={team.id}
                       submission={submission}
@@ -340,7 +331,6 @@ export default async function TeamDetailsPage({
       );
     }
 
-    // --- CLOSED STATUS ---
     if (!team.isCompleted && !registrationsOpen && resultsOut) {
       return (
         <Card className="border-white/20 bg-black/20 backdrop-blur-xl">
@@ -391,43 +381,69 @@ export default async function TeamDetailsPage({
 
   return (
     // MAIN CONTAINER: Sky Gradient
-    <div className="relative flex min-h-screen flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-gradient-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb] text-white">
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-6 py-12 md:p-12 overflow-hidden bg-gradient-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb] text-white">
       {/* --- DECORATIVE LAYERS (The Beach) --- */}
-      <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
-      <div className="absolute -bottom-[12%] left-[-10%] w-[120%] h-[30vh] bg-[#fbf6db] rounded-[50%] shadow-[0_-10px_50px_rgba(240,230,180,0.8)] z-0 pointer-events-none" />
+      <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[25vh] md:h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
+      <div className="absolute -bottom-[12%] left-[-10%] w-[120%] h-[20vh] md:h-[30vh] bg-[#fbf6db] rounded-[50%] shadow-[0_-10px_50px_rgba(240,230,180,0.8)] z-0 pointer-events-none" />
 
       {/* --- CONTENT --- */}
-      <div className="relative z-10 w-full max-w-3xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* HEADER */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
+      <div className="relative z-10 w-full max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-4 w-full">
+          {/* LEFT SIDE (Desktop) / TOP ROW (Mobile) */}
+          <div className="flex w-full md:w-auto items-center justify-between md:justify-start gap-4 min-w-0">
+            {/* 1. Home Button */}
             <Button
               asChild
               size="icon"
-              className="bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm backdrop-blur-sm"
+              className="bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm backdrop-blur-sm shrink-0 rounded-xl"
             >
               <Link href="/">
-                <Home className="h-4 w-4" />
+                <Home className="h-5 w-5" />
               </Link>
             </Button>
-            <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <h1 className="text-3xl font-bold drop-shadow-sm">{team.name}</h1>
+
+            {/* 2. DESKTOP ONLY: Title & ID */}
+            <div className="hidden md:flex items-center gap-4 min-w-0">
+              {/* Title: Allows wrapping for long names */}
+              <h1 className="text-3xl font-bold drop-shadow-sm leading-tight break-words max-w-[500px]">
+                {team.name}
+              </h1>
+
+              {/* ID: Sits 'Left Beside' the name (to the right of name, but grouped left) */}
               {user.isLeader && (
-                // Wrapper to style the Team ID display if it accepts className,
-                // otherwise it sits in a glass container.
-                <div className="px-3 py-1 rounded-full">
+                <div className="shrink-0">
                   <TeamIdDisplay teamId={team.id} />
                 </div>
               )}
             </div>
+
+            {/* 3. MOBILE ONLY: Sign Out */}
+            <div className="md:hidden shrink-0 [&_button]:bg-white/10 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/20 [&_button]:backdrop-blur-sm [&_button]:rounded-xl">
+              <SignOut variant="outline" />
+            </div>
           </div>
-          {/* Sign Out Button Wrapper */}
-          <div className="[&_button]:bg-white/10 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/20 [&_button]:backdrop-blur-sm">
+
+          {/* CENTER CONTENT (MOBILE ONLY) - Title & ID */}
+          <div className="md:hidden flex flex-col items-center space-y-4 px-4 w-full">
+            <h1 className="text-3xl font-bold drop-shadow-sm text-center break-words leading-tight">
+              {team.name}
+            </h1>
+            {user.isLeader && (
+              <div className="flex justify-center">
+                <TeamIdDisplay teamId={team.id} />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT SIDE (DESKTOP ONLY) - Sign Out */}
+          <div className="hidden md:block shrink-0 [&_button]:bg-white/10 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/20 [&_button]:backdrop-blur-sm [&_button]:rounded-xl">
             <SignOut variant="outline" />
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* GRID: Details & Members */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
           {/* DETAILS CARD */}
           <Card className="border-white/30 bg-black/20 backdrop-blur-xl shadow-xl">
             <CardHeader className="pb-3">

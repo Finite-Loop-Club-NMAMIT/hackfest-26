@@ -8,13 +8,16 @@ import { Button } from "~/components/ui/button";
 export function TeamIdDisplay({ teamId }: { teamId: string }) {
   const [copied, setCopied] = useState(false);
 
+  // Helper to shorten the ID (e.g., "5ff1bb00...2304aa0d")
+  const shortenedId = `${teamId.slice(0, 8)}...${teamId.slice(-8)}`;
+
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(teamId);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Team ID copied to clipboard");
-    } catch (_error) {
+    } catch (error) {
       toast.error("Failed to copy", {
         description: "Please try copying manually.",
       });
@@ -22,42 +25,31 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
   }
 
   return (
-    // Changed bg-zinc-900/90 -> bg-black/40 for that "Smoked Glass" look
-    <div className="bg-transparent border border-white/20 rounded-lg p-5 shadow-2xl backdrop-blur-xl max-w-md transition-all hover:bg-black/10">
-      <p className="text-xs text-white/70 mb-1.5 font-medium">
-        Team ID (share this to invite members):
-      </p>
+    <div className="bg-black/40 border border-white/20 rounded-lg p-3 shadow-2xl backdrop-blur-xl transition-all hover:bg-black/50 flex flex-col items-start gap-2 min-w-[280px]">
+      <div className="flex items-center justify-between w-full gap-3">
+        <div className="flex flex-col">
+          <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
+            Team ID
+          </p>
+          <code className="text-sm font-mono font-bold text-white tracking-wide">
+            {shortenedId}
+          </code>
+        </div>
 
-      <div className="flex items-center gap-3">
-        {/* ID: Monospace, Bold, White */}
-        <code className="text-sm md:text-base font-mono font-bold text-white tracking-wide flex-1 truncate drop-shadow-sm">
-          {teamId}
-        </code>
-
-        {/* Copy Button: Glassy Outline */}
         <Button
           onClick={copyToClipboard}
           size="sm"
-          variant="outline"
+          variant="ghost"
           className="
-            h-8 px-3 shrink-0
-            bg-white/10 hover:bg-white/20
-            border-white/20 hover:border-white/40
-            text-white 
-            backdrop-blur-sm
+            h-8 px-2
+            text-white/70 hover:text-white hover:bg-white/10
             transition-all
           "
         >
           {copied ? (
-            <>
-              <Check className="h-3.5 w-3.5 mr-1.5 text-green-400" />
-              <span className="text-green-400 font-medium">Copied</span>
-            </>
+            <Check className="h-4 w-4 text-green-400" />
           ) : (
-            <>
-              <Copy className="h-3.5 w-3.5 mr-1.5" />
-              Copy
-            </>
+            <Copy className="h-4 w-4" />
           )}
         </Button>
       </div>
