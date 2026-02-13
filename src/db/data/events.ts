@@ -1,6 +1,5 @@
 import { query } from "~/db/data";
 import { successResponse } from "~/lib/response/success";
-
 export type GetAllEventsResponse = {
   success: boolean;
   data?: {

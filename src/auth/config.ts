@@ -87,9 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async redirect({ baseUrl }) {
       return baseUrl;
     },
-    async redirect({ baseUrl }) {
-      return baseUrl;
-    },
+
     async session({ session, user }) {
       session.user.id = user.id;
       const dbUser = (

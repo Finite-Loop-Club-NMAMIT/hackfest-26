@@ -1,5 +1,11 @@
-import Events from "~/components/events/layout";
+import { auth } from "~/auth/event-config";
+import Events from "~/components/events/eventLayout";
 
 export default async function EventsPage() {
-  return <Events />;
+  const session = await auth();
+  return (
+    <section>
+      <Events session={session} />
+    </section>
+  );
 }
