@@ -3,7 +3,7 @@
 import { Html } from '@react-three/drei';
 import { Canvas, extend, useFrame, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -626,78 +626,7 @@ function buildShipPath(islandPositions: [number, number, number][]): THREE.Catmu
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
 }
 
-function PathVisualizer({
-  islandPositions,
-  progressRef,
-}: {
-  islandPositions: [number, number, number][];
-  progressRef: React.MutableRefObject<number>;
-}) {
-  const bgLineRef = useRef<THREE.Line>(null);
-  const fgLineRef = useRef<THREE.Line>(null);
-  const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
-
-  const points = useMemo(() => {
-    const pts = curve.getPoints(2000);
-    return pts.map((p) => new THREE.Vector3(p.x, 5.2, p.z));
-  }, [curve]);
-
-  const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
-
-  const fgGeometry = useMemo(() => geometry.clone(), [geometry]);
-
-  // Compute dashing
-  useLayoutEffect(() => {
-    bgLineRef.current?.computeLineDistances();
-    fgLineRef.current?.computeLineDistances();
-  }, [geometry, fgGeometry]);
-
-  useFrame(() => {
-    if (fgLineRef.current) {
-      const t = Math.max(0, Math.min(1, progressRef.current));
-      const totalPoints = points.length;
-      const visiblePoints = Math.floor(t * totalPoints);
-      fgGeometry.setDrawRange(0, visiblePoints);
-    }
-  });
-
-  return (
-    <group>
-      {/* @ts-ignore */}
-      <line ref={bgLineRef} geometry={geometry}>
-        <lineDashedMaterial
-          color="white"
-          dashSize={4}
-          gapSize={3}
-          opacity={0.2}
-          transparent
-          depthWrite={false}
-        />
-      </line>
-
-      {/* @ts-ignore */}
-      <line ref={fgLineRef} geometry={fgGeometry}>
-        <lineDashedMaterial
-          color="#4deeea"
-          dashSize={4}
-          gapSize={3}
-          opacity={1}
-          transparent
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </line>
-    </group>
-  );
-}
-
-function Ship({
-  islandPositions,
-  sharedProgressRef,
-}: {
-  islandPositions: [number, number, number][];
-  sharedProgressRef?: React.MutableRefObject<number>;
-}) {
+function Ship({ islandPositions }: { islandPositions: [number, number, number][] }) {
   const shipRef = useRef<THREE.Group>(null);
   const [shipModel, setShipModel] = useState<THREE.Group | null>(null);
   const progressRef = useRef(0);
@@ -715,10 +644,10 @@ function Ship({
   const lastExitedIsland = useRef<number | null>(null); 
   
   
-  const lastScrollDelta = useRef(0);
+  const scrollDirectionRef = useRef<'forward' | 'backward'>('forward');
   const isReversingRef = useRef(false);
-  const uTurnProgressRef = useRef(0);
-  const uTurnRotationRef = useRef(0);
+  const targetReversingRef = useRef(false);
+  const turnProgressRef = useRef(1);
   
   
   const cameraLookAtTarget = useRef(new THREE.Vector3(0, 0, 0));
@@ -774,37 +703,43 @@ function Ship({
         return;
       }
 
-      const clampedDelta = Math.max(-8, Math.min(8, event.deltaY)); 
+      // Simple trackpad detection
+      const isTrackpad = Math.abs(event.deltaY) < 50;
       
+      // Different speeds for trackpad vs mouse (reduced for smoother control)
+      const scrollSpeed = isTrackpad ? 0.005 : 0.15;
+      const delta = event.deltaY * scrollSpeed;
       
+      // Ignore tiny movements
+      if (Math.abs(delta) < 0.5) return;
       
-      const isScrollingForward = clampedDelta > 0;
-      const wasScrollingForward = lastScrollDelta.current > 0;
+      // Determine scroll direction
+      const currentDirection = delta > 0 ? 'forward' : 'backward';
       
-      if (lastScrollDelta.current !== 0 && isScrollingForward !== wasScrollingForward) {
-        
-        uTurnProgressRef.current = 0;
-        isReversingRef.current = !isScrollingForward; 
+      // Detect direction change and trigger turn
+      if (scrollDirectionRef.current !== currentDirection) {
+        scrollDirectionRef.current = currentDirection;
+        targetReversingRef.current = currentDirection === 'backward';
+        turnProgressRef.current = 0;
+        // Don't accumulate scroll during direction change to prevent boost
+        return;
       }
-      lastScrollDelta.current = clampedDelta;
 
-      
+      // Handle island pause
       if (pausedAtIsland !== null) {
-        scrollAccumAtIsland.current += Math.abs(clampedDelta);
+        scrollAccumAtIsland.current += Math.abs(delta);
         if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
-          
           lastExitedIsland.current = pausedAtIsland;
           setPausedAtIsland(null);
           globalPausedIsland = null;
           scrollAccumAtIsland.current = 0;
         } else {
-          return; 
+          return;
         }
       }
 
-      scrollAccumRef.current += clampedDelta * 1.5; 
-      
-      
+      // Update scroll position
+      scrollAccumRef.current += delta;
       scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
 
       const segmentSize = 400;
@@ -881,47 +816,55 @@ function Ship({
 
   useFrame((state, delta) => {
     const elapsed = state.clock.elapsedTime;
-    
-    
-    if (uTurnProgressRef.current < 1.0) {
-      uTurnProgressRef.current = Math.min(1.0, uTurnProgressRef.current + delta * 2); 
-      const turnEase = 1 - (1 - uTurnProgressRef.current) ** 3; 
-      uTurnRotationRef.current = turnEase * Math.PI; 
-    }
 
-    progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
+    // Handle turning animation
+    if (turnProgressRef.current < 1) {
+      turnProgressRef.current = Math.min(1, turnProgressRef.current + delta * 1.2);
+      
+      // Update camera direction midway through turn
+      if (turnProgressRef.current >= 0.5) {
+        isReversingRef.current = targetReversingRef.current;
+      }
+    } else {
+      // Only update progress when not turning
+      progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
+    }
     const t = Math.max(0, Math.min(1, progressRef.current));
-
-    // Sync to shared ref for the PathVisualizer
-    if (sharedProgressRef) {
-      sharedProgressRef.current = t;
-    }
 
     const point = curve.getPointAt(t);
     const tangent = curve.getTangentAt(t);
 
     if (shipRef.current) {
-      shipRef.current.position.set(point.x, point.y, point.z);
+      const SHIP_HEIGHT_OFFSET = 3;
+      shipRef.current.position.set(point.x, point.y + SHIP_HEIGHT_OFFSET, point.z);
       shipRef.current.position.y += Math.sin(elapsed * 1.5) * 0.4;
 
+      // Calculate base rotation from tangent direction
+      const forwardAngle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
+      const reverseAngle = forwardAngle + Math.PI;
       
-      let baseAngle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
+      // Calculate current target angle based on reversing state
+      const currentTargetAngle = isReversingRef.current ? reverseAngle : forwardAngle;
+      const newTargetAngle = targetReversingRef.current ? reverseAngle : forwardAngle;
       
-      
-      if (isReversingRef.current) {
-        baseAngle += Math.PI;
+      // Gradually blend between current and new target during turn
+      let targetAngle = currentTargetAngle;
+      if (turnProgressRef.current < 1) {
+        const turnEase = turnProgressRef.current;
+        let angleDiff = newTargetAngle - currentTargetAngle;
+        if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        targetAngle = currentTargetAngle + angleDiff * turnEase;
       }
       
-      
-      if (uTurnProgressRef.current < 1.0) {
-        baseAngle += uTurnRotationRef.current; 
-      }
-      
+      // Smooth interpolation to target angle
       const currentY = shipRef.current.rotation.y;
-      let diff = baseAngle - currentY;
+      let diff = targetAngle - currentY;
       if (diff > Math.PI) diff -= Math.PI * 2;
       if (diff < -Math.PI) diff += Math.PI * 2;
-      shipRef.current.rotation.y += diff * 0.15;
+      
+      const turnSpeed = 0.15;
+      shipRef.current.rotation.y += diff * turnSpeed;
       shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03;
     }
     
@@ -1144,10 +1087,10 @@ function Ship({
   if (!shipModel) return null;
 
   return (
-    <group ref={shipRef} position={[0, 5, 0]}>
+    <group ref={shipRef} position={[0, 150, 0]}>
       <primitive
         object={shipModel}
-        scale={[15, 15, 15]}
+        scale={[20, 20, 20]}
         rotation={[0, 0, 0]}
       />
       {/* Boat wake / foam trail */}
@@ -1231,8 +1174,6 @@ function WakeEffect() {
 export default function TimelineScene() {
   const [selectedEvent, setSelectedEvent] = useState<{ day: number; title: string; time: string } | null>(null);
   const isMobile = useIsMobile();
-  // Shared ref to track ship progress for the glowing path
-  const shipProgressRef = useRef(0);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -1271,8 +1212,7 @@ export default function TimelineScene() {
 
         <Ocean />
         <Islands onSelect={setSelectedEvent} />
-        <PathVisualizer islandPositions={ISLAND_POSITIONS} progressRef={shipProgressRef} />
-        <Ship islandPositions={ISLAND_POSITIONS} sharedProgressRef={shipProgressRef} />
+        <Ship islandPositions={ISLAND_POSITIONS} />
       </Canvas>
 
       {/* Event Details Modal */}
