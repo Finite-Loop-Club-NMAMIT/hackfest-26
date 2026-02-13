@@ -62,6 +62,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true;
     },
+    async redirect({ baseUrl }) {
+      return baseUrl;
+    },
     async session({ session, user }) {
       session.user.id = user.id;
       const dbUser = await db

@@ -7,7 +7,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { paymentStatusEnum } from "../enum";
+import { eventStatusEnum, eventTypeEnum, paymentStatusEnum } from "../enum";
 import { eventUsers } from "./event-auth";
 
 export const events = pgTable(
@@ -18,10 +18,15 @@ export const events = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     title: text("title").notNull(),
     description: text("description").notNull(),
-    date: text("date").notNull(),
+    date: timestamp("date").notNull().defaultNow(),
+    venue: text("venue").notNull(),
+    deadline: timestamp("deadline").notNull().defaultNow(),
     image: text("image").notNull(),
-    // HACK: SOLO/TEAM event can be determined by team size
-    teamSize: integer("team_size").notNull().default(1),
+    type: eventTypeEnum("event_type").notNull().default("Solo"),
+    status: eventStatusEnum("event_status").notNull().default("Draft"),
+    maxTeams: integer("max_teams").notNull().default(0),
+    minTeamSize: integer("min_team_size").notNull().default(1),
+    maxTeamSize: integer("max_team_size").notNull().default(1),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -30,7 +35,7 @@ export const events = pgTable(
   },
   (table) => [
     index("event_date_idx").on(table.date),
-    index("event_team_size_idx").on(table.teamSize),
+    index("event_deadline_idx").on(table.deadline),
   ],
 );
 

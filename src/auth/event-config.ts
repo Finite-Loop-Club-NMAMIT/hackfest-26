@@ -36,6 +36,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     // HACK: fetch and add user data to session
+    async redirect({ baseUrl }) {
+      return `${baseUrl}/events`;
+    },
     async session({ session, user }) {
       if (user) {
         session.eventUser = user;
