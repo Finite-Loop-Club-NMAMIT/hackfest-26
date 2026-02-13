@@ -26,7 +26,6 @@ export default async function TeamsPage() {
   return (
     // MAIN CONTAINER: Sky Gradient + Centering
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden bg-gradient-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb] text-white">
-      
       {/* --- DECORATIVE LAYERS (The Beach) --- */}
       {/* 1. Mist/Glow Layer */}
       <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
@@ -35,21 +34,20 @@ export default async function TeamsPage() {
 
       {/* --- CONTENT CONTAINER --- */}
       <div className="relative z-10 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
         {/* HEADER SECTION */}
         <div className="mb-8 flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             {/* Home Button: Glass Style */}
-            <Button 
-              asChild 
-              size="icon" 
+            <Button
+              asChild
+              size="icon"
               className="bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm backdrop-blur-sm"
             >
               <Link href="/">
                 <Home className="h-5 w-5" />
               </Link>
             </Button>
-            
+
             <div className="space-y-1">
               <h1 className="text-3xl md:text-4xl font-bold drop-shadow-sm">
                 Team Management
@@ -62,15 +60,12 @@ export default async function TeamsPage() {
 
           {/* Sign Out Button: Glass Style */}
           <div className="[&_button]:bg-white/10 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/20 [&_button]:backdrop-blur-sm">
-             <SignOut variant="outline" />
+            <SignOut variant="outline" />
           </div>
         </div>
 
         {/* TEAM FORM */}
-        {/* You may need to ensure TeamForm internals use transparent backgrounds 
-            or glass styles to match this theme perfectly. */}
         <TeamForm />
-        
       </div>
     </div>
   );

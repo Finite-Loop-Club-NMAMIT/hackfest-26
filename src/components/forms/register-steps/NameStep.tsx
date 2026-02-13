@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight } from "lucide-react"; // Optional: Add an icon for the "Enter" hint
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,

@@ -1,13 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
 import { RegisterForm } from "~/components/forms/register-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import * as userData from "~/db/data/participant";
 
 export default async function RegisterPage() {

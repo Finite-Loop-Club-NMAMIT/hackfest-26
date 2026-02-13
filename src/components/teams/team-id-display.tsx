@@ -14,7 +14,7 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Team ID copied to clipboard");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to copy", {
         description: "Please try copying manually.",
       });
@@ -27,7 +27,7 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
       <p className="text-xs text-white/70 mb-1.5 font-medium">
         Team ID (share this to invite members):
       </p>
-      
+
       <div className="flex items-center gap-3">
         {/* ID: Monospace, Bold, White */}
         <code className="text-sm md:text-base font-mono font-bold text-white tracking-wide flex-1 truncate drop-shadow-sm">

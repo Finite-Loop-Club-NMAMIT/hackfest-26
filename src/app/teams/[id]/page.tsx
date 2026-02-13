@@ -4,9 +4,9 @@ import {
   Clock,
   CreditCard,
   Home,
-  XCircle,
+  Info,
   Users,
-  Info
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -94,9 +94,7 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-red-300" />
-                  <CardTitle className="text-red-100">
-                    Not Selected
-                  </CardTitle>
+                  <CardTitle className="text-red-100">Not Selected</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -128,7 +126,10 @@ export default async function TeamDetailsPage({
                 </p>
                 {user.isLeader ? (
                   paymentsOpen ? (
-                    <Button asChild className="bg-yellow-400 text-yellow-950 hover:bg-yellow-300 font-bold border-none">
+                    <Button
+                      asChild
+                      className="bg-yellow-400 text-yellow-950 hover:bg-yellow-300 font-bold border-none"
+                    >
                       <Link href={`/teams/${id}/payment`}>
                         Complete Payment
                       </Link>
@@ -308,7 +309,7 @@ export default async function TeamDetailsPage({
 
                 {teamStatus === "IDEA_SUBMITTED" && submission ? (
                   <div className="text-white">
-                     {/* Pass white styling down if possible, or wrap */}
+                    {/* Pass white styling down if possible, or wrap */}
                     <TeamSubmissionForm
                       teamId={team.id}
                       submission={submission}
@@ -391,20 +392,18 @@ export default async function TeamDetailsPage({
   return (
     // MAIN CONTAINER: Sky Gradient
     <div className="relative flex min-h-screen flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-gradient-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb] text-white">
-      
-       {/* --- DECORATIVE LAYERS (The Beach) --- */}
+      {/* --- DECORATIVE LAYERS (The Beach) --- */}
       <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
       <div className="absolute -bottom-[12%] left-[-10%] w-[120%] h-[30vh] bg-[#fbf6db] rounded-[50%] shadow-[0_-10px_50px_rgba(240,230,180,0.8)] z-0 pointer-events-none" />
 
       {/* --- CONTENT --- */}
       <div className="relative z-10 w-full max-w-3xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
         {/* HEADER */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
-             <Button 
-              asChild 
-              size="icon" 
+            <Button
+              asChild
+              size="icon"
               className="bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm backdrop-blur-sm"
             >
               <Link href="/">
@@ -414,7 +413,7 @@ export default async function TeamDetailsPage({
             <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-2">
               <h1 className="text-3xl font-bold drop-shadow-sm">{team.name}</h1>
               {user.isLeader && (
-                // Wrapper to style the Team ID display if it accepts className, 
+                // Wrapper to style the Team ID display if it accepts className,
                 // otherwise it sits in a glass container.
                 <div className="px-3 py-1 rounded-full">
                   <TeamIdDisplay teamId={team.id} />
@@ -424,7 +423,7 @@ export default async function TeamDetailsPage({
           </div>
           {/* Sign Out Button Wrapper */}
           <div className="[&_button]:bg-white/10 [&_button]:border-white/20 [&_button]:text-white [&_button]:hover:bg-white/20 [&_button]:backdrop-blur-sm">
-             <SignOut variant="outline" />
+            <SignOut variant="outline" />
           </div>
         </div>
 
@@ -442,8 +441,10 @@ export default async function TeamDetailsPage({
                 <span className="text-sm font-medium text-white/70">
                   Status
                 </span>
-                <span className={`px-2 py-0.5 rounded text-sm font-bold ${team.isCompleted ? 'bg-green-500/20 text-green-200' : 'bg-yellow-500/20 text-yellow-200'}`}>
-                   {team.isCompleted ? "Completed" : "Active"}
+                <span
+                  className={`px-2 py-0.5 rounded text-sm font-bold ${team.isCompleted ? "bg-green-500/20 text-green-200" : "bg-yellow-500/20 text-yellow-200"}`}
+                >
+                  {team.isCompleted ? "Completed" : "Active"}
                 </span>
               </div>
               {resultsOut &&
@@ -455,7 +456,7 @@ export default async function TeamDetailsPage({
                       Payment
                     </span>
                     <span className="text-white font-mono">
-                       {team.paymentStatus}
+                      {team.paymentStatus}
                     </span>
                   </div>
                 )}
@@ -465,11 +466,13 @@ export default async function TeamDetailsPage({
           {/* MEMBERS CARD */}
           <Card className="border-white/30 bg-black/20 backdrop-blur-xl shadow-xl">
             <CardHeader className="pb-3">
-               <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-white/80" />
                 <div className="flex flex-1 justify-between items-center">
                   <CardTitle className="text-white">Team Members</CardTitle>
-                  <CardDescription className="text-white/60">{members.length} / 4</CardDescription>
+                  <CardDescription className="text-white/60">
+                    {members.length} / 4
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -502,9 +505,8 @@ export default async function TeamDetailsPage({
 
         {/* Dynamic Status Section */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-           {renderStatusContent()}
+          {renderStatusContent()}
         </div>
-       
       </div>
     </div>
   );

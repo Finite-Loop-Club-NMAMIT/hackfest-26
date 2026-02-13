@@ -1,6 +1,6 @@
 "use client";
 
-import { FileImage, UploadCloud, X } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import type { UseFormReturn } from "react-hook-form";
 import { CloudinaryUpload } from "~/components/cloudinary-upload"; // Assuming this accepts className, if not, the wrapper handles positioning
