@@ -34,6 +34,7 @@ type Event = {
 };
 
 const Events = ({ session }: { session: Session | null }) => {
+  const [loading, setLoading] = useState({ register: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>();
   const [drawerDirection, setDrawerDirection] = useState<"right" | "bottom">(
