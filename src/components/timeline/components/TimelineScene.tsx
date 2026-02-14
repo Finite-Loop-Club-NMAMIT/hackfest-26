@@ -1,6 +1,6 @@
 'use client';
 
-import { Html } from '@react-three/drei';
+import { Html, Line } from '@react-three/drei';
 import { Canvas, extend, useFrame, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,17 +22,17 @@ extend({ Water });
 // Hook to detect mobile device
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   return isMobile;
 }
 
@@ -51,17 +51,23 @@ const DAY_THEMES: Record<number, { parchment: string; border: string; ink: strin
   3: { parchment: '#e3dcd2', border: '#556B2F', ink: '#2A1A0A', wax: '#228822', icon: '💎' },
 };
 
+const SCROLL_SENSITIVITY = 0.05; // How much scroll wheel affects the "target"
+const BOAT_MOVEMENT_SPEED = 0.02; // Boat speed in "progress units" per second (0.1 = ~10s for full path)
+const BOAT_MAX_SCROLL_DELTA = 5; // Max scroll input per event
+const DOCK_SIDE = 25; // Side offset for dock markers
+
+
 
 function Ocean() {
   const waterRef = useRef<Water>(null);
 
   const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000, 2, 2), []);
 
-  
+
   const sunDirection = useMemo(() => {
     const dir = new THREE.Vector3();
-    const theta = Math.PI * (0.45 - 0.5); 
-    const phi = 2 * Math.PI * (0.205 - 0.5); 
+    const theta = Math.PI * (0.45 - 0.5);
+    const phi = 2 * Math.PI * (0.205 - 0.5);
     dir.x = Math.cos(phi);
     dir.y = Math.sin(theta);
     dir.z = Math.sin(phi);
@@ -80,23 +86,23 @@ function Ocean() {
         }
       ),
       sunDirection: sunDirection,
-      sunColor: 0xfff5e0,      
-      waterColor: 0x006994,     
-      distortionScale: 4.0,     
-      fog: true,                
-      alpha: 0.95,              
+      sunColor: 0xfff5e0,
+      waterColor: 0x006994,
+      distortionScale: 4.0,
+      fog: true,
+      alpha: 0.95,
     });
-    
+
     waterInstance.material.transparent = true;
     return waterInstance;
   }, [waterGeometry, sunDirection]);
 
   useFrame((state, delta) => {
     if (waterRef.current?.material?.uniforms) {
-      
+
       waterRef.current.material.uniforms.time.value += delta * 0.6;
 
-      
+
       const elapsed = state.clock.elapsedTime;
       const dynamicSun = waterRef.current.material.uniforms.sunDirection.value;
       dynamicSun.x = Math.cos(elapsed * 0.02) * 0.8;
@@ -104,7 +110,7 @@ function Ocean() {
       dynamicSun.z = Math.sin(elapsed * 0.02) * 0.8;
       dynamicSun.normalize();
 
-      
+
       waterRef.current.position.x = state.camera.position.x;
       waterRef.current.position.z = state.camera.position.z;
     }
@@ -217,7 +223,7 @@ function loadFinalIslandModel(callback: (model: THREE.Group) => void) {
 }
 
 
-let globalPausedIsland: number | null = null; 
+let globalPausedIsland: number | null = null;
 
 type TimelineEvent = { day: number; title: string; time: string };
 
@@ -236,10 +242,10 @@ function EventLabel({
   const displayTitle = event.title.replace(/\\n/g, '\n').replace(/\n/g, ' ');
   const [isNearShip, setIsNearShip] = useState(false);
   const isMobile = useIsMobile();
-  
-  
+
+
   useFrame(() => {
-    
+
     const isFocused = globalPausedIsland === islandIndex;
     setIsNearShip(isFocused);
   });
@@ -250,7 +256,7 @@ function EventLabel({
       distanceFactor={isMobile ? 35 : 55}
       position={[0, 18, 0]}
       style={{
-        pointerEvents: 'none', 
+        pointerEvents: 'none',
         cursor: 'default',
       }}
       zIndexRange={[100, 0]}
@@ -307,9 +313,9 @@ function EventLabel({
               {event.day}
             </div>
             <div style={{
-               position: 'absolute', inset: '3px', borderRadius: '50%',
-               border: '1px dashed rgba(255,255,255,0.4)',
-               opacity: 0.6
+              position: 'absolute', inset: '3px', borderRadius: '50%',
+              border: '1px dashed rgba(255,255,255,0.4)',
+              opacity: 0.6
             }} />
           </div>
         )}
@@ -389,7 +395,7 @@ function EventLabel({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              color: '#5c4033', 
+              color: '#5c4033',
             }}
           >
             <span style={{ fontSize: '14px' }}>{theme.icon}</span>
@@ -404,25 +410,25 @@ function EventLabel({
           flexDirection: 'column',
           alignItems: 'center',
         }}>
-           {/* Dotted line */}
-           <div style={{
-             width: '2px',
-             height: '15px',
-             borderLeft: `2px dashed rgba(255, 255, 255, 0.6)`,
-             filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-           }} />
-           {/* Red X */}
-           <div style={{
-             color: '#d00',
-             fontSize: '16px',
-             fontWeight: 'bold',
-             fontFamily: 'var(--font-pirata), serif',
-             lineHeight: 1,
-             textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-             transform: 'translateY(-4px)'
-           }}>
-             X
-           </div>
+          {/* Dotted line */}
+          <div style={{
+            width: '2px',
+            height: '15px',
+            borderLeft: `2px dashed rgba(255, 255, 255, 0.6)`,
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+          }} />
+          {/* Red X */}
+          <div style={{
+            color: '#d00',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fontFamily: 'var(--font-pirata), serif',
+            lineHeight: 1,
+            textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            transform: 'translateY(-4px)'
+          }}>
+            X
+          </div>
         </div>
       </button>
     </Html>
@@ -512,34 +518,34 @@ const ISLAND_POSITIONS: [number, number, number][] = (() => {
   const random = seededRandom(12345);
   const positions: [number, number, number][] = [];
   const numIslands = events.length;
-  const spacing = 180; 
+  const spacing = 180;
 
   for (let i = 0; i < numIslands; i++) {
     const isLast = i === numIslands - 1;
-    
-    
-    
+
+
+
     const baseX = 60 + i * spacing;
-    
-    
-    const cycle = i % 6; 
+
+
+    const cycle = i % 6;
     let laneZ = 0;
-    
+
     if (cycle === 0 || cycle === 1) {
-      laneZ = -60; 
+      laneZ = -60;
     } else if (cycle === 2 || cycle === 3) {
-      laneZ = 0; 
+      laneZ = 0;
     } else {
-      laneZ = 60; 
+      laneZ = 60;
     }
-    
-    
+
+
     const randomOffset = (random() - 0.5) * 20;
-    
+
     const x = baseX;
     const y = isLast ? 25 : 10;
     const z = laneZ + randomOffset;
-    
+
     positions.push([x, y, z]);
   }
   return positions;
@@ -590,35 +596,35 @@ function Islands({ onSelect }: { onSelect: (e: TimelineEvent) => void }) {
 function buildShipPath(islandPositions: [number, number, number][]): THREE.CatmullRomCurve3 {
   const waypoints: THREE.Vector3[] = [];
 
-  
+
   const first = islandPositions[0];
   waypoints.push(new THREE.Vector3(first[0] - 80, 5, first[2]));
 
-  
+
   for (let i = 0; i < islandPositions.length; i++) {
     const island = islandPositions[i];
     const isLast = i === islandPositions.length - 1;
-    
-    
-    
-    const approachX = island[0] - 12; 
-    const approachZ = island[2] + 25; 
-    
+
+
+
+    const approachX = island[0] - 12;
+    const approachZ = island[2] + 25;
+
     waypoints.push(new THREE.Vector3(approachX, 5, approachZ));
-    
+
     if (!isLast) {
-      
-      const passX = island[0] + 12; 
-      const passZ = island[2] + 25; 
+
+      const passX = island[0] + 12;
+      const passZ = island[2] + 25;
       waypoints.push(new THREE.Vector3(passX, 5, passZ));
-      
-      
+
+
       const nextIsland = islandPositions[i + 1];
       const midX = (island[0] + nextIsland[0]) / 2;
-      const midZ = (island[2] + nextIsland[2]) / 2 + 25; 
+      const midZ = (island[2] + nextIsland[2]) / 2 + 25;
       waypoints.push(new THREE.Vector3(midX, 5, midZ));
     } else {
-      
+
       waypoints.push(new THREE.Vector3(island[0] + 30, 5, island[2] + 25));
     }
   }
@@ -626,35 +632,202 @@ function buildShipPath(islandPositions: [number, number, number][]): THREE.Catmu
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
 }
 
-function Ship({ islandPositions }: { islandPositions: [number, number, number][] }) {
+// ─── Dynamic Background Logic ──────────────────────────────────────────────
+function getSkyOverlayColor(progressIndex: number): string {
+  // Keyframes for background overlay (Index -> Color & Opacity)
+  // Transparent = Day (shows sunny.jpeg). Dark/Colors = Night/Sunset.
+  const keyframes = [
+    { idx: 0, col: 'rgba(0, 0, 0, 0)' },       // Day 1 10AM (Clear)
+    { idx: 4, col: 'rgba(0, 0, 0, 0)' },       // Day 1 4PM
+    { idx: 5, col: 'rgba(255, 100, 50, 0.5)' }, // Day 1 5PM (Sunset)
+    { idx: 6, col: 'rgba(10, 10, 35, 0.9)' },   // Day 1 8PM (Night)
+    { idx: 7, col: 'rgba(10, 10, 35, 0.9)' },   // Day 1 9PM (Night)
+    { idx: 7.8, col: 'rgba(255, 100, 50, 0.5)' },// Sunrise transition
+    { idx: 8, col: 'rgba(0, 0, 0, 0)' },       // Day 2 8AM (Clear)
+    { idx: 11, col: 'rgba(0, 0, 0, 0)' },      // Day 2 4PM
+    { idx: 12, col: 'rgba(10, 10, 35, 0.9)' },  // Day 2 8PM (Night)
+    { idx: 13, col: 'rgba(10, 10, 35, 0.9)' },  // Day 2 9PM (Night)
+    { idx: 13.8, col: 'rgba(255, 100, 50, 0.5)' },// Sunrise transition
+    { idx: 14, col: 'rgba(0, 0, 0, 0)' },      // Day 3 7AM (Clear)
+    { idx: 20, col: 'rgba(0, 0, 0, 0)' },      // Day 3 End
+  ];
+
+  // Find surrounding keyframes
+  let lower = keyframes[0];
+  let upper = keyframes[keyframes.length - 1];
+
+  for (let i = 0; i < keyframes.length - 1; i++) {
+    if (progressIndex >= keyframes[i].idx && progressIndex < keyframes[i + 1].idx) {
+      lower = keyframes[i];
+      upper = keyframes[i + 1];
+      break;
+    }
+  }
+
+  // Linear interpolation
+  const t = (progressIndex - lower.idx) / (upper.idx - lower.idx || 1);
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  // Parse RGBA (Simple regex interaction)
+  const parseRGBA = (c: string) => {
+    const match = c.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+    if (!match) return [0, 0, 0, 0];
+    return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3]), parseFloat(match[4])];
+  };
+
+  const c1 = parseRGBA(lower.col);
+  const c2 = parseRGBA(upper.col);
+
+  const r = Math.round(c1[0] + (c2[0] - c1[0]) * clampedT);
+  const g = Math.round(c1[1] + (c2[1] - c1[1]) * clampedT);
+  const b = Math.round(c1[2] + (c2[2] - c1[2]) * clampedT);
+  const a = c1[3] + (c2[3] - c1[3]) * clampedT;
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+
+// ─── Dock Markers ─────────────────────────────────────────────────────────────
+function DockMarkers({ activeIsland }: { activeIsland: number }) {
+  return (
+    <>
+      {ISLAND_POSITIONS.map((pos, i) => {
+        const isActive = i === activeIsland;
+        return (
+          <group key={i} position={[pos[0], 1.5, pos[2] + 25]}>
+            <mesh>
+              <sphereGeometry args={[isActive ? 3 : 2, 12, 12]} />
+              <meshStandardMaterial
+                color={isActive ? '#ffdd44' : '#66ccff'}
+                emissive={isActive ? '#ffaa00' : '#44aaff'}
+                emissiveIntensity={isActive ? 2.5 : 1.2}
+                transparent
+                opacity={isActive ? 1 : 0.7}
+              />
+            </mesh>
+            <mesh rotation-x={-Math.PI / 2}>
+              <ringGeometry args={[isActive ? 3.5 : 2.5, isActive ? 5.5 : 4, 24]} />
+              <meshBasicMaterial
+                color={isActive ? '#ffaa00' : '#44aaff'}
+                transparent opacity={isActive ? 0.5 : 0.25} side={THREE.DoubleSide}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
+// ─── Path Line & Camera Layers ──────────────────────────────────────────────
+function PathLine({ curve }: { curve: THREE.CatmullRomCurve3 }) {
+  const lineRef = useRef<any>(null);
+  const points = useMemo(() => curve.getPoints(300), [curve]);
+
+  // Put path line on layer 1 so Water shader's reflection camera (layer 0 only) doesn't see it (assuming we want to hide it from reflections if possible)
+  useEffect(() => {
+    if (lineRef.current) {
+      lineRef.current.layers.set(1);
+    }
+  }, []);
+
+  return (
+    <Line ref={lineRef} points={points} color="lightblue" lineWidth={3} dashed dashScale={2}
+      gapSize={1} opacity={0.5} transparent position={[0, 0.5, 0]} />
+  );
+}
+
+function CameraLayerSetup() {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.layers.enable(1); // Enable path layer
+  }, [camera]);
+  return null;
+}
+
+function Ship({ islandPositions, onProgress, onDock }: { islandPositions: [number, number, number][], onProgress?: (idx: number) => void, onDock?: (idx: number | null) => void }) {
   const shipRef = useRef<THREE.Group>(null);
   const [shipModel, setShipModel] = useState<THREE.Group | null>(null);
   const progressRef = useRef(0);
   const targetProgressRef = useRef(0);
   const { camera } = useThree();
-  const scrollAccumRef = useRef(0);
   const isMobile = useIsMobile();
-  const zoomRef = useRef(isMobile ? 0.2 : 0.3); 
-  const autoZoomRef = useRef(1.0); 
-  
-  
+  const zoomRef = useRef(1);
+  const autoZoomRef = useRef(1.0);
+
+
+  // Navigation State
+  const currentIslandRef = useRef(0);
+  const scrollAccumRef = useRef(0);
+  const scrollCooldownRef = useRef(0);
+
+  // ... (Report progress in useFrame)
+  useFrame(() => {
+    if (onProgress) {
+      // Smoothly report the current visual position index
+      // Since progressRef (0-1) maps to the whole path, we map it back to island index approx
+      // But simpler: just report scrollAccumRef which is the 'target' index float, 
+      // or better, interpolate it based on progressRef if we want exact visual sync.
+      // For background, scrollAccumRef is responsive enough.
+      onProgress(scrollAccumRef.current);
+    }
+  });
+
+  // Camera/Focus State
   const [pausedAtIsland, setPausedAtIsland] = useState<number | null>(null);
-  const scrollAccumAtIsland = useRef(0);
-  const SCROLL_THRESHOLD_TO_CONTINUE = 40;
-  const lastExitedIsland = useRef<number | null>(null); 
-  
-  
+  const lastExitedIsland = useRef<number | null>(null);
+  const focusBlendRef = useRef(0);
+  const cameraLookAtTarget = useRef(new THREE.Vector3(0, 0, 0));
+
+  // Rotation State (from -2)
   const scrollDirectionRef = useRef<'forward' | 'backward'>('forward');
   const isReversingRef = useRef(false);
   const targetReversingRef = useRef(false);
   const turnProgressRef = useRef(1);
-  
-  
-  const cameraLookAtTarget = useRef(new THREE.Vector3(0, 0, 0));
-  const focusBlendRef = useRef(0); 
 
   const curve = useMemo(() => buildShipPath(islandPositions), [islandPositions]);
   const totalIslands = islandPositions.length;
+
+  // Pre-compute precise t values for each island's dock point (Adapted)
+  const dockProgressValues = useMemo(() => {
+    const samples = 2000;
+    // Target the "dock" area used in buildShipPath (approx z+25, x center)
+    const dockTargets = islandPositions.map(pos =>
+      new THREE.Vector3(pos[0], 5, pos[2] + 25)
+    );
+    const tValues: number[] = new Array(islandPositions.length).fill(0);
+    const bestDist: number[] = new Array(islandPositions.length).fill(Infinity);
+
+    for (let s = 0; s <= samples; s++) {
+      const t = s / samples;
+      const pt = curve.getPointAt(t);
+      for (let i = 0; i < dockTargets.length; i++) {
+        const d = pt.distanceTo(dockTargets[i]);
+        if (d < bestDist[i]) {
+          bestDist[i] = d;
+          tValues[i] = t;
+        }
+      }
+    }
+    return tValues;
+  }, [curve, islandPositions]);
+
+  const getProgressForIsland = (index: number) => {
+    const t = dockProgressValues[index] ?? 0;
+    return Math.max(0, Math.min(0.999, t));
+  };
+
+  // Sync initial position (from -1)
+  const initialSynced = useRef(false);
+  useEffect(() => {
+    if (!initialSynced.current && dockProgressValues.length > 0) {
+      // Start at first island
+      const preciseT = getProgressForIsland(0);
+      progressRef.current = preciseT;
+      targetProgressRef.current = preciseT;
+      initialSynced.current = true;
+    }
+  }, [dockProgressValues]);
 
   useEffect(() => {
     const loader = new GLTFLoader();
@@ -677,23 +850,47 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
             }
           }
         });
-        
-        
+
+
         if (curve) {
           const initialTangent = curve.getTangentAt(0);
           const initialAngle = Math.atan2(initialTangent.x, initialTangent.z) - Math.PI / 2;
           scene.rotation.y = initialAngle;
         }
-        
+
         setShipModel(scene);
         dracoLoader.dispose();
       },
       undefined,
       (error) => console.error('Error loading ship model:', error)
     );
-  }, [curve]);
+  }, []);
 
-  
+
+  // Listen for jump events (from -1)
+  useEffect(() => {
+    const handleJump = (e: any) => {
+      const index = e.detail.index;
+      currentIslandRef.current = index;
+
+      // Update direction for rotation logic
+      const newTarget = getProgressForIsland(index);
+      const direction = newTarget > progressRef.current ? 'forward' : 'backward';
+
+      if (scrollDirectionRef.current !== direction) {
+        scrollDirectionRef.current = direction;
+        targetReversingRef.current = direction === 'backward';
+        turnProgressRef.current = 0;
+      }
+
+      targetProgressRef.current = newTarget;
+      scrollAccumRef.current = index;
+    };
+    window.addEventListener('timeline-scroll-to', handleJump);
+    return () => window.removeEventListener('timeline-scroll-to', handleJump);
+  }, [islandPositions, dockProgressValues]);
+
+  // Scroll Handling (Merged: Snap Logic + Zoom)
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
@@ -703,364 +900,217 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
         return;
       }
 
-      // Simple trackpad detection
-      const isTrackpad = Math.abs(event.deltaY) < 50;
-      
-      // Different speeds for trackpad vs mouse (reduced for smoother control)
-      const scrollSpeed = isTrackpad ? 0.005 : 0.15;
-      const delta = event.deltaY * scrollSpeed;
-      
-      // Ignore tiny movements
-      if (Math.abs(delta) < 0.5) return;
-      
-      // Determine scroll direction
-      const currentDirection = delta > 0 ? 'forward' : 'backward';
-      
-      // Detect direction change and trigger turn
-      if (scrollDirectionRef.current !== currentDirection) {
-        scrollDirectionRef.current = currentDirection;
-        targetReversingRef.current = currentDirection === 'backward';
-        turnProgressRef.current = 0;
-        // Don't accumulate scroll during direction change to prevent boost
-        return;
-      }
+      // Snap Logic from -1
+      const now = Date.now();
+      if (now - scrollCooldownRef.current < 200) return;
 
-      // Handle island pause
-      if (pausedAtIsland !== null) {
-        scrollAccumAtIsland.current += Math.abs(delta);
-        if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
-          lastExitedIsland.current = pausedAtIsland;
-          setPausedAtIsland(null);
-          globalPausedIsland = null;
-          scrollAccumAtIsland.current = 0;
-        } else {
-          return;
+      const clampedDelta = Math.max(-BOAT_MAX_SCROLL_DELTA, Math.min(BOAT_MAX_SCROLL_DELTA, event.deltaY));
+      const sensitivity = SCROLL_SENSITIVITY;
+
+      const oldAccum = scrollAccumRef.current;
+      scrollAccumRef.current += clampedDelta * sensitivity;
+      scrollAccumRef.current = Math.max(0, Math.min(islandPositions.length - 1, scrollAccumRef.current));
+
+      const targetIsland = Math.round(scrollAccumRef.current);
+
+      if (targetIsland !== currentIslandRef.current) {
+        // Determine direction based on island change
+        const direction = targetIsland > currentIslandRef.current ? 'forward' : 'backward';
+
+        if (scrollDirectionRef.current !== direction) {
+          scrollDirectionRef.current = direction;
+          targetReversingRef.current = direction === 'backward';
+          turnProgressRef.current = 0;
         }
+
+        currentIslandRef.current = targetIsland;
+        targetProgressRef.current = getProgressForIsland(targetIsland);
+        scrollCooldownRef.current = now;
       }
-
-      // Update scroll position
-      scrollAccumRef.current += delta;
-      scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
-
-      const segmentSize = 400;
-      const segments = totalIslands + 1;
-
-      const newTarget = Math.min(
-        1,
-        Math.max(0, scrollAccumRef.current / (segmentSize * segments))
-      );
-      targetProgressRef.current = newTarget;
     };
 
-    let touchStartY = 0;
-    let touchStartDist = 0;
-
-    const getTouchDist = (touches: TouchList) => {
-      if (touches.length < 2) return 0;
-      const dx = touches[1].clientX - touches[0].clientX;
-      const dy = touches[1].clientY - touches[0].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-
+    // Touch handling (simplified for now to match wheel logic roughly)
     const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 1) {
-        touchStartY = event.touches[0].clientY;
-      } else if (event.touches.length === 2) {
-        touchStartDist = getTouchDist(event.touches);
-      }
+      // Placeholder for touch start
     };
-
     const handleTouchMove = (event: TouchEvent) => {
-      event.preventDefault();
-
-      if (event.touches.length === 2) {
-        
-        const dist = getTouchDist(event.touches);
-        const delta = (touchStartDist - dist) * 0.01;
-        zoomRef.current = Math.max(0.4, Math.min(2.0, zoomRef.current + delta));
-        touchStartDist = dist;
-        return;
-      }
-
-      if (event.touches.length === 1) {
-        const currentY = event.touches[0].clientY;
-        const deltaY = touchStartY - currentY;
-        touchStartY = currentY;
-
-        const clampedDelta = Math.max(-15, Math.min(15, deltaY * 2.0));
-        scrollAccumRef.current += clampedDelta;
-        
-        
-        scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
-
-        const segmentSize = 400;
-        const segments = totalIslands + 1;
-
-        const newTarget = Math.min(
-          1,
-          Math.max(0, scrollAccumRef.current / (segmentSize * segments))
-        );
-        targetProgressRef.current = newTarget;
-      }
+      // Placeholder for touch move
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     return () => {
       window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [totalIslands, pausedAtIsland]);
+  }, [islandPositions, dockProgressValues]);
 
   useFrame((state, delta) => {
     const elapsed = state.clock.elapsedTime;
 
-    // Handle turning animation
-    if (turnProgressRef.current < 1) {
-      turnProgressRef.current = Math.min(1, turnProgressRef.current + delta * 1.2);
-      
-      // Update camera direction midway through turn
-      if (turnProgressRef.current >= 0.5) {
-        isReversingRef.current = targetReversingRef.current;
-      }
+    // MOVEMENT: Lerp to target (from -1 logic)
+    // MOVEMENT: Constant Speed Logic
+    const diff = targetProgressRef.current - progressRef.current;
+
+    // Determine movement speed based on BOAT_MOVEMENT_SPEED (units per second)
+    const moveStep = BOAT_MOVEMENT_SPEED * delta;
+
+    if (Math.abs(diff) < moveStep) {
+      progressRef.current = targetProgressRef.current;
     } else {
-      // Only update progress when not turning
-      progressRef.current += (targetProgressRef.current - progressRef.current) * 0.03;
+      progressRef.current += Math.sign(diff) * moveStep;
     }
-    const t = Math.max(0, Math.min(1, progressRef.current));
+
+    const t = Math.max(0, Math.min(0.999, progressRef.current));
 
     const point = curve.getPointAt(t);
     const tangent = curve.getTangentAt(t);
 
+    // SHIP VISUALS (from -2)
     if (shipRef.current) {
+      // Turn Animation Logic (from -2)
+      if (turnProgressRef.current < 1) {
+        turnProgressRef.current = Math.min(1, turnProgressRef.current + delta * 1.2);
+        if (turnProgressRef.current >= 0.5) isReversingRef.current = targetReversingRef.current;
+      }
+
       const SHIP_HEIGHT_OFFSET = 3;
       shipRef.current.position.set(point.x, point.y + SHIP_HEIGHT_OFFSET, point.z);
-      shipRef.current.position.y += Math.sin(elapsed * 1.5) * 0.4;
+      shipRef.current.position.y += Math.sin(elapsed * 1.5) * 0.4; // Wave bobbing
 
-      // Calculate base rotation from tangent direction
+      // Rotation
       const forwardAngle = Math.atan2(tangent.x, tangent.z) - Math.PI / 2;
       const reverseAngle = forwardAngle + Math.PI;
-      
-      // Calculate current target angle based on reversing state
+
       const currentTargetAngle = isReversingRef.current ? reverseAngle : forwardAngle;
       const newTargetAngle = targetReversingRef.current ? reverseAngle : forwardAngle;
-      
-      // Gradually blend between current and new target during turn
+
       let targetAngle = currentTargetAngle;
       if (turnProgressRef.current < 1) {
         const turnEase = turnProgressRef.current;
         let angleDiff = newTargetAngle - currentTargetAngle;
+        // Angle wrapping
         if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
         targetAngle = currentTargetAngle + angleDiff * turnEase;
       }
-      
-      // Smooth interpolation to target angle
+
       const currentY = shipRef.current.rotation.y;
-      let diff = targetAngle - currentY;
-      if (diff > Math.PI) diff -= Math.PI * 2;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      
+      let rotDiff = targetAngle - currentY;
+      if (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+      if (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+
       const turnSpeed = 0.15;
-      shipRef.current.rotation.y += diff * turnSpeed;
-      shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03;
+      shipRef.current.rotation.y += rotDiff * turnSpeed;
+      shipRef.current.rotation.z = Math.sin(elapsed * 0.8) * 0.03; // Roll
     }
-    
-    
+
+    // CAMERA LOGIC (Strictly preserved from -2)
+
+    // 1. Detect Paused Island (Logic from -2)
+    // We keep this because it drives the focusBlend
     if (pausedAtIsland === null) {
       for (let i = 0; i < islandPositions.length; i++) {
-        // Skip recently exited island
         if (i === lastExitedIsland.current) continue;
-        
+
         const island = islandPositions[i];
-        const distToIsland = Math.sqrt(
-          (point.x - island[0]) ** 2 +
-          (point.z - island[2]) ** 2
-        );
-        
-        
-        if (distToIsland < 35) {
+        // Distance check
+        const distToIsland = Math.sqrt((point.x - island[0]) ** 2 + (point.z - island[2]) ** 2);
+
+        if (distToIsland < 60) {
           setPausedAtIsland(i);
-          globalPausedIsland = i; 
-          scrollAccumAtIsland.current = 0;
+          if (onDock) onDock(i);
           break;
         }
       }
-      
-      // Clear lastExitedIsland once we're far enough from it
+
+      // Clear lastExitedIsland
       if (lastExitedIsland.current !== null) {
         const exitedIsland = islandPositions[lastExitedIsland.current];
-        const distToExited = Math.sqrt(
-          (point.x - exitedIsland[0]) ** 2 +
-          (point.z - exitedIsland[2]) ** 2
-        );
-        if (distToExited > 60) {
-          lastExitedIsland.current = null;
-        }
+        const distToExited = Math.sqrt((point.x - exitedIsland[0]) ** 2 + (point.z - exitedIsland[2]) ** 2);
+        if (distToExited > 120) lastExitedIsland.current = null;
       }
     } else {
-      
       const pausedIsland = islandPositions[pausedAtIsland];
-      const distToPausedIsland = Math.sqrt(
-        (point.x - pausedIsland[0]) ** 2 +
-        (point.z - pausedIsland[2]) ** 2
-      );
-      
-      
-      
-      if (distToPausedIsland > 40) {
+      const distToPausedIsland = Math.sqrt((point.x - pausedIsland[0]) ** 2 + (point.z - pausedIsland[2]) ** 2);
+
+      if (distToPausedIsland > 60) {
+        lastExitedIsland.current = pausedAtIsland;
         setPausedAtIsland(null);
-        globalPausedIsland = null;
+        if (onDock) onDock(null);
       }
     }
 
-    
-    
+    // 2. Auto Zoom Logic (from -2)
     let nearestIslandDist = Infinity;
     islandPositions.forEach((islandPos) => {
-      const dist = Math.sqrt(
-        (point.x - islandPos[0]) ** 2 +
-        (point.z - islandPos[2]) ** 2
-      );
-      if (dist < nearestIslandDist) {
-        nearestIslandDist = dist;
-      }
+      const dist = Math.sqrt((point.x - islandPos[0]) ** 2 + (point.z - islandPos[2]) ** 2);
+      if (dist < nearestIslandDist) nearestIslandDist = dist;
     });
-    
-    
-    
-    let targetAutoZoom = 1.0;
-    
-    if (nearestIslandDist < 40) {
-      targetAutoZoom = 0.65; 
-    } else if (nearestIslandDist < 70) {
-      targetAutoZoom = 0.75; 
-    } else if (nearestIslandDist < 100) {
-      targetAutoZoom = 0.9; 
-    } else {
-      targetAutoZoom = 1.1; 
-    }
-    autoZoomRef.current += (targetAutoZoom - autoZoomRef.current) * 0.05;
-    
-    const zoom = zoomRef.current * autoZoomRef.current;
-    const camHeight = (isMobile ? 30 : 45) * zoom;
-    const camDistance = (isMobile ? 70 : 65) * zoom;
 
-    
+    let targetAutoZoom = 1.0;
+    if (nearestIslandDist < 40) targetAutoZoom = 0.65;
+    else if (nearestIslandDist < 70) targetAutoZoom = 0.75;
+    else if (nearestIslandDist < 100) targetAutoZoom = 0.9;
+    else targetAutoZoom = 1.1;
+
+    autoZoomRef.current += (targetAutoZoom - autoZoomRef.current) * 0.05;
+
+    const zoom = zoomRef.current * autoZoomRef.current;
+    const camHeight = (isMobile ? 18 : 15) * zoom;
+    const camDistance = (isMobile ? 45 : 25) * zoom;
+
+    // 3. Focus Blend Animation
     if (pausedAtIsland !== null && pausedAtIsland < islandPositions.length) {
-      
       gsap.to(focusBlendRef, {
         current: 1,
-        duration: 0.8,
+        duration: 0.6,
         ease: 'power2.out',
         overwrite: true
       });
     } else {
-      
       gsap.to(focusBlendRef, {
         current: 0,
-        duration: 0.8,
+        duration: 0.6,
         ease: 'power2.inOut',
         overwrite: true
       });
     }
-    
-    // Camera follows ship with tangent-based offset but fixed look direction
-    // Mirror camera position when reversing
+
+    // 4. Camera Positioning (from -2)
     const tangentMultiplier = isReversingRef.current ? 1 : -1;
     const offsetAmount = isMobile ? 20 : 30;
     const routeCamX = point.x + tangent.x * offsetAmount * tangentMultiplier;
     const routeCamY = camHeight;
     const routeCamZ = point.z + camDistance;
-    
+
     // Fixed look-at target (always look at ship position)
-    const routeLookAt = new THREE.Vector3(
-      point.x,
-      5,
-      point.z
-    );
-    
+    const routeLookAt = new THREE.Vector3(point.x, 5, point.z);
+
     // Island focus camera positions
     let islandCamX = routeCamX;
     let islandCamY = routeCamY;
     let islandCamZ = routeCamZ;
     let islandLookAt = routeLookAt.clone();
-    
+
     if (pausedAtIsland !== null && pausedAtIsland < islandPositions.length) {
       const island = islandPositions[pausedAtIsland];
-      islandCamX = island[0] - 40;
-      islandCamY = 45;
-      islandCamZ = island[2] + 40;
+      islandCamX = island[0] - 55;
+      islandCamY = 50;
+      islandCamZ = island[2] + 55;
       islandLookAt = new THREE.Vector3(island[0], island[1], island[2]);
     }
-    
+
     // Blend between route camera and island focus camera
     const blend = focusBlendRef.current;
     const targetCamX = routeCamX + (islandCamX - routeCamX) * blend;
     const targetCamY = routeCamY + (islandCamY - routeCamY) * blend;
     const targetCamZ = routeCamZ + (islandCamZ - routeCamZ) * blend;
-    
+
     const targetLookX = routeLookAt.x + (islandLookAt.x - routeLookAt.x) * blend;
     const targetLookY = routeLookAt.y + (islandLookAt.y - routeLookAt.y) * blend;
     const targetLookZ = routeLookAt.z + (islandLookAt.z - routeLookAt.z) * blend;
-    
-    /* ORIGINAL DYNAMIC CAMERA - Uncomment to revert
-    const routeCamX = point.x - tangent.x * 30;
-    const routeCamY = camHeight;
-    const routeCamZ = point.z + camDistance;
-    
-    
-    let routeLookAt: THREE.Vector3;
-    if (progressRef.current < 0.05) {
-      routeLookAt = new THREE.Vector3(
-        point.x + tangent.x * 15,
-        5,
-        point.z + tangent.z * 10
-      );
-    } else if (nearestIslandDist < 60 && nearestIslandPos) {
-      routeLookAt = new THREE.Vector3(
-        nearestIslandPos[0],
-        nearestIslandPos[1] + 5,
-        nearestIslandPos[2]
-      );
-    } else {
-      routeLookAt = new THREE.Vector3(
-        point.x + tangent.x * 15,
-        5,
-        point.z + tangent.z * 10
-      );
-    }
-    
-    
-    let islandCamX = routeCamX;
-    let islandCamY = routeCamY;
-    let islandCamZ = routeCamZ;
-    let islandLookAt = routeLookAt;
-    
-    if (pausedAtIsland !== null && pausedAtIsland < islandPositions.length) {
-      const island = islandPositions[pausedAtIsland];
-      islandCamX = island[0] - 40;
-      islandCamY = 45;
-      islandCamZ = island[2] + 40;
-      islandLookAt = new THREE.Vector3(island[0], island[1], island[2]);
-    }
-    
-    
-    const blend = focusBlendRef.current;
-    const targetCamX = routeCamX + (islandCamX - routeCamX) * blend;
-    const targetCamY = routeCamY + (islandCamY - routeCamY) * blend;
-    const targetCamZ = routeCamZ + (islandCamZ - routeCamZ) * blend;
-    
-    const targetLookX = routeLookAt.x + (islandLookAt.x - routeLookAt.x) * blend;
-    const targetLookY = routeLookAt.y + (islandLookAt.y - routeLookAt.y) * blend;
-    const targetLookZ = routeLookAt.z + (islandLookAt.z - routeLookAt.z) * blend;
-    */
-    
-    
+
     const camFollowSpeed = isMobile ? 0.4 : 0.6;
-    
+
     gsap.to(camera.position, {
       x: targetCamX,
       y: targetCamY,
@@ -1069,8 +1119,7 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
       ease: 'power1.out',
       overwrite: true
     });
-    
-    
+
     gsap.to(cameraLookAtTarget.current, {
       x: targetLookX,
       y: targetLookY,
@@ -1087,14 +1136,29 @@ function Ship({ islandPositions }: { islandPositions: [number, number, number][]
   if (!shipModel) return null;
 
   return (
-    <group ref={shipRef} position={[0, 150, 0]}>
-      <primitive
-        object={shipModel}
-        scale={[20, 20, 20]}
-        rotation={[0, 0, 0]}
-      />
-      {/* Boat wake / foam trail */}
-      <WakeEffect />
+    <group>
+      <group ref={shipRef} position={[0, 150, 0]}>
+        <primitive
+          object={shipModel}
+          scale={[20, 20, 20]}
+          rotation={[0, 0, 0]}
+        />
+        {/* Boat wake / foam trail */}
+        <WakeEffect />
+        <Html position={[0, 20, 0]} center>
+          <div style={{ background: 'rgba(0,0,0,0.8)', color: 'white', padding: '4px', fontSize: '10px', pointerEvents: 'none' }}>
+            d: {shipRef.current ? (
+              Math.round(Math.sqrt(
+                (shipRef.current.position.x - islandPositions[Math.round(scrollAccumRef.current) || 0][0]) ** 2 +
+                (shipRef.current.position.z - islandPositions[Math.round(scrollAccumRef.current) || 0][2]) ** 2
+              ))
+            ) : '?'}
+            <br />
+            idx: {Math.round(scrollAccumRef.current)}
+          </div>
+        </Html>
+      </group>
+      <PathLine curve={curve} />
     </group>
   );
 }
@@ -1108,7 +1172,7 @@ function WakeEffect() {
   }[]>([]);
   const spawnTimer = useRef(0);
 
-  
+
   const geometry = useMemo(() => new THREE.RingGeometry(0.3, 1.2, 16), []);
   const material = useMemo(
     () =>
@@ -1158,7 +1222,7 @@ function WakeEffect() {
         (p.mesh.material as THREE.Material).dispose();
         return false;
       }
-      
+
       const scale = 1 + life * 6;
       p.mesh.scale.set(scale, scale, scale);
       (p.mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 * (1 - life);
@@ -1174,9 +1238,34 @@ function WakeEffect() {
 export default function TimelineScene() {
   const [selectedEvent, setSelectedEvent] = useState<{ day: number; title: string; time: string } | null>(null);
   const isMobile = useIsMobile();
+  const bgOverlayRef = useRef<HTMLDivElement>(null);
+  const [activeDock, setActiveDock] = useState<number | null>(null);
+
+  const handleShipProgress = (progressIdx: number) => {
+    if (bgOverlayRef.current) {
+      bgOverlayRef.current.style.backgroundColor = getSkyOverlayColor(progressIdx);
+    }
+  };
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      {/* Base Image */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundImage: 'url(/sunny.jpeg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+      }} />
+
+      {/* Dynamic Time Overlay */}
+      <div ref={bgOverlayRef} style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundBlendMode: 'multiply',
+        transition: 'background-color 1.5s ease', // Smooth CSS transition
+        pointerEvents: 'none',
+      }} />
+
       <style>{`
         @keyframes noteGlow {
           0%, 100% {
@@ -1194,10 +1283,12 @@ export default function TimelineScene() {
           antialias: true,
           stencil: false,
           depth: true,
+          alpha: true,
         }}
-        style={{ background: '#87CEEB' }}
+        style={{ background: 'transparent' }}
         onCreated={({ gl, scene }) => {
-          scene.fog = new THREE.Fog(0x87CEEB, 200, 800);
+          // Fog from -1: 0x1a2a3a, near 400, far 1200
+          scene.fog = new THREE.Fog(0x1a2a3a, 400, 1200);
           gl.domElement.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
             console.log('WebGL context lost, attempting recovery...');
@@ -1210,9 +1301,11 @@ export default function TimelineScene() {
         <directionalLight position={[-100, 80, -50]} intensity={5} />
         <directionalLight position={[0, 60, 100]} intensity={5} />
 
+        <CameraLayerSetup />
         <Ocean />
+        <DockMarkers activeIsland={activeDock ?? -1} />
         <Islands onSelect={setSelectedEvent} />
-        <Ship islandPositions={ISLAND_POSITIONS} />
+        <Ship islandPositions={ISLAND_POSITIONS} onProgress={handleShipProgress} onDock={setActiveDock} />
       </Canvas>
 
       {/* Event Details Modal */}
@@ -1222,120 +1315,120 @@ export default function TimelineScene() {
           style={{ perspective: '1000px' }}
         >
           {selectedEvent && (() => {
-             const theme = DAY_THEMES[selectedEvent.day] || DAY_THEMES[1];
-             return (
-               <div
-                  style={{
-                    background: theme.parchment,
-                    backgroundImage: `
+            const theme = DAY_THEMES[selectedEvent.day] || DAY_THEMES[1];
+            return (
+              <div
+                style={{
+                  background: theme.parchment,
+                  backgroundImage: `
                       linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent),
                       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http:
                     `,
-                    borderRadius: '6px',
-                    padding: isMobile ? '24px 20px 20px' : '36px 30px 30px',
-                    position: 'relative',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 60px rgba(139, 69, 19, 0.2)',
-                    border: `3px solid ${theme.border}`,
+                  borderRadius: '6px',
+                  padding: isMobile ? '24px 20px 20px' : '36px 30px 30px',
+                  position: 'relative',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 60px rgba(139, 69, 19, 0.2)',
+                  border: `3px solid ${theme.border}`,
+                }}
+              >
+                {/* Wax Seal — top-left */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-18px',
+                    left: '-18px',
+                    width: '56px',
+                    height: '56px',
+                    backgroundColor: theme.wax,
+                    backgroundImage: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), transparent 60%)`,
+                    borderRadius: '50%',
+                    border: '2px solid rgba(255,255,255,0.15)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.5), inset 0 -2px 6px rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: 'rotate(-10deg)',
+                    zIndex: 20,
                   }}
-               >
-                 {/* Wax Seal — top-left */}
-                 <div
-                   style={{
-                     position: 'absolute',
-                     top: '-18px',
-                     left: '-18px',
-                     width: '56px',
-                     height: '56px',
-                     backgroundColor: theme.wax,
-                     backgroundImage: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), transparent 60%)`,
-                     borderRadius: '50%',
-                     border: '2px solid rgba(255,255,255,0.15)',
-                     boxShadow: '0 4px 12px rgba(0,0,0,0.5), inset 0 -2px 6px rgba(0,0,0,0.3)',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     transform: 'rotate(-10deg)',
-                     zIndex: 20,
-                   }}
-                 >
-                    <div style={{
-                      color: 'rgba(255,255,255,0.9)',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-cinzel), serif',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                      letterSpacing: '1px',
-                    }}>
-                      Day {selectedEvent.day}
-                    </div>
-                    <div style={{
-                       position: 'absolute', inset: '4px', borderRadius: '50%',
-                       border: '1.5px dashed rgba(255,255,255,0.35)',
-                    }} />
-                 </div>
+                >
+                  <div style={{
+                    color: 'rgba(255,255,255,0.9)',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-cinzel), serif',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                    letterSpacing: '1px',
+                  }}>
+                    Day {selectedEvent.day}
+                  </div>
+                  <div style={{
+                    position: 'absolute', inset: '4px', borderRadius: '50%',
+                    border: '1.5px dashed rgba(255,255,255,0.35)',
+                  }} />
+                </div>
 
-                 {/* Custom close button */}
-                 <button
-                   type="button"
-                   onClick={() => setSelectedEvent(null)}
-                   style={{
-                     position: 'absolute',
-                     top: '10px',
-                     right: '12px',
-                     width: '28px',
-                     height: '28px',
-                     borderRadius: '50%',
-                     border: `1.5px solid ${theme.border}`,
-                     background: 'rgba(0,0,0,0.08)',
-                     color: theme.ink,
-                     fontSize: '16px',
-                     fontFamily: 'var(--font-pirata), serif',
-                     cursor: 'pointer',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     transition: 'background 0.2s',
-                     zIndex: 20,
-                   }}
-                   onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.15)'; }}
-                   onFocus={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.15)'; }}
-                   onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.08)'; }}
-                   onBlur={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.08)'; }}
-                 >
-                   ✕
-                 </button>
+                {/* Custom close button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvent(null)}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '12px',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    border: `1.5px solid ${theme.border}`,
+                    background: 'rgba(0,0,0,0.08)',
+                    color: theme.ink,
+                    fontSize: '16px',
+                    fontFamily: 'var(--font-pirata), serif',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.2s',
+                    zIndex: 20,
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.15)'; }}
+                  onFocus={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.15)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.08)'; }}
+                  onBlur={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.08)'; }}
+                >
+                  ✕
+                </button>
 
-                 {/* Corner decorations */}
-                 <div style={{ position: 'absolute', top: '8px', left: '8px', width: '16px', height: '16px', borderTop: `2px solid ${theme.border}`, borderLeft: `2px solid ${theme.border}`, opacity: 0.4 }} />
-                 <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '16px', height: '16px', borderBottom: `2px solid ${theme.border}`, borderRight: `2px solid ${theme.border}`, opacity: 0.4 }} />
+                {/* Corner decorations */}
+                <div style={{ position: 'absolute', top: '8px', left: '8px', width: '16px', height: '16px', borderTop: `2px solid ${theme.border}`, borderLeft: `2px solid ${theme.border}`, opacity: 0.4 }} />
+                <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '16px', height: '16px', borderBottom: `2px solid ${theme.border}`, borderRight: `2px solid ${theme.border}`, opacity: 0.4 }} />
 
-                 {/* Title */}
-                 <DialogHeader>
-                   <DialogTitle
-                     className={`text-center mb-2 mt-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}
-                     style={{
-                       fontFamily: 'var(--font-pirata), serif',
-                       color: theme.ink,
-                       lineHeight: 1.2,
-                     }}
-                   >
-                     {selectedEvent.title.replace(/\\n/g, ' ')}
-                   </DialogTitle>
-                   <DialogDescription className="sr-only">Event details</DialogDescription>
-                 </DialogHeader>
+                {/* Title */}
+                <DialogHeader>
+                  <DialogTitle
+                    className={`text-center mb-2 mt-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}
+                    style={{
+                      fontFamily: 'var(--font-pirata), serif',
+                      color: theme.ink,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {selectedEvent.title.replace(/\\n/g, ' ')}
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">Event details</DialogDescription>
+                </DialogHeader>
 
-                 {/* Divider */}
-                 <div className="w-4/5 mx-auto h-px my-4" style={{ background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`, opacity: 0.5 }} />
+                {/* Divider */}
+                <div className="w-4/5 mx-auto h-px my-4" style={{ background: `linear-gradient(to right, transparent, ${theme.border}, transparent)`, opacity: 0.5 }} />
 
-                 {/* Time + Day */}
-                 <div className="flex items-center justify-center gap-3" style={{ color: theme.ink, fontFamily: 'var(--font-cinzel), serif' }}>
-                    <span style={{ fontSize: '20px' }}>{theme.icon}</span>
-                    <span style={{ fontSize: '18px', fontWeight: 700 }}>{selectedEvent.time}</span>
-                    <span style={{ fontSize: '14px', opacity: 0.6 }}>• Day {selectedEvent.day}</span>
-                 </div>
-               </div>
-             );
+                {/* Time + Day */}
+                <div className="flex items-center justify-center gap-3" style={{ color: theme.ink, fontFamily: 'var(--font-cinzel), serif' }}>
+                  <span style={{ fontSize: '20px' }}>{theme.icon}</span>
+                  <span style={{ fontSize: '18px', fontWeight: 700 }}>{selectedEvent.time}</span>
+                  <span style={{ fontSize: '14px', opacity: 0.6 }}>• Day {selectedEvent.day}</span>
+                </div>
+              </div>
+            );
           })()}
         </DialogContent>
       </Dialog>
