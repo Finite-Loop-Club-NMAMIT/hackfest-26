@@ -58,6 +58,15 @@ export const teamStatusEnum = pgEnum("team_status", [
   "Second Runner Up",
 ]);
 
+export const eventTypeEnum = pgEnum("event_type", ["Solo", "Team"]);
+
+export const eventStatusEnum = pgEnum("event_status", [
+  "Draft",
+  "Published",
+  "Ongoing",
+  "Completed",
+]);
+
 export const paymentStatusEnum = pgEnum("payment_status", [
   "Pending",
   "Paid",
