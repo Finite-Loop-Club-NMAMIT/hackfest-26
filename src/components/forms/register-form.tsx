@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -132,6 +133,16 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
           />
         </div>
 
+        <div className="absolute inset-0 w-full h-full z-0 opacity-20 pointer-events-none mix-blend-multiply">
+          <Image
+            src="/images/palm-tree.png"
+            alt="Palm trees"
+            fill
+            className="object-cover object-bottom"
+            priority
+          />
+        </div>
+
         {/* --- DECORATIVE ELEMENTS (The Beach) --- */}
         <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
         <div className="absolute -bottom-[12%] left-[-10%] w-[120%] h-[30vh] bg-[#fbf6db] rounded-[50%] shadow-[0_-10px_50px_rgba(240,230,180,0.8)] z-0 pointer-events-none" />
@@ -216,7 +227,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                   shadow-sm                    // Subtle depth
                   
                   // Layout & Typography
-                  h-12 px-6 rounded-xl transition-all font-bold
+                  h-12 px-6 rounded-xl transition-all font-pirate font-bold tracking-wide
                 "
               >
                 Back
@@ -229,7 +240,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               onClick={!isLastStep ? handleNext : undefined}
               disabled={form.formState.isSubmitting}
               className="
-                flex-1 h-12 rounded-xl text-lg font-bold shadow-lg transition-all
+                flex-1 h-12 rounded-xl text-lg font-pirate font-bold shadow-lg transition-all tracking-wide
                 bg-white text-[#10569c] hover:bg-white/90 hover:scale-[1.01] active:scale-[0.99]
                 disabled:opacity-70 disabled:pointer-events-none
               "

@@ -29,7 +29,7 @@ export function CourseStep({ form, onNext }: CourseStepProps) {
           <FormItem className="w-full max-w-lg space-y-8">
             {/* Header Section */}
             <div className="text-center">
-              <FormLabel className="text-3xl md:text-5xl font-bold text-white drop-shadow-sm leading-tight">
+              <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight tracking-wide">
                 What course are you in?
               </FormLabel>
             </div>

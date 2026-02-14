@@ -15,6 +15,7 @@ import SignOut from "~/components/auth/authButtons/signOut";
 import { ConfirmTeamButton } from "~/components/teams/confirm-team-button";
 import { DeleteTeamButton } from "~/components/teams/delete-team-button";
 import { LeaveTeamButton } from "~/components/teams/leave-team-button";
+import { TeamPageLayout } from "~/components/teams/TeamPageLayout";
 import { TeamIdDisplay } from "~/components/teams/team-id-display";
 import { TeamSubmissionForm } from "~/components/teams/team-submission-form";
 import { Button } from "~/components/ui/button";
@@ -94,7 +95,9 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-red-300" />
-                  <CardTitle className="text-red-100">Not Selected</CardTitle>
+                  <CardTitle className="text-red-100 font-pirate text-2xl tracking-wide">
+                    Not Selected
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -113,7 +116,7 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5 text-yellow-300" />
-                  <CardTitle className="text-yellow-100">
+                  <CardTitle className="text-yellow-100 font-pirate text-2xl tracking-wide">
                     Payment Pending
                   </CardTitle>
                 </div>
@@ -154,7 +157,7 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-green-300" />
-                  <CardTitle className="text-green-100">
+                  <CardTitle className="text-green-100 font-pirate text-2xl tracking-wide">
                     Registration Complete
                   </CardTitle>
                 </div>
@@ -174,7 +177,7 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-blue-300" />
-                  <CardTitle className="text-blue-100">
+                  <CardTitle className="text-blue-100 font-pirate text-2xl tracking-wide">
                     Selected! Payment Opening Soon
                   </CardTitle>
                 </div>
@@ -194,7 +197,7 @@ export default async function TeamDetailsPage({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-orange-300" />
-                  <CardTitle className="text-orange-100">
+                  <CardTitle className="text-orange-100 font-pirate text-2xl tracking-wide">
                     Submission Missed
                   </CardTitle>
                 </div>
@@ -217,7 +220,7 @@ export default async function TeamDetailsPage({
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-blue-300" />
-                <CardTitle className="text-blue-100">
+                <CardTitle className="text-blue-100 font-pirate text-2xl tracking-wide">
                   Awaiting Results
                 </CardTitle>
               </div>
@@ -237,7 +240,7 @@ export default async function TeamDetailsPage({
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-orange-300" />
-                <CardTitle className="text-orange-100">
+                <CardTitle className="text-orange-100 font-pirate text-2xl tracking-wide">
                   Submission Missed
                 </CardTitle>
               </div>
@@ -257,7 +260,9 @@ export default async function TeamDetailsPage({
       return (
         <Card className="border-white/30 bg-black/20 backdrop-blur-xl shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Team Actions</CardTitle>
+            <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+              Team Actions
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!team.isCompleted &&
@@ -335,7 +340,9 @@ export default async function TeamDetailsPage({
       return (
         <Card className="border-white/20 bg-black/20 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-white">Team Status</CardTitle>
+            <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+              Team Status
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-white/60">
@@ -351,7 +358,9 @@ export default async function TeamDetailsPage({
       return (
         <Card className="border-white/20 bg-black/20 backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="text-white">Team Status</CardTitle>
+            <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+              Team Status
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-white/60">
@@ -366,7 +375,9 @@ export default async function TeamDetailsPage({
     return (
       <Card className="border-white/20 bg-black/20 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle className="text-white">Team Status</CardTitle>
+          <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+            Team Status
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-white/60">
@@ -381,11 +392,7 @@ export default async function TeamDetailsPage({
 
   return (
     // MAIN CONTAINER: Sky Gradient
-    <div className="relative flex min-h-screen flex-col items-center justify-center p-6 py-12 md:p-12 overflow-hidden bg-gradient-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb] text-white">
-      {/* --- DECORATIVE LAYERS (The Beach) --- */}
-      <div className="absolute -bottom-[5%] left-[-20%] w-[140%] h-[25vh] md:h-[35vh] bg-[#fffac2]/40 rounded-[100%] blur-3xl z-0 pointer-events-none" />
-      <div className="absolute -bottom-[12%] left-[-10%] w-[120%] h-[20vh] md:h-[30vh] bg-[#fbf6db] rounded-[50%] shadow-[0_-10px_50px_rgba(240,230,180,0.8)] z-0 pointer-events-none" />
-
+    <TeamPageLayout>
       {/* --- CONTENT --- */}
       <div className="relative z-10 w-full max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* HEADER SECTION */}
@@ -406,7 +413,7 @@ export default async function TeamDetailsPage({
             {/* 2. DESKTOP ONLY: Title & ID */}
             <div className="hidden md:flex items-center gap-4 min-w-0">
               {/* Title: Allows wrapping for long names */}
-              <h1 className="text-3xl font-bold drop-shadow-sm leading-tight break-words max-w-[500px]">
+              <h1 className="text-4xl md:text-5xl font-pirate font-bold drop-shadow-sm leading-tight wrap-break-word max-w-[500px] tracking-wide">
                 {team.name}
               </h1>
 
@@ -426,7 +433,7 @@ export default async function TeamDetailsPage({
 
           {/* CENTER CONTENT (MOBILE ONLY) - Title & ID */}
           <div className="md:hidden flex flex-col items-center space-y-4 px-4 w-full">
-            <h1 className="text-3xl font-bold drop-shadow-sm text-center break-words leading-tight">
+            <h1 className="text-4xl font-pirate font-bold drop-shadow-sm text-center wrap-break-word leading-tight tracking-wide">
               {team.name}
             </h1>
             {user.isLeader && (
@@ -449,7 +456,9 @@ export default async function TeamDetailsPage({
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Info className="w-5 h-5 text-white/80" />
-                <CardTitle className="text-white">Team Details</CardTitle>
+                <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+                  Team Details
+                </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -485,8 +494,10 @@ export default async function TeamDetailsPage({
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-white/80" />
                 <div className="flex flex-1 justify-between items-center">
-                  <CardTitle className="text-white">Team Members</CardTitle>
-                  <CardDescription className="text-white/60">
+                  <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+                    Team Members
+                  </CardTitle>
+                  <CardDescription className="text-white/60 font-mono">
                     {members.length} / 4
                   </CardDescription>
                 </div>
@@ -524,6 +535,6 @@ export default async function TeamDetailsPage({
           {renderStatusContent()}
         </div>
       </div>
-    </div>
+    </TeamPageLayout>
   );
 }

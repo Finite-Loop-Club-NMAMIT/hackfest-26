@@ -17,7 +17,7 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Team ID copied to clipboard");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to copy", {
         description: "Please try copying manually.",
       });
