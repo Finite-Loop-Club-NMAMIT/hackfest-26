@@ -1,12 +1,27 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Crimson_Text, Pirata_One, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
+import { GlobalLoader } from "~/components/ui/global-loader";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
 import "./globals.css";
+import { DayNightProvider } from "~/components/providers/useDayNight";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
+});
+
+const pirata = Pirata_One({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-pirata",
+});
+
+const crimson = Crimson_Text({
+  weight: ["400", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-crimson",
 });
 
 export const metadata: Metadata = {
@@ -22,9 +37,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${jakarta.variable} antialiased dark`}>
-        {children}
-        <ToasterWrapper />
+      <body
+        className={`${jakarta.variable} ${pirata.variable} ${crimson.variable} antialiased dark`}
+      >
+        <DayNightProvider>
+          <GlobalLoader />
+          {children}
+          <ThemeToggle />
+          <ToasterWrapper />
+        </DayNightProvider>
         {/* Umami Analytics */}
         <Script
           defer
