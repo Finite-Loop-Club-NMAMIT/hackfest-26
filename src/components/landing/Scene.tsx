@@ -1,9 +1,7 @@
 /** biome-ignore-all lint/performance/noImgElement: <TODO: MIGHT CHANGE LATER> */
 "use client";
 
-import {
-  useTexture,
-} from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { motion } from "framer-motion";
 import type { Session } from "next-auth";
@@ -26,9 +24,16 @@ useTexture.preload([
   "/images/underwater.png",
 ]);
 
-function Background({ isNight, scrollProgress }: { isNight: boolean; scrollProgress: number }) {
+function Background({
+  isNight,
+  scrollProgress,
+}: {
+  isNight: boolean;
+  scrollProgress: number;
+}) {
   const { viewport } = useThree();
   const meshRef = useRef<THREE.Mesh>(null);
+  // biome-ignore lint/suspicious/noExplicitAny: <TODO: MIGHT CHANGE LATER>
   const materialRef = useRef<any>(null);
   const [morning, night, underwater] = useTexture([
     "/images/morning.webp",
@@ -204,150 +209,150 @@ function LandingContent({
       className="w-full text-white no-scrollbar pointer-events-auto"
     >
       {/* HERITAGE SECTION (SUNNY) */}
-        <motion.section
-          className="h-screen flex flex-col items-center justify-center relative p-8 text-center bg-linear-to-b from-black/20 via-transparent to-transparent"
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <img
-            src="/logo.png"
-            alt="HF Logo"
-            className="w-48 md:w-64 h-auto drop-shadow-2xl z-10 mb-8 translate-x-8"
-          />
-          <h1 className="text-5xl md:text-8xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
-            HACKFEST '26
-          </h1>
-          <p className="mt-6 text-xl md:text-2xl font-medium drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-white/90 max-w-2xl bg-black/20 backdrop-blur-sm p-4 rounded-xl border border-white/10">
-            Embark on a voyage of innovation.
+      <motion.section
+        className="h-screen flex flex-col items-center justify-center relative p-8 text-center bg-linear-to-b from-black/20 via-transparent to-transparent"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 0.5 }}
+        viewport={{ once: true }}
+      >
+        <img
+          src="/logo.png"
+          alt="HF Logo"
+          className="w-48 md:w-64 h-auto drop-shadow-2xl z-10 mb-8 translate-x-8"
+        />
+        <h1 className="text-5xl md:text-8xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
+          HACKFEST '26
+        </h1>
+        <p className="mt-6 text-xl md:text-2xl font-medium drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-white/90 max-w-2xl bg-black/20 backdrop-blur-sm p-4 rounded-xl border border-white/10">
+          Embark on a voyage of innovation.
+        </p>
+        <div className="absolute bottom-12">
+          <p className="text-sm font-semibold tracking-widest uppercase opacity-80 animate-pulse">
+            Scroll to Dive
           </p>
-          <div className="absolute bottom-12">
-            <p className="text-sm font-semibold tracking-widest uppercase opacity-80 animate-pulse">
-              Scroll to Dive
-            </p>
+        </div>
+      </motion.section>
+
+      {/* SPACER FOR TRANSITION */}
+      <section className="h-[10vh]"></section>
+      <div className="relative">
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/20 to-black/50 pointer-events-none z-0" />
+
+        {/* UNDERWATER SECTION (SPONSORS) */}
+        <motion.section
+          className="flex flex-col items-center justify-start pt-12 relative px-4"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ margin: "-100px" }}
+        >
+          <div className="w-full max-w-6xl">
+            <motion.h2
+              className="text-5xl md:text-7xl font-pirate font-bold text-center mb-16 drop-shadow-[0_0_15px_rgba(0,200,255,0.8)] text-cyan-200 tracking-wide"
+              initial={{ scale: 0.9, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              Our Sponsors
+            </motion.h2>
+
+            <motion.div
+              className="flex flex-col items-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="group relative w-72 md:w-96 aspect-video bg-white/70 backdrop-blur-sm border-2 border-cyan-400/50 rounded-2xl flex items-center justify-center hover:border-cyan-300 transition-all duration-500 overflow-hidden shadow-[0_0_25px_rgba(0,200,255,0.2)] hover:shadow-[0_0_40px_rgba(0,200,255,0.4)]">
+                <img
+                  src="/logos/nitte.png"
+                  alt="NITTE"
+                  className="w-3/4 h-auto object-contain group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="mt-3 text-sm font-mono font-semibold tracking-[0.3em] uppercase text-cyan-300/80">
+                Executive Sponsor
+              </span>
+            </motion.div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <motion.div
+                  key={i}
+                  className="group relative aspect-video bg-black/30 backdrop-blur-sm border border-cyan-500/30 rounded-xl flex items-center justify-center hover:bg-cyan-900/40 transition-all duration-500 overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <span className="text-cyan-400 font-mono text-lg group-hover:scale-110 transition-transform">
+                    Sponsor {i}
+                  </span>
+                  <div className="absolute inset-0 bg-linear-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.section>
 
-        {/* SPACER FOR TRANSITION */}
-        <section className="h-[10vh]"></section>
-        <div className="relative">
-          <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/20 to-black/50 pointer-events-none z-0" />
+        {/* TRACKS SECTION */}
+        <TracksSection />
 
-          {/* UNDERWATER SECTION (SPONSORS) */}
-          <motion.section
-            className="flex flex-col items-center justify-start pt-12 relative px-4"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            viewport={{ margin: "-100px" }}
-          >
-            <div className="w-full max-w-6xl">
-              <motion.h2
-                className="text-5xl md:text-7xl font-pirate font-bold text-center mb-16 drop-shadow-[0_0_15px_rgba(0,200,255,0.8)] text-cyan-200 tracking-wide"
-                initial={{ scale: 0.9, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8 }}
+        {/* TIMELINE SECTION */}
+        <Timeline />
+
+        {/* DEEP SEA (PRIZE POOL) */}
+        <motion.section
+          className="flex flex-col items-center justify-center relative px-4 py-8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        >
+          <div className="relative z-10 flex flex-col items-center text-center w-full pt-16 pb-8">
+            <motion.h2
+              className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              Prize Pool
+            </motion.h2>
+
+            {/* ─── MASSIVE AMOUNT ─── */}
+            <motion.div
+              className="relative mb-20 flex flex-col items-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
+            >
+              {/* Animated glow rings */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10 animate-[ping_4s_ease-in-out_infinite]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20 animate-[ping_3s_ease-in-out_infinite_0.5s]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-md md:h-112 rounded-full bg-yellow-500/5 blur-3xl" />
+
+              {/* The number */}
+              <span className="text-sm md:text-lg font-mono font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
+                Worth Over
+              </span>
+              <span
+                className="text-8xl md:text-[12rem] font-black font-sans leading-none tracking-tight"
+                style={{
+                  color: "#eab308",
+                  textShadow:
+                    "0 0 40px rgba(234,179,8,0.5), 0 0 80px rgba(234,179,8,0.3), 0 0 120px rgba(234,179,8,0.15)",
+                }}
               >
-                Our Sponsors
-              </motion.h2>
+                ₹3L
+                <span className="text-yellow-400/70">+</span>
+              </span>
+              <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
+                IN PRIZES
+              </span>
+            </motion.div>
 
-              <motion.div
-                className="flex flex-col items-center mb-12"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-              >
-                <div className="group relative w-72 md:w-96 aspect-video bg-white/70 backdrop-blur-sm border-2 border-cyan-400/50 rounded-2xl flex items-center justify-center hover:border-cyan-300 transition-all duration-500 overflow-hidden shadow-[0_0_25px_rgba(0,200,255,0.2)] hover:shadow-[0_0_40px_rgba(0,200,255,0.4)]">
-                  <img
-                    src="/logos/nitte.png"
-                    alt="NITTE"
-                    className="w-3/4 h-auto object-contain group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <span className="mt-3 text-sm font-mono font-semibold tracking-[0.3em] uppercase text-cyan-300/80">
-                  Executive Sponsor
-                </span>
-              </motion.div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="group relative aspect-video bg-black/30 backdrop-blur-sm border border-cyan-500/30 rounded-xl flex items-center justify-center hover:bg-cyan-900/40 transition-all duration-500 overflow-hidden"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <span className="text-cyan-400 font-mono text-lg group-hover:scale-110 transition-transform">
-                      Sponsor {i}
-                    </span>
-                    <div className="absolute inset-0 bg-linear-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.section>
-
-          {/* TRACKS SECTION */}
-          <TracksSection />
-
-          {/* TIMELINE SECTION */}
-          <Timeline />
-
-          {/* DEEP SEA (PRIZE POOL) */}
-          <motion.section
-            className="flex flex-col items-center justify-center relative px-4 py-8"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
-          >
-            <div className="relative z-10 flex flex-col items-center text-center w-full pt-16 pb-8">
-              <motion.h2
-                className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
-                initial={{ opacity: 0, y: -20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-              >
-                Prize Pool
-              </motion.h2>
-
-              {/* ─── MASSIVE AMOUNT ─── */}
-              <motion.div
-                className="relative mb-20 flex flex-col items-center"
-                initial={{ scale: 0.8, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
-              >
-                {/* Animated glow rings */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10 animate-[ping_4s_ease-in-out_infinite]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20 animate-[ping_3s_ease-in-out_infinite_0.5s]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-md md:h-112 rounded-full bg-yellow-500/5 blur-3xl" />
-
-                {/* The number */}
-                <span className="text-sm md:text-lg font-mono font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
-                  Worth Over
-                </span>
-                <span
-                  className="text-8xl md:text-[12rem] font-black font-sans leading-none tracking-tight"
-                  style={{
-                    color: "#eab308",
-                    textShadow:
-                      "0 0 40px rgba(234,179,8,0.5), 0 0 80px rgba(234,179,8,0.3), 0 0 120px rgba(234,179,8,0.15)",
-                  }}
-                >
-                  ₹3L
-                  <span className="text-yellow-400/70">+</span>
-                </span>
-                <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
-                  IN PRIZES
-                </span>
-              </motion.div>
-
-              {/* <Link href="/timeline" passHref>
+            {/* <Link href="/timeline" passHref>
               <button
                 type="button"
                 className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide"
@@ -360,11 +365,11 @@ function LandingContent({
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </button>
             </Link> */}
-            </div>
-          </motion.section>
-        </div>
-        
-        <Footer />
+          </div>
+        </motion.section>
+      </div>
+
+      <Footer />
     </div>
   );
 }
@@ -403,8 +408,8 @@ export default function Scene({ session }: { session: Session | null }) {
       setScrollProgress(progress);
     };
 
-    htmlElement.addEventListener('scroll', handleScroll, { passive: true });
-    return () => htmlElement.removeEventListener('scroll', handleScroll);
+    htmlElement.addEventListener("scroll", handleScroll, { passive: true });
+    return () => htmlElement.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Prevent keyboard navigation from breaking scroll sync
@@ -445,19 +450,25 @@ export default function Scene({ session }: { session: Session | null }) {
     };
   }, []);
 
-  const canvasContent = useMemo(() => (
-    <Canvas
-      className="canvas1"
-      gl={{ antialias: true, alpha: false }}
-      dpr={[1, 1.5]}
-      color="black"
-    >
-      <Suspense fallback={null}>
-        <ScrollSync setUnderwater={setIsUnderwater} scrollProgress={scrollProgress} />
-        <Background isNight={isNight} scrollProgress={scrollProgress} />
-      </Suspense>
-    </Canvas>
-  ), [isNight, scrollProgress]);
+  const canvasContent = useMemo(
+    () => (
+      <Canvas
+        className="canvas1"
+        gl={{ antialias: true, alpha: false }}
+        dpr={[1, 1.5]}
+        color="black"
+      >
+        <Suspense fallback={null}>
+          <ScrollSync
+            setUnderwater={setIsUnderwater}
+            scrollProgress={scrollProgress}
+          />
+          <Background isNight={isNight} scrollProgress={scrollProgress} />
+        </Suspense>
+      </Canvas>
+    ),
+    [isNight, scrollProgress],
+  );
 
   return (
     <div
@@ -470,7 +481,7 @@ export default function Scene({ session }: { session: Session | null }) {
       }}
     >
       {/* HTML Content Layer */}
-      <div 
+      <div
         ref={htmlScrollRef}
         className="absolute inset-0 overflow-y-auto overflow-x-hidden no-scrollbar"
         style={{ zIndex: 10 }}
