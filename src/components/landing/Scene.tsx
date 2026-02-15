@@ -451,26 +451,6 @@ export default function Scene({ session }: { session: Session | null }) {
     };
   }, []);
 
-  const canvasContent = useMemo(
-    () => (
-      <Canvas
-        className="canvas1"
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 1.5]}
-        color="black"
-      >
-        <Suspense fallback={null}>
-          <ScrollSync
-            setUnderwater={setIsUnderwater}
-            scrollProgress={scrollProgress}
-          />
-          <Background isNight={isNight} scrollProgress={scrollProgress} />
-        </Suspense>
-      </Canvas>
-    ),
-    [isNight, scrollProgress],
-  );
-
   return (
     <div
       ref={scrollContainerRef}
@@ -495,15 +475,34 @@ export default function Scene({ session }: { session: Session | null }) {
         <Navbar isUnderwater={isUnderwater} session={session} />
       </div>
 
-      {canvasContent}
+      <Canvas
+        className="canvas1"
+        gl={{ antialias: true, alpha: false }}
+        dpr={[1, 1.5]}
+        color="black"
+      >
+        <Suspense fallback={null}>
+          <ScrollSync
+            setUnderwater={setIsUnderwater}
+            scrollProgress={scrollProgress}
+          />
+          <Background isNight={isNight} scrollProgress={scrollProgress} />
+        </Suspense>
+      </Canvas>
       <style jsx global>{`
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(2deg); }
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(2deg);
+          }
         }
-        
+
         /* Lock viewport to prevent mobile browser chrome from causing layout shifts */
-        html, body {
+        html,
+        body {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           /* Prevent address bar resize from affecting layout */
@@ -511,14 +510,15 @@ export default function Scene({ session }: { session: Session | null }) {
           width: 100%;
           height: 100%;
         }
-        
+
         /* Fix for iOS Safari */
         @supports (-webkit-touch-callout: none) {
-          html, body {
+          html,
+          body {
             height: -webkit-fill-available;
           }
         }
-        
+
         /* Ensure the canvas container uses fixed dimensions */
         .canvas1 {
           position: fixed !important;
