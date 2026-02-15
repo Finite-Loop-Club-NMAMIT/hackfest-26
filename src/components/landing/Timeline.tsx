@@ -169,7 +169,7 @@ function TimelineItem({
             <div
               className={`flex items-center gap-4 p-6 md:p-8 pb-2 md:pb-3 ${
                 isEven ? "md:flex-row-reverse md:text-right" : ""
-              }`}
+              } ${event.label ? "flex-col" : ""}`}
             >
               {/* Big day number */}
               <div className="relative shrink-0">
