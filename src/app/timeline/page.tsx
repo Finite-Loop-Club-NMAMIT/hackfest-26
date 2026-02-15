@@ -1,11 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
-import { Navbar } from '~/components/landing/Navbar';
 import Timeline2D from '../../components/timeline/components/Timeline2D';
 import WaterBackground from '../../components/timeline/components/WaterBackground';
+import { Navbar } from '~/components/landing/Navbar';
 
 const TimelineScene = dynamic(() => import('../../components/timeline/components/TimelineScene'), {
   ssr: false,
