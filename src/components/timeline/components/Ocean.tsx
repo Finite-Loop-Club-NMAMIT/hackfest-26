@@ -1,15 +1,14 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Water } from 'three/examples/jsm/objects/Water.js';
+import { extend, useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { extend } from '@react-three/fiber';
+import { Water } from 'three/examples/jsm/objects/Water.js';
 
 extend({ Water });
 
 export function Ocean() {
-  const waterRef = useRef<any>(null);
+  const waterRef = useRef<Water>(null);
 
   const waterGeometry = useMemo(() => new THREE.PlaneGeometry(3000, 3000, 2, 2), []);
 
