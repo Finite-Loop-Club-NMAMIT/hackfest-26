@@ -4,12 +4,17 @@ import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useDayNight } from "~/components/providers/useDayNight";
+import { usePathname } from "next/navigation";
 
 export function ThemeToggle() {
   const { isNight, toggleTheme } = useDayNight();
   const pathname = usePathname();
 
+<<<<<<< HEAD
   if (pathname === "/contact" || pathname === "/about") return null;
+=======
+  if (pathname === '/timeline') return null;
+>>>>>>> 2bbb9b9 (feat: 2D Improvement)
 
   return (
     <motion.button

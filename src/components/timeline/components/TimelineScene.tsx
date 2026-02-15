@@ -268,7 +268,7 @@ function EventLabel({
   return (
     <Html
       center
-      distanceFactor={isMobile ? 25 : 40}
+      distanceFactor={isMobile ? 15 : 40}
       position={[0, 18, 0]}
       style={{
         pointerEvents: 'none', 
@@ -296,7 +296,7 @@ function EventLabel({
           background: 'none',
           border: 'none',
           padding: 0,
-          transform: isVeryClose ? (isMobile ? 'scale(1.5)' : 'scale(1.3)') : 'scale(1)',
+          transform: isVeryClose ? (isMobile ? 'scale(2.0)' : 'scale(1.3)') : 'scale(1)',
           opacity: fadeOpacity,
         }}
         className="hover:scale-110 active:scale-95"
@@ -345,9 +345,9 @@ function EventLabel({
               linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent)
             `,
             color: theme.ink,
-            padding: isMobile ? '10px 14px' : '14px 20px',
-            minWidth: isMobile ? '100px' : '160px',
-            maxWidth: isMobile ? '180px' : '240px',
+            padding: isMobile ? '14px 18px' : '14px 20px',
+            minWidth: isMobile ? '130px' : '160px',
+            maxWidth: isMobile ? '220px' : '240px',
             textAlign: 'center',
             position: 'relative',
             borderRadius: '2px',
@@ -378,7 +378,7 @@ function EventLabel({
 
           <div
             style={{
-              fontSize: isMobile ? '18px' : '24px',
+              fontSize: isMobile ? '22px' : '24px',
               fontFamily: 'var(--font-pirata), serif',
               fontWeight: 400,
               lineHeight: '1.1',
@@ -400,7 +400,7 @@ function EventLabel({
 
           <div
             style={{
-              fontSize: isMobile ? '14px' : '16px',
+              fontSize: isMobile ? '16px' : '16px',
               fontFamily: 'var(--font-cinzel), serif',
               fontWeight: 600,
               display: 'flex',
@@ -624,10 +624,8 @@ function buildShipPath(islandPositions: [number, number, number][]): THREE.Catmu
       const midX = (island[0] + nextIsland[0]) / 2;
       const midZ = (island[2] + nextIsland[2]) / 2 + 25; 
       waypoints.push(new THREE.Vector3(midX, 5, midZ));
-    } else {
-      
-      waypoints.push(new THREE.Vector3(island[0] + 30, 5, island[2] + 25));
     }
+    // Last island: path ends at the approach waypoint (no overshoot)
   }
 
   return new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
@@ -989,14 +987,14 @@ const Ship = forwardRef<ShipControls, {
       }
     };
 
-    window.addEventListener('wheel', handleWheel, { passive: false });
     if (!isMobile) {
+      window.addEventListener('wheel', handleWheel, { passive: false });
       window.addEventListener('touchstart', handleTouchStart, { passive: true });
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
     }
     return () => {
-      window.removeEventListener('wheel', handleWheel);
       if (!isMobile) {
+        window.removeEventListener('wheel', handleWheel);
         window.removeEventListener('touchstart', handleTouchStart);
         window.removeEventListener('touchmove', handleTouchMove);
       }
@@ -1466,6 +1464,56 @@ function MobileControls({ shipControls }: { shipControls: React.RefObject<ShipCo
 }
 
 
+function StartLine() {
+  const startPos = ISLAND_POSITIONS[0];
+  const x = startPos[0] - 80;
+  const z = startPos[2];
+
+  const points = useMemo(() => [
+    new THREE.Vector3(x, 0.5, z - 40),
+    new THREE.Vector3(x, 0.5, z + 40),
+  ], [x, z]);
+
+  return (
+    <group>
+      <Line
+        points={points}
+        color="#f0e6d2"
+        lineWidth={3}
+        dashed
+        dashScale={3}
+        gapSize={1.5}
+        opacity={0.7}
+        transparent
+      />
+      {/* Start marker flag */}
+      <group position={[x, 0, z - 40]}>
+        {/* Pole */}
+        <mesh position={[0, 10, 0]}>
+          <cylinderGeometry args={[0.3, 0.3, 20, 8]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+        {/* Flag */}
+        <mesh position={[4, 17, 0]}>
+          <planeGeometry args={[8, 5]} />
+          <meshStandardMaterial
+            color="#aa2222"
+            side={THREE.DoubleSide}
+            emissive="#661111"
+            emissiveIntensity={0.3}
+          />
+        </mesh>
+      </group>
+      {/* Start glow marker */}
+      <mesh position={[x, 1.5, z]} rotation-x={-Math.PI / 2}>
+        <ringGeometry args={[3, 5.5, 24]} />
+        <meshBasicMaterial color="#f0e6d2" transparent opacity={0.4} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
+
 export default function TimelineScene() {
   const [selectedEvent, setSelectedEvent] = useState<{ day: number; title: string; time: string } | null>(null);
   const isMobile = useIsMobile();
@@ -1473,9 +1521,12 @@ export default function TimelineScene() {
   const bgOverlayRef = useRef<HTMLDivElement>(null);
   const [activeDock, setActiveDock] = useState<number | null>(null);
 
-  const handleShipProgress = (progressIdx: number) => {
+  const handleShipProgress = (scrollAccum: number) => {
     if (bgOverlayRef.current) {
-      bgOverlayRef.current.style.backgroundImage = getSkyGradient(progressIdx);
+      // Convert raw scroll accumulation to island index for sky gradient
+      const segmentSize = 400;
+      const islandIndex = scrollAccum / segmentSize;
+      bgOverlayRef.current.style.backgroundImage = getSkyGradient(islandIndex);
     }
   };
 
@@ -1524,6 +1575,7 @@ export default function TimelineScene() {
 
         <CameraLayerSetup />
         <Ocean />
+        <StartLine />
         <DockMarkers activeIsland={activeDock ?? -1} />
         <Islands onSelect={setSelectedEvent} />
         <Ship ref={shipControlsRef} islandPositions={ISLAND_POSITIONS} onProgress={handleShipProgress} onDock={setActiveDock} />

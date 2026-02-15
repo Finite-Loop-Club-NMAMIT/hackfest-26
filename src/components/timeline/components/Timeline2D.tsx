@@ -1,303 +1,289 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { events } from '~/constants/timeline';
+import { useRef } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
+import { 
+  Anchor, 
+  Ship, 
+  Trophy, 
+  Utensils, 
+  Code, 
+  Coffee, 
+  Mic, 
+  Flag,
+  Zap,
+} from "lucide-react";
+import { events } from "~/constants/timeline";
 
-const DAY_COLORS = {
-  1: {
-    node: 'bg-gradient-to-br from-orange-400 to-orange-600',
-    path: 'bg-gradient-to-r from-pink-400 to-pink-500',
-    glow: 'shadow-orange-500',
-  },
-  2: {
-    node: 'bg-gradient-to-br from-blue-400 to-blue-600',
-    path: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
-    glow: 'shadow-blue-500',
-  },
-  3: {
-    node: 'bg-gradient-to-br from-green-400 to-green-600',
-    path: 'bg-gradient-to-r from-green-300 to-green-400',
-    glow: 'shadow-green-500',
-  },
+
+const getEventDetails = (event: typeof events[0], index: number) => {
+  const dateMap: Record<number, { day: string; month: string; year: string }> = {
+    1: { day: "17", month: "APR", year: "2026" },
+    2: { day: "18", month: "APR", year: "2026" },
+    3: { day: "19", month: "APR", year: "2026" },
+  };
+  const date = dateMap[event.day] || { day: "??", month: "APR", year: "2026" };
+
+  const titleLower = event.title.toLowerCase();
+  let icon = Ship;
+  let accent = "#22d3ee";
+  let accentRgb = "34,211,238";
+
+  if (titleLower.includes("check-in") || titleLower.includes("checkout")) {
+    icon = Flag;
+    accent = "#f87171";
+    accentRgb = "248,113,113";
+  } else if (titleLower.includes("food") || titleLower.includes("lunch") || titleLower.includes("dinner") || titleLower.includes("breakfast") || titleLower.includes("snack")) {
+    icon = Utensils;
+    accent = "#facc15";
+    accentRgb = "250,204,21";
+  } else if (titleLower.includes("start") || titleLower.includes("begin")) {
+    icon = Anchor;
+    accent = "#22d3ee";
+    accentRgb = "34,211,238";
+  } else if (titleLower.includes("end") || titleLower.includes("closing") || titleLower.includes("winner")) {
+    icon = Trophy;
+    accent = "#eab308";
+    accentRgb = "234,179,8";
+  } else if (titleLower.includes("hack") || titleLower.includes("code")) {
+    icon = Code;
+    accent = "#c084fc";
+    accentRgb = "192,132,252";
+  } else if (titleLower.includes("cool") || titleLower.includes("chill")) {
+    icon = Coffee;
+    accent = "#60a5fa"; 
+    accentRgb = "96,165,250";
+  } else if (titleLower.includes("pitch") || titleLower.includes("talk") || titleLower.includes("mic")) {
+    icon = Mic;
+    accent = "#f472b6"; 
+    accentRgb = "244,114,182";
+  } else if (titleLower.includes("engagement") || titleLower.includes("activity")) {
+    icon = Zap;
+    accent = "#4ade80";
+    accentRgb = "74,222,128";
+  }
+
+  const description = `${event.time} - Prepare for ${event.title.replace(/\n/g, " ")}.`;
+
+  return {
+    ...date,
+    title: event.title.replace(/\n/g, " "),
+    description,
+    icon,
+    accent,
+    accentRgb,
+    label: event.day === 1 && index === 0 ? "DAY 1" : undefined
+  };
 };
-
-const PATH_STROKES = {
-  1: '#ff5fa2',
-  2: '#f6c445',
-  3: '#7bd973',
-};
-
-function seededRandom(seed: number) {
-  let t = seed + 0x6d2b79f5;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function buildWavePath(from: NodePosition, to: NodePosition, seed: number) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-  const nx = -dy / distance;
-  const ny = dx / distance;
-
-  const maxOffset = 80;
-  const offsetA = (seededRandom(seed) - 0.5) * 2 * maxOffset;
-  const offsetB = (seededRandom(seed + 17) - 0.5) * 2 * maxOffset;
-
-  const c1x = from.x + dx * 0.33 + nx * offsetA;
-  const c1y = from.y + dy * 0.33 + ny * offsetA;
-  const c2x = from.x + dx * 0.66 + nx * offsetB;
-  const c2y = from.y + dy * 0.66 + ny * offsetB;
-
-  return `M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`;
-}
-
-interface NodePosition {
-  x: number;
-  y: number;
-  event: typeof events[0];
-  index: number;
-}
 
 export default function Timeline2D() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [selectedEvent, setSelectedEvent] = useState<typeof events[0] | null>(null);
+  const richEvents = events.map((e, i) => getEventDetails(e, i));
   const containerRef = useRef<HTMLDivElement>(null);
-  const [nodePositions, setNodePositions] = useState<NodePosition[]>([]);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"]
+  });
 
-  useEffect(() => {
-    const positions: NodePosition[] = [];
-    const padding = 100;
-    const baseSpacing = 160;
-    const centerX = 500;
-    let y = padding;
-    let x = centerX;
-
-    events.forEach((event, i) => {
-      const drift = (seededRandom(i * 13 + 5) - 0.5) * 300;
-      const wobble = Math.sin(i * 0.9) * 90;
-      x = clamp(x + drift + wobble, 120, 880);
-
-      if (seededRandom(i * 7 + 3) > 0.75) {
-        const jump = (seededRandom(i * 17 + 1) - 0.5) * 420;
-        x = clamp(x + jump, 120, 880);
-      }
-
-      const spacingJitter = (seededRandom(i * 9 + 11) - 0.5) * 110;
-      y += baseSpacing + spacingJitter;
-
-      positions.push({
-        x,
-        y,
-        event,
-        index: i,
-      });
-    });
-
-    setNodePositions(positions);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      const element = containerRef.current;
-      const scrollTop = element.scrollTop;
-      const scrollHeight = element.scrollHeight - element.clientHeight;
-      const progress = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
-      setScrollProgress(progress);
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
-
-  const getPlayerPosition = () => {
-    const currentIndex = Math.floor(scrollProgress * (events.length - 1));
-    const nextIndex = Math.min(currentIndex + 1, events.length - 1);
-    const localProgress = (scrollProgress * (events.length - 1)) - currentIndex;
-
-    if (nodePositions.length === 0) return { x: 0, y: 0 };
-
-    const current = nodePositions[currentIndex];
-    const next = nodePositions[nextIndex];
-
-    return {
-      x: current.x + (next.x - current.x) * localProgress,
-      y: current.y + (next.y - current.y) * localProgress,
-    };
-  };
-
-  const playerPos = getPlayerPosition();
-
-  const lastY = nodePositions.length > 0 ? nodePositions[nodePositions.length - 1].y : 0;
-  const containerHeight = Math.max(2000, lastY + 500);
-  const containerWidth = 1000;
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative w-full h-screen overflow-y-scroll bg-linear-to-b from-green-200 via-green-100 to-yellow-100"
-      style={{
-        backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.2) 0%, transparent 50%)',
-      }}
+    <section ref={containerRef} className="relative w-full min-h-screen bg-[#0B1026] py-20 overflow-hidden">
+        
+      {/* Background: Navigation Grid & Vignette */}
+      <div className="absolute inset-0 pointer-events-none">
+         {/* Grid */}
+         <div 
+           className="absolute inset-0 opacity-[0.03]"
+           style={{ 
+             backgroundImage: `linear-gradient(#c5a059 1px, transparent 1px), linear-gradient(90deg, #c5a059 1px, transparent 1px)`,
+             backgroundSize: '40px 40px'
+           }} 
+         />
+         {/* Vignette */}
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0B1026_100%)] opacity-80" />
+      </div>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-900/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-900/20 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-24"
+        >
+          <h2 className="text-5xl md:text-7xl font-pirata font-black text-transparent bg-clip-text bg-gradient-to-b from-[#f0e6d2] to-[#c5a059] drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] tracking-wider">
+            Timeline
+          </h2>
+          <p className="mt-4 text-lg md:text-xl text-[#f0e6d2]/60 font-crimson italic tracking-wide">
+            The Captain's schedule for the 3-day journey.
+          </p>
+        </motion.div>
+
+        <div className="relative max-w-5xl mx-auto pb-32">
+          {/* Central rope — Desktop */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-[#c5a059]/20">
+            <motion.div 
+               style={{ scaleY, originY: 0 }}
+               className="w-full h-full bg-[#c5a059] shadow-[0_0_15px_rgba(197,160,89,0.5)]"
+            />
+          </div>
+
+          {/* Left rope — Mobile */}
+          <div className="md:hidden absolute left-6 top-0 bottom-0 w-px bg-[#c5a059]/20">
+             <motion.div 
+               style={{ scaleY, originY: 0 }}
+               className="w-full h-full bg-[#c5a059] shadow-[0_0_15px_rgba(197,160,89,0.5)]"
+            />
+          </div>
+
+          <div className="flex flex-col gap-20 md:gap-28">
+            {richEvents.map((event, index) => (
+              <TimelineItem key={`${event.title}-${index}`} event={event} index={index} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TimelineItem({
+  event,
+  index,
+}: {
+  event: ReturnType<typeof getEventDetails>;
+  index: number;
+}) {
+  const isEven = index % 2 === 0;
+  const Icon = event.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ margin: "-80px" }}
+      transition={{ duration: 0.6, delay: index * 0.05 }}
+      className={`relative flex items-center flex-row ${
+        isEven ? "md:flex-row" : "md:flex-row-reverse"
+      }`}
     >
-      <div className="relative" style={{ height: `${containerHeight}px`, width: `${containerWidth}px`, margin: '0 auto' }}>
-        <svg
-          className="absolute left-0 top-0"
-          width={containerWidth}
-          height={containerHeight}
-        >
-          <title>Wavy dotted route</title>
-          {nodePositions.map((node, i) => {
-            if (i >= nodePositions.length - 1) return null;
-            const next = nodePositions[i + 1];
-            const stroke = PATH_STROKES[node.event.day as keyof typeof PATH_STROKES] || PATH_STROKES[1];
-            const d = buildWavePath(node, next, i * 31 + node.event.day * 7);
-            return (
-              <path
-                key={`path-${node.index}`}
-                d={d}
-                stroke={stroke}
-                strokeWidth={10}
-                strokeDasharray="2 18"
-                strokeLinecap="round"
-                fill="none"
-              />
-            );
-          })}
-        </svg>
+      <div className="hidden md:block w-1/2" />
 
+      {/* Node on the rope */}
+      <div className="absolute left-6 md:left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
         <div
-          className="absolute w-12 h-12 bg-black rounded-md transition-all duration-300 shadow-2xl"
-          style={{
-            left: `${playerPos.x - 24}px`,
-            top: `${playerPos.y - 24}px`,
-            zIndex: 50,
-            border: '4px solid white',
-          }}
+          className="absolute w-20 h-20 rounded-full opacity-25 animate-[ping_3s_ease-in-out_infinite]"
+          style={{ backgroundColor: event.accent, filter: "blur(10px)" }}
         />
-
-        {nodePositions.map((node) => {
-          const colors = DAY_COLORS[node.event.day as keyof typeof DAY_COLORS] || DAY_COLORS[1];
-          const isPassed = scrollProgress * (events.length - 1) >= node.index;
-          
-          return (
-            <div
-              key={node.index}
-              className="absolute"
-              style={{
-                left: `${node.x - 40}px`,
-                top: `${node.y - 40}px`,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedEvent(node.event)}
-                className={`
-                  relative w-20 h-20 rounded-full ${colors.node}
-                  flex items-center justify-center
-                  font-bold text-2xl text-white
-                  transition-all duration-300
-                  border-4 border-white
-                  ${isPassed ? 'scale-110 shadow-2xl' : 'opacity-70'}
-                  hover:scale-125 hover:shadow-2xl
-                  cursor-pointer
-                `}
-                style={{
-                  boxShadow: isPassed ? '0 8px 24px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.2)',
-                }}
-              >
-                <span className="relative z-10">{node.index + 1}</span>
-                
-                {node.event.day === 1 && node.index === 0 && (
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white">
-                    ★
-                  </div>
-                )}
-                
-                {node.event.day !== events[Math.max(0, node.index - 1)]?.day && node.index > 0 && (
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold border-2 border-white shadow-lg">
-                    Day {node.event.day}
-                  </div>
-                )}
-              </button>
-
-              <div 
-                className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-white rounded-lg px-3 py-2 shadow-lg text-center min-w-max"
-                style={{ maxWidth: '150px' }}
-              >
-                <div className="text-sm font-bold text-gray-800 whitespace-pre-line">
-                  {node.event.title}
-                </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  {node.event.time}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        <div className="absolute left-0 top-0 w-32 h-32 pointer-events-none">
-          <div className="relative w-full h-full">
-            <div className="absolute top-8 left-8 text-6xl">🎮</div>
-            <div className="absolute top-4 left-20 bg-pink-300 text-pink-800 px-3 py-1 rounded-full text-sm font-bold border-2 border-white shadow-lg">
-              Start!
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {selectedEvent && (
-        <button 
-          type="button"
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-1000"
-          onClick={() => setSelectedEvent(null)}
+        <div
+          className="w-14 h-14 rounded-full bg-[#0f172a] border-2 backdrop-blur-xl flex items-center justify-center z-10 shadow-lg group"
+          style={{ borderColor: event.accent }}
         >
-          <div 
-            className="bg-white rounded-2xl p-8 max-w-md shadow-2xl transform scale-100 animate-in"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setSelectedEvent(null);
-            }}
-            role="dialog"
-            aria-modal="true"
-            tabIndex={-1}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className={`px-4 py-1 rounded-full text-white font-bold ${DAY_COLORS[selectedEvent.day as keyof typeof DAY_COLORS]?.node}`}>
-                Day {selectedEvent.day}
-              </div>
-              <button 
-                type="button"
-                onClick={() => setSelectedEvent(null)}
-                className="text-gray-500 hover:text-gray-800 text-2xl font-bold"
-              >
-                ×
-              </button>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2 whitespace-pre-line">
-              {selectedEvent.title}
-            </h2>
-            <p className="text-xl text-gray-600">
-              {selectedEvent.time}
-            </p>
-          </div>
-        </button>
-      )}
-
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-6 py-3 shadow-lg border-2 border-gray-300 z-50">
-        <div className="text-sm font-bold text-gray-700">
-          Progress: {Math.round(scrollProgress * 100)}%
+          <Icon className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" style={{ color: event.accent }} />
         </div>
       </div>
-    </div>
+
+      {/* Card */}
+      <div
+        className={`w-full md:w-1/2 pl-20 md:pl-0 pr-2 ${
+          isEven ? "md:pr-14 md:pl-0" : "md:pl-14 md:pr-0"
+        }`}
+      >
+        <motion.div
+          initial={{ x: isEven ? -20 : 20, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
+          className="relative group"
+        >
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover effect only */}
+          <div
+            className="relative overflow-hidden bg-[#1e293b]/40 backdrop-blur-md border rounded-sm transition-all duration-500 hover:translate-y-[-4px]"
+            style={{
+              borderColor: `rgba(${event.accentRgb}, 0.2)`,
+              boxShadow: `0 10px 30px -10px rgba(0,0,0,0.5)`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = `rgba(${event.accentRgb}, 0.5)`;
+              e.currentTarget.style.boxShadow = `0 20px 40px -10px rgba(${event.accentRgb}, 0.1)`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = `rgba(${event.accentRgb}, 0.2)`;
+              e.currentTarget.style.boxShadow = `0 10px 30px -10px rgba(0,0,0,0.5)`;
+            }}
+          >
+
+
+            <div
+              className={`relative flex items-center gap-4 p-6 md:p-8 pb-2 md:pb-3 ${
+                isEven ? "md:flex-row-reverse md:text-right" : ""
+              }`}
+            >
+              {/* Big day number */}
+              <div className="relative shrink-0">
+                <span
+                  className={`text-6xl md:text-7xl font-pirata leading-none tracking-tight block`}
+                  style={{
+                    color: event.accent,
+                    textShadow: `0 0 20px rgba(${event.accentRgb}, 0.4)`,
+                  }}
+                >
+                  {event.day}
+                </span>
+              </div>
+
+              {/* Month + year stacked */}
+              <div
+                className={`flex flex-col ${isEven ? "md:items-end" : "md:items-start"} justify-center`}
+              >
+                <span
+                  className={`text-xl md:text-2xl font-pirata font-bold tracking-[0.15em] leading-tight`}
+                  style={{ color: "#f0e6d2" }}
+                >
+                  {event.month}
+                </span>
+                <span className="text-sm font-mono text-white/40 tracking-widest">
+                  {event.year}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="mx-6 md:mx-8 h-px"
+              style={{ backgroundColor: `rgba(${event.accentRgb}, 0.15)` }}
+            />
+
+            <div
+              className={`p-6 md:p-8 pt-4 md:pt-5 ${
+                isEven ? "md:text-right" : "text-left"
+              }`}
+            >
+              <h3 className="text-xl md:text-2xl font-pirata font-bold text-[#f0e6d2] mb-2 drop-shadow-md">
+                {event.title}
+              </h3>
+              <p className="text-[#94a3b8] text-sm md:text-base leading-relaxed font-crimson font-medium">
+                {event.description}
+              </p>
+            </div>
+
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-sm"
+              style={{
+                background: `radial-gradient(ellipse at ${
+                  isEven ? "100% 30%" : "0% 30%"
+                }, rgba(${event.accentRgb}, 0.06), transparent 70%)`,
+              }}
+            />
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }

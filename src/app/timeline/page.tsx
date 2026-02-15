@@ -30,21 +30,66 @@ export default function TimelinePage() {
       <button
         type="button"
         onClick={handleToggle}
-        className="fixed top-6 right-6 z-9999 transition-transform duration-300 hover:scale-105"
+        className="fixed top-6 right-6 z-50 transition-transform duration-300 hover:scale-105 active:scale-95"
         aria-label="Toggle 2D and 3D mode"
       >
-        <div className="relative w-28 h-9 rounded-full bg-linear-to-r from-slate-900 to-slate-700 border border-white/20 shadow-xl">
-          <div className="absolute inset-0 flex items-center justify-between px-3 text-[10px] font-bold tracking-widest text-white">
-            <span className={is3D ? 'opacity-100' : 'opacity-40'}>3D</span>
-            <span className={!is3D ? 'opacity-100' : 'opacity-40'}>2D</span>
+        <div style={{
+          position: 'relative',
+          width: '120px',
+          height: '44px',
+          borderRadius: '22px',
+          background: '#2A1A0A',
+          border: '2px solid #8B4513',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.5), inset 0 2px 4px rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '4px',
+          cursor: 'pointer',
+        }}>
+          {/* Background Text */}
+          <div className="absolute inset-0 flex items-center justify-between px-4 w-full h-full pointer-events-none">
+            <span style={{ 
+              fontFamily: 'var(--font-pirata), serif', 
+              color: '#8B4513', 
+              fontSize: '18px',
+              textShadow: '0 1px 1px rgba(255,255,255,0.1)'
+            }}>3D</span>
+            <span style={{ 
+              fontFamily: 'var(--font-cinzel), serif', 
+              color: '#8B4513', 
+              fontSize: '14px',
+              fontWeight: 700,
+              textShadow: '0 1px 1px rgba(255,255,255,0.1)'
+            }}>2D</span>
           </div>
+
+          {/* Sliding Nob */}
           <div
-            className="absolute top-0.5 left-0.5 w-8 h-8 rounded-full bg-white text-slate-900 text-[10px] font-extrabold flex items-center justify-center shadow-lg transition-transform duration-300"
             style={{
-              transform: is3D ? 'translateX(0px)' : 'translateX(52px)',
+              width: '56px',
+              height: '34px',
+              background: '#f0e6d2',
+              backgroundImage: 'linear-gradient(to bottom, #f8f1e0, #e0d0b0)',
+              borderRadius: '18px',
+              border: '1px solid #8B4513',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              transform: is3D ? 'translateX(0)' : 'translateX(56px)',
+              transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
             }}
           >
-            {is3D ? '3D' : '2D'}
+             <span style={{ 
+               fontFamily: is3D ? 'var(--font-pirata), serif' : 'var(--font-cinzel), serif',
+               color: '#2A1A0A',
+               fontSize: is3D ? '20px' : '14px',
+               fontWeight: is3D ? 400 : 700,
+             }}>
+               {is3D ? '3D' : '2D'}
+             </span>
           </div>
         </div>
       </button>
