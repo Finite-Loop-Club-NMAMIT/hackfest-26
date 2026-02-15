@@ -172,10 +172,10 @@ function LandingContent({
         const { height } = ref.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         // Exact pages needed for content
-        const newPages = Math.max(3, height / viewportHeight);
+        const newPages = height / viewportHeight;
 
         // Only update if difference is significant
-        if (Math.abs(newPages - pages) > 0.02) {
+        if (Math.abs(newPages - pages) > 0.01) {
           setPages(newPages);
         }
         setContentHeight(height);
