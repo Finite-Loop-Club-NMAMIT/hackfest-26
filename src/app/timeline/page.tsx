@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
 import Timeline2D from '../../components/timeline/components/Timeline2D';
 import WaterBackground from '../../components/timeline/components/WaterBackground';
+import { Navbar } from '~/components/landing/Navbar';
 
 const TimelineScene = dynamic(() => import('../../components/timeline/components/TimelineScene'), {
   ssr: false,
 });
 
 export default function TimelinePage() {
+  const { data: session } = useSession();
   const [is3D, setIs3D] = useState(true);
 
   useEffect(() => {
@@ -28,10 +31,12 @@ export default function TimelinePage() {
 
   return (
     <div className="relative w-full h-screen">
+      <Navbar isUnderwater={false} session={session} />
+      
       <button
         type="button"
         onClick={handleToggle}
-        className="fixed top-6 right-6 z-50 transition-transform duration-300 hover:scale-105 active:scale-95"
+        className="fixed md:top-6 top-20 right-4 md:right-6 z-50 transition-transform duration-300 hover:scale-105 active:scale-95"
         aria-label="Toggle 2D and 3D mode"
       >
         <div style={{
@@ -95,8 +100,10 @@ export default function TimelinePage() {
         </div>
       </button>
 
-      {is3D ? <TimelineScene /> : <WaterBackground />}
-      {!is3D && <Timeline2D />}
+      <div className="relative w-full h-full pt-24 md:pt-0">
+        {is3D ? <TimelineScene /> : <WaterBackground />}
+        {!is3D && <Timeline2D />}
+      </div>
     </div>
   );
 }

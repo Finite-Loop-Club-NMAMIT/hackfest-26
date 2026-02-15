@@ -1,18 +1,17 @@
 "use client";
-
-import { useRef } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
-import { 
-  Anchor, 
-  Ship, 
-  Trophy, 
-  Utensils, 
-  Code, 
-  Coffee, 
-  Mic, 
+import {
+  Anchor,
+  Code,
+  Coffee,
   Flag,
+  Mic,
+  Ship,
+  Trophy,
+  Utensils,
   Zap,
 } from "lucide-react";
+import { useRef } from "react";
 import { events } from "~/constants/timeline";
 
 
@@ -94,24 +93,14 @@ export default function Timeline2D() {
   return (
     <section ref={containerRef} className="relative z-10 w-full min-h-screen bg-transparent py-20 overflow-hidden">
         
-      {/* Background: Navigation Grid & Vignette */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[#0B1026]/20" />
-         {/* Grid */}
-         <div 
-           className="absolute inset-0 opacity-[0.03]"
-           style={{ 
-             backgroundImage: `linear-gradient(#c5a059 1px, transparent 1px), linear-gradient(90deg, #c5a059 1px, transparent 1px)`,
-             backgroundSize: '40px 40px'
-           }} 
-         />
-         {/* Vignette */}
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(11,16,38,0)_0%,rgba(11,16,38,0.5)_100%)] opacity-45" />
-      </div>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-900/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-900/20 rounded-full blur-[120px]" />
-      </div>
+      {/* Underwater Background Image */}
+      <div 
+        className="absolute inset-0 pointer-events-none bg-cover bg-center"
+        style={{ backgroundImage: 'url(/images/underwater.jpg)' }}
+      />
+      
+      {/* Dark Overlay for Readability */}
+      <div className="absolute inset-0 pointer-events-none bg-black/40" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -120,7 +109,7 @@ export default function Timeline2D() {
           transition={{ duration: 0.8 }}
           className="text-center mb-24"
         >
-          <h2 className="text-5xl md:text-7xl font-pirata font-black text-transparent bg-clip-text bg-gradient-to-b from-[#f0e6d2] to-[#c5a059] drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] tracking-wider">
+          <h2 className="text-5xl md:text-7xl font-pirata font-black text-transparent bg-clip-text bg-linear-to-b from-[#f0e6d2] to-[#c5a059] drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] tracking-wider">
             The Captain’s Route
           </h2>
           <p className="mt-4 text-lg md:text-xl text-[#f0e6d2]/60 font-crimson italic tracking-wide">
@@ -206,7 +195,7 @@ function TimelineItem({
         >
           {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover effect only */}
           <div
-            className="relative overflow-hidden bg-[#1e293b]/40 backdrop-blur-md border rounded-sm transition-all duration-500 hover:translate-y-[-4px]"
+            className="relative overflow-hidden bg-[#1e293b]/40 backdrop-blur-md border rounded-sm transition-all duration-500 hover:-translate-y-1"
             style={{
               borderColor: `rgba(${event.accentRgb}, 0.2)`,
               boxShadow: `0 10px 30px -10px rgba(0,0,0,0.5)`,

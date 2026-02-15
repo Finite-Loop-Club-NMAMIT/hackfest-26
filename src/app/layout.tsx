@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Crimson_Text, Pirata_One, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { SessionProvider } from "next-auth/react";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import { GlobalLoader } from "~/components/ui/global-loader";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
-import "./globals.css";
 import { DayNightProvider } from "~/components/providers/useDayNight";
+import "./globals.css" assert { type: "css" };
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -40,12 +41,14 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${pirata.variable} ${crimson.variable} antialiased dark`}
       >
-        <DayNightProvider>
-          <GlobalLoader />
-          {children}
-          <ThemeToggle />
-          <ToasterWrapper />
-        </DayNightProvider>
+        <SessionProvider>
+          <DayNightProvider>
+            <GlobalLoader />
+            {children}
+            <ThemeToggle />
+            <ToasterWrapper />
+          </DayNightProvider>
+        </SessionProvider>
         {/* Umami Analytics */}
         <Script
           defer
