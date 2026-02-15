@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Timeline2D from '../../components/timeline/components/Timeline2D';
+import WaterBackground from '../../components/timeline/components/WaterBackground';
 
 const TimelineScene = dynamic(() => import('../../components/timeline/components/TimelineScene'), {
   ssr: false,
@@ -94,7 +95,8 @@ export default function TimelinePage() {
         </div>
       </button>
 
-      {is3D ? <TimelineScene /> : <Timeline2D />}
+      {is3D ? <TimelineScene /> : <WaterBackground />}
+      {!is3D && <Timeline2D />}
     </div>
   );
 }

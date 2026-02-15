@@ -23,12 +23,14 @@ function Ocean() {
         }
       ),
       sunDirection: new THREE.Vector3(),
-      sunColor: 0xffffff,
-      waterColor: 0x0a4d8c,
-      distortionScale: 8.0,
+      sunColor: 0xfff6d5,
+      waterColor: 0x1aa0d8,
+      distortionScale: 16.0,
       fog: false,
     });
     
+    waterInstance.material.transparent = true;
+    waterInstance.material.opacity = 0.95;
     return waterInstance;
   }, [waterGeometry]);
 
@@ -62,8 +64,10 @@ function CameraSetup() {
 
 export default function WaterBackground() {
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
-      <Canvas camera={{ fov: 75 }}>
+    <div
+      style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}
+    >
+      <Canvas camera={{ fov: 75 }} gl={{ alpha: true, antialias: true }} style={{ background: 'transparent' }}>
         <CameraSetup />
         <ambientLight intensity={0.8} />
         <directionalLight position={[0, 10, 0]} intensity={1.2} />

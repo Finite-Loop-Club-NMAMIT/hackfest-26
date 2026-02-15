@@ -1519,7 +1519,19 @@ export default function TimelineScene() {
   const isMobile = useIsMobile();
   const shipControlsRef = useRef<ShipControls>(null);
   const bgOverlayRef = useRef<HTMLDivElement>(null);
+  const allowRecoveryRef = useRef(true);
+  const webglLossHandlerRef = useRef<((event: Event) => void) | null>(null);
+  const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [activeDock, setActiveDock] = useState<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      allowRecoveryRef.current = false;
+      if (glCanvasRef.current && webglLossHandlerRef.current) {
+        glCanvasRef.current.removeEventListener('webglcontextlost', webglLossHandlerRef.current);
+      }
+    };
+  }, []);
 
   const handleShipProgress = (scrollAccum: number) => {
     if (bgOverlayRef.current) {
@@ -1561,11 +1573,15 @@ export default function TimelineScene() {
         style={{ background: 'transparent' }}
         onCreated={({ gl, scene }) => {
           scene.fog = new THREE.Fog(0x1a2a3a, 400, 1200);
-          gl.domElement.addEventListener('webglcontextlost', (event) => {
+          const handleContextLost = (event: Event) => {
             event.preventDefault();
+            if (!allowRecoveryRef.current) return;
             console.log('WebGL context lost, attempting recovery...');
             setTimeout(() => window.location.reload(), 1000);
-          });
+          };
+          webglLossHandlerRef.current = handleContextLost;
+          glCanvasRef.current = gl.domElement;
+          gl.domElement.addEventListener('webglcontextlost', handleContextLost);
         }}
       >
         <ambientLight intensity={3} />

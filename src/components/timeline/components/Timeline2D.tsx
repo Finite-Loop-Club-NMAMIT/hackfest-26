@@ -92,10 +92,11 @@ export default function Timeline2D() {
   });
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-screen bg-[#0B1026] py-20 overflow-hidden">
+    <section ref={containerRef} className="relative z-10 w-full min-h-screen bg-transparent py-20 overflow-hidden">
         
       {/* Background: Navigation Grid & Vignette */}
       <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[#0B1026]/20" />
          {/* Grid */}
          <div 
            className="absolute inset-0 opacity-[0.03]"
@@ -105,7 +106,7 @@ export default function Timeline2D() {
            }} 
          />
          {/* Vignette */}
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0B1026_100%)] opacity-80" />
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(11,16,38,0)_0%,rgba(11,16,38,0.5)_100%)] opacity-45" />
       </div>
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-900/20 rounded-full blur-[120px]" />
@@ -120,10 +121,10 @@ export default function Timeline2D() {
           className="text-center mb-24"
         >
           <h2 className="text-5xl md:text-7xl font-pirata font-black text-transparent bg-clip-text bg-gradient-to-b from-[#f0e6d2] to-[#c5a059] drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] tracking-wider">
-            Timeline
+            The Captain’s Route
           </h2>
           <p className="mt-4 text-lg md:text-xl text-[#f0e6d2]/60 font-crimson italic tracking-wide">
-            The Captain's schedule for the 3-day journey.
+            The Captain's log for the 3-day voyage.
           </p>
         </motion.div>
 
