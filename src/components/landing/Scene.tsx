@@ -372,7 +372,6 @@ function LandingContent({
                 IN PRIZES
               </span>
             </motion.div>
-
             <Link href="/timeline" passHref>
               <button
                 type="button"
