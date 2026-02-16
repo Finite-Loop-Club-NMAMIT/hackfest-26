@@ -2,19 +2,27 @@
 
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
+<<<<<<< HEAD
 import { usePathname } from "next/navigation";
 import { useDayNight } from "~/components/providers/useDayNight";
+=======
+>>>>>>> 69c5d01 (feat: added contact us page and enhanced images quality)
 import { usePathname } from "next/navigation";
+import { useDayNight } from "~/components/providers/useDayNight";
 
 export function ThemeToggle() {
   const { isNight, toggleTheme } = useDayNight();
   const pathname = usePathname();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   if (pathname === "/contact" || pathname === "/about") return null;
 =======
   if (pathname === '/timeline') return null;
 >>>>>>> 2bbb9b9 (feat: 2D Improvement)
+=======
+  if (pathname === "/contact" || pathname === "/about") return null;
+>>>>>>> 69c5d01 (feat: added contact us page and enhanced images quality)
 
   return (
     <motion.button

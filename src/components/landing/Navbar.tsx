@@ -17,9 +17,15 @@ function cn(...inputs: ClassValue[]) {
 
 const NAV_LINKS = [
   { name: "Home", href: "/" },
+<<<<<<< HEAD
   { name: "About", href: "/about" },
   { name: "Events", href: "#" },
   { name: "Timeline", href: "#" },
+=======
+  { name: "About", href: "/#" },
+  { name: "Tracks", href: "/#" },
+  { name: "Prizes", href: "/#" },
+>>>>>>> 69c5d01 (feat: added contact us page and enhanced images quality)
   { name: "Contact", href: "/contact" },
 ];
 
