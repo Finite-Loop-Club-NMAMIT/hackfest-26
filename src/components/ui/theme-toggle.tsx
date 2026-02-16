@@ -7,8 +7,11 @@ import { useDayNight } from "~/components/providers/useDayNight";
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 >>>>>>> a945d76 (feat: added contact us page and enhanced images quality)
 
+=======
+>>>>>>> a593772 (refactor: remove unnecessary empty line.)
 export function ThemeToggle() {
   const { isNight, toggleTheme } = useDayNight();
   const pathname = usePathname();
