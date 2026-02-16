@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { name: "About", href: "/#" },
   { name: "Tracks", href: "/#" },
   { name: "Prizes", href: "/#" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export function Navbar({
