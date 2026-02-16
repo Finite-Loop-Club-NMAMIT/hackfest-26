@@ -451,7 +451,7 @@ export default function Scene({ session }: { session: Session | null }) {
     const lenis = new Lenis({
       wrapper: htmlElement, // The container with overflow: auto
       content: htmlElement.firstElementChild as HTMLElement, // The content inside
-      duration: 1.5, // Slower duration for "stronger" smooth effect
+      duration: 1.0, // Slower duration for "stronger" smooth effect
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
       smoothWheel: true,
       syncTouch: false, // Don't hijack touch unless desired
