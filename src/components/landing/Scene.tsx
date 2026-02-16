@@ -372,20 +372,6 @@ function LandingContent({
                 IN PRIZES
               </span>
             </motion.div>
-
-            <Link href="/timeline" passHref>
-              <button
-                type="button"
-                className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide"
-                // Prevent scroll on focus
-                onFocus={(e) => {
-                  e.preventDefault();
-                }}
-              >
-                <span className="relative z-10">Explore Timeline</span>
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              </button>
-            </Link>
           </div>
         </motion.section>
       </div>
