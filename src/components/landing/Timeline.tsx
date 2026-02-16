@@ -63,8 +63,8 @@ export default function Timeline() {
     <section className="relative w-full py-4 md:py-1 overflow-hidden">
       {/* Ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-900/15 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-900/15 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-900/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-900/5 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -130,8 +130,8 @@ function TimelineItem({
       {/* Node on the rope */}
       <div className="absolute left-6 md:left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
         <div
-          className="absolute w-20 h-20 rounded-full opacity-25 animate-[ping_3s_ease-in-out_infinite]"
-          style={{ backgroundColor: event.accent, filter: "blur(10px)" }}
+          className="absolute w-20 h-20 rounded-full opacity-10"
+          style={{ backgroundColor: event.accent, filter: "blur(20px)" }}
         />
         <div
           className="w-14 h-14 rounded-full bg-black/80 border-2 backdrop-blur-xl flex items-center justify-center z-10 shadow-lg"
@@ -155,7 +155,7 @@ function TimelineItem({
         >
           {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover effect only */}
           <div
-            className="relative overflow-hidden bg-black/30 backdrop-blur-md border rounded-2xl transition-all duration-500"
+            className="relative overflow-hidden bg-black/40 border rounded-2xl transition-all duration-500"
             style={{
               borderColor: `rgba(${event.accentRgb}, 0.2)`,
             }}
@@ -174,7 +174,7 @@ function TimelineItem({
               {/* Big day number */}
               <div className="relative shrink-0">
                 <span
-                  className={`${event.label ? "text-5xl md:text-8xl" : "text-7xl md:text-8xl"} font-black font-sans leading-none tracking-tight block`}
+                  className={`${event.label ? "text-5xl md:text-6xl lg:text-7xl xl:text-8xl" : "text-7xl md:text-8xl"} font-black font-sans leading-none tracking-tight block`}
                   style={{
                     color: event.accent,
                     textShadow: `0 0 40px rgba(${event.accentRgb}, 0.4), 0 0 80px rgba(${event.accentRgb}, 0.2)`,
