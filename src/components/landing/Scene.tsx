@@ -3,7 +3,7 @@
 
 import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
-import { motion } from "framer-motion";
+import { motion, useAnimationFrame } from "framer-motion";
 import Lenis from "lenis";
 import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -99,7 +99,7 @@ function Background({
       // Use damped progress for smoother transition
       const transitionProgress = Math.max(
         0,
-        Math.min(1, (progress - 0.05) / 0.09),
+        Math.min(1, (progress - 0.05) / 0.08),
       );
       materialRef.current.uTransitionProgress = transitionProgress;
       materialRef.current.uHoverProgress = state.pointer.x * 0.5 + 0.5;
@@ -156,6 +156,116 @@ function Background({
   );
 }
 
+function FixedHero({ scrollRef }: { scrollRef: React.MutableRefObject<number> }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useAnimationFrame(() => {
+    if (containerRef.current) {
+      const progress = scrollRef.current;
+      const opacity = 1 - THREE.MathUtils.smoothstep(progress, 0.04, 0.08);
+      const scale = 1 - progress * 2;
+
+      containerRef.current.style.opacity = opacity.toString();
+      containerRef.current.style.transform = `scale(${Math.max(0, scale)})`;
+
+      containerRef.current.style.visibility = opacity <= 0.001 ? "hidden" : "visible";
+    }
+  });
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-0 flex flex-col items-center justify-center pointer-events-none"
+    >
+      <motion.div
+        className="flex h-screen flex-col items-center justify-center relative p-8 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
+      >
+        <div className="z-10 flex flex-col items-center">
+          {/* LOGO */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative pointer-events-auto" // Interactive if needed
+          >
+            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-110 -z-10" />
+            <img
+              src="/logo.png"
+              alt="HF Logo"
+              className="w-48 md:w-64 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
+            />
+          </motion.div>
+
+          <h1 className="text-6xl md:text-9xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
+            HACKFEST '26
+          </h1>
+
+          {/* PLANK */}
+          <motion.div
+            className="mt-8 flex flex-col items-center pointer-events-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+          >
+            <div
+              className="relative px-12 py-6 transform -rotate-2 animate-[float_4s_ease-in-out_infinite]"
+              style={{
+                filter: "drop-shadow(0 10px 10px rgba(0,0,0,0.5))",
+              }}
+            >
+              <div
+                className="absolute inset-0 bg-[#34211e] rounded-sm"
+                style={{
+                  clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)",
+                  backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 12px), repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 20px)",
+                }}
+              />
+              <div
+                className="absolute inset-0 bg-black/20"
+                style={{ clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)" }}
+              />
+
+              <div className="absolute top-2 left-4 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
+              <div className="absolute top-3 right-5 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
+
+              <div className="relative z-10">
+                <p className="text-xl md:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90" style={{ transform: "rotate(1deg)" }}>
+                  Embark on a Voyage of Innovation
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* SCROLL INDICATOR */}
+        <motion.div
+          className="absolute bottom-0 z-20 pointer-events-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+        >
+          <div className="flex flex-col items-center gap-2 animate-bounce">
+            <p className="text-xs font-mono tracking-[0.3em] uppercase text-white/70">
+              Dive Deeper
+            </p>
+            <svg
+              className="w-6 h-6 text-white/70"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
 function LandingContent({
   setPages,
   pages,
@@ -164,6 +274,7 @@ function LandingContent({
   pages: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, setContentHeight] = useState<number>(0);
 
   useEffect(() => {
@@ -224,97 +335,15 @@ function LandingContent({
   return (
     <div
       ref={ref}
-      className="w-full text-white no-scrollbar pointer-events-auto"
+      className="w-full text-white no-scrollbar pointer-events-none"
     >
-      {/* HERITAGE SECTION (SUNNY) */}
-      <motion.section
-        className="h-screen flex flex-col items-center justify-center relative p-8 text-center"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 1.5 }}
-        viewport={{ once: true }}
-      >
-        <div className="z-10 flex flex-col items-center">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-110 -z-10" />
-            <img
-              src="/logo.png"
-              alt="HF Logo"
-              className="w-48 md:w-64 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
-            />
-          </motion.div>
 
-          <h1 className="text-6xl md:text-9xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
+      <section className="h-screen w-full relative z-0"></section>
 
-            HACKFEST '26
-          </h1>
-
-          <motion.div
-            className="mt-8 flex flex-col items-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-          >
-            <div
-              className="relative px-12 py-6 transform -rotate-2 animate-[float_4s_ease-in-out_infinite]"
-              style={{
-                filter: "drop-shadow(0 10px 10px rgba(0,0,0,0.5))",
-              }}
-            >
-              <div
-                className="absolute inset-0 bg-[#34211e] rounded-sm"
-                style={{
-                  clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)",
-                  backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 12px), repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 20px)",
-                }}
-              />
-              <div
-                className="absolute inset-0 bg-black/20"
-                style={{ clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)" }}
-              />
-
-              <div className="absolute top-2 left-4 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
-              <div className="absolute top-3 right-5 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
-
-              <div className="relative z-10">
-                <p className="text-xl md:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90" style={{ transform: "rotate(1deg)" }}>
-                  Embark on a Voyage of Innovation
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.div
-          className="absolute bottom-12 z-20"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-        >
-          <div className="flex flex-col items-center gap-2 animate-bounce">
-            <p className="text-xs font-mono tracking-[0.3em] uppercase text-white/70">
-              Dive Deeper
-            </p>
-            <svg
-              className="w-6 h-6 text-white/70"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
-        </motion.div>
-      </motion.section>
-
-      {/* SPACER FOR TRANSITION */}
+      {/* SPACER FOR TRANSITION - Optional extra space before sponsors */}
       <section className="h-[10vh]"></section>
-      <div className="relative">
+
+      <div className="relative pointer-events-auto z-10">
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/20 to-black/50 pointer-events-none z-0" />
 
         {/* UNDERWATER SECTION (SPONSORS) */}
@@ -578,8 +607,10 @@ export default function Scene({ session }: { session: Session | null }) {
         className="absolute inset-0 overflow-y-auto overflow-x-hidden no-scrollbar"
         style={{ zIndex: 10 }}
       >
+        <FixedHero scrollRef={scrollRef} />
         <LandingContent setPages={setPages} pages={pages} />
       </div>
+
       <div className="absolute inset-0 pointer-events-none z-40">
         {/* The Navbar component itself handles pointer-events-auto for buttons */}
         <Navbar isUnderwater={isUnderwater} session={session} />
