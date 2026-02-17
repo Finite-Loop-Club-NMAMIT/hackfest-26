@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakarta.variable} ${pirata.variable} ${crimson.variable} antialiased dark`}
+        className={`${jakarta.variable} ${pirata.variable} ${crimson.variable} antialiased dark select-none`}
       >
         <DayNightProvider>
           <GlobalLoader />

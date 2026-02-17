@@ -99,7 +99,7 @@ function Background({
       // Use damped progress for smoother transition
       const transitionProgress = Math.max(
         0,
-        Math.min(1, (progress - 0.05) / 0.14),
+        Math.min(1, (progress - 0.05) / 0.09),
       );
       materialRef.current.uTransitionProgress = transitionProgress;
       materialRef.current.uHoverProgress = state.pointer.x * 0.5 + 0.5;
@@ -228,28 +228,88 @@ function LandingContent({
     >
       {/* HERITAGE SECTION (SUNNY) */}
       <motion.section
-        className="h-screen flex flex-col items-center justify-center relative p-8 text-center bg-linear-to-b from-black/20 via-transparent to-transparent"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.5 }}
+        className="h-screen flex flex-col items-center justify-center relative p-8 text-center"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
         viewport={{ once: true }}
       >
-        <img
-          src="/logo.png"
-          alt="HF Logo"
-          className="w-48 md:w-64 h-auto drop-shadow-2xl z-10 mb-8 translate-x-8"
-        />
-        <h1 className="text-5xl md:text-8xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
-          HACKFEST '26
-        </h1>
-        <p className="mt-6 text-xl md:text-2xl font-medium drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-white/90 max-w-2xl bg-black/20 backdrop-blur-sm p-4 rounded-xl border border-white/10">
-          Embark on a voyage of innovation.
-        </p>
-        <div className="absolute bottom-12">
-          <p className="text-sm font-semibold tracking-widest uppercase opacity-80 animate-pulse">
-            Scroll to Dive
-          </p>
+        <div className="z-10 flex flex-col items-center">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-110 -z-10" />
+            <img
+              src="/logo.png"
+              alt="HF Logo"
+              className="w-48 md:w-64 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
+            />
+          </motion.div>
+
+          <h1 className="text-6xl md:text-9xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
+
+            HACKFEST '26
+          </h1>
+
+          <motion.div
+            className="mt-8 flex flex-col items-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+          >
+            <div
+              className="relative px-12 py-6 transform -rotate-2 animate-[float_4s_ease-in-out_infinite]"
+              style={{
+                filter: "drop-shadow(0 10px 10px rgba(0,0,0,0.5))",
+              }}
+            >
+              <div
+                className="absolute inset-0 bg-[#34211e] rounded-sm"
+                style={{
+                  clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)",
+                  backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 12px), repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 20px)",
+                }}
+              />
+              <div
+                className="absolute inset-0 bg-black/20"
+                style={{ clipPath: "polygon(2% 0%, 98% 5%, 100% 100%, 0% 95%)" }}
+              />
+
+              <div className="absolute top-2 left-4 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
+              <div className="absolute top-3 right-5 w-3 h-3 rounded-full bg-[#1a0f0a] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.2)]" />
+
+              <div className="relative z-10">
+                <p className="text-xl md:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90" style={{ transform: "rotate(1deg)" }}>
+                  Embark on a Voyage of Innovation
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
+
+        <motion.div
+          className="absolute bottom-12 z-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+        >
+          <div className="flex flex-col items-center gap-2 animate-bounce">
+            <p className="text-xs font-mono tracking-[0.3em] uppercase text-white/70">
+              Dive Deeper
+            </p>
+            <svg
+              className="w-6 h-6 text-white/70"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </motion.div>
       </motion.section>
 
       {/* SPACER FOR TRANSITION */}
@@ -286,7 +346,7 @@ function LandingContent({
                 <img
                   src="/logos/nmamit.png"
                   alt="NITTE"
-                  className="w-3/4 h-auto object-contain group-hover:scale-105 transition-transform duration-500 scale-125"
+                  className="w-3/4 h-auto object-contain scale-110 group-hover:scale-115 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
@@ -297,19 +357,14 @@ function LandingContent({
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <motion.div
+                <div className="group relative aspect-video bg-black/30 border border-cyan-500/30 rounded-xl flex items-center justify-center hover:bg-cyan-900/40 transition-all duration-500 overflow-hidden"
                   key={i}
-                  className="group relative aspect-video bg-black/30 border border-cyan-500/30 rounded-xl flex items-center justify-center hover:bg-cyan-900/40 transition-all duration-500 overflow-hidden"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  viewport={{ once: true }}
                 >
                   <span className="text-cyan-400 font-mono text-lg group-hover:scale-110 transition-transform">
                     Sponsor {i}
                   </span>
                   <div className="absolute inset-0 bg-linear-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
