@@ -99,7 +99,7 @@ function Background({
       // Use damped progress for smoother transition
       const transitionProgress = Math.max(
         0,
-        Math.min(1, (progress - 0.05) / 0.08),
+        Math.min(1, (progress - 0.05) / 0.06),
       );
       materialRef.current.uTransitionProgress = transitionProgress;
       materialRef.current.uHoverProgress = state.pointer.x * 0.5 + 0.5;
@@ -162,7 +162,7 @@ function FixedHero({ scrollRef }: { scrollRef: React.MutableRefObject<number> })
   useAnimationFrame(() => {
     if (containerRef.current) {
       const progress = scrollRef.current;
-      const opacity = 1 - THREE.MathUtils.smoothstep(progress, 0, 0.05);
+      const opacity = 1 - THREE.MathUtils.smoothstep(progress, 0, 0.09);
       const scale = 1 - progress * 2;
 
       containerRef.current.style.opacity = opacity.toString();
