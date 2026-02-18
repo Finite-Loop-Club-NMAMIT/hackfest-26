@@ -11,6 +11,7 @@ extend({ TransitionMaterial });
 function ContactBackground({ isNight }: { isNight: boolean }) {
   const { viewport } = useThree();
   const meshRef = useRef<THREE.Mesh>(null);
+  // biome-ignore lint/suspicious/noExplicitAny: Custom shader material has dynamic uniforms
   const materialRef = useRef<any>(null);
 
   const [morning, night, underwater] = useTexture([

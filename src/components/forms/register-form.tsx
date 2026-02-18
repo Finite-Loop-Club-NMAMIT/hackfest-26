@@ -43,6 +43,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   const [step, setStep] = useState(0);
 
   const form = useForm<FormValues>({
+    // biome-ignore lint/suspicious/noExplicitAny: Resolving zod types is complex
     resolver: zodResolver(registerParticipantSchema) as any,
     defaultValues: {
       name: "",

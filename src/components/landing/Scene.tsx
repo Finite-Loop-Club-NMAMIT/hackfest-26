@@ -5,6 +5,7 @@ import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { motion } from "framer-motion";
 import Lenis from "lenis";
+import Link from "next/link";
 import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
@@ -15,7 +16,6 @@ import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import Timeline from "./Timeline";
 import TracksSection from "./Tracks";
-import Link from "next/link"; // Added Link import since we are enabling the button
 
 // Register the custom shader material
 extend({ TransitionMaterial });
@@ -371,6 +371,20 @@ function LandingContent({
               <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
                 IN PRIZES
               </span>
+
+              <Link href="/timeline" passHref>
+                <button
+                  type="button"
+                  className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide mt-8"
+                  // Prevent scroll on focus
+                  onFocus={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="relative z-10">Explore Timeline</span>
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                </button>
+              </Link>
             </motion.div>
           </div>
         </motion.section>
@@ -455,7 +469,7 @@ export default function Scene({ session }: { session: Session | null }) {
       wrapper: htmlElement, // The container with overflow: auto
       content: htmlElement.firstElementChild as HTMLElement, // The content inside
       duration: 1.0, // Slower duration for "stronger" smooth effect
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
+      easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)), // Custom easing
       smoothWheel: true,
       syncTouch: false, // Don't hijack touch unless desired
     });

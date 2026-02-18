@@ -27,8 +27,7 @@ import { events } from "~/constants/timeline";
 
 extend({ Water });
 
-let globalPausedIsland: number | null = null;
-let globalShipPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+const globalShipPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -886,7 +885,7 @@ const Ship = forwardRef<
           if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
             lastExitedIsland.current = pausedAtIsland;
             setPausedAtIsland(null);
-            globalPausedIsland = null;
+
             scrollAccumAtIsland.current = 0;
           }
           return;
@@ -920,7 +919,7 @@ const Ship = forwardRef<
           if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
             lastExitedIsland.current = pausedAtIsland;
             setPausedAtIsland(null);
-            globalPausedIsland = null;
+
             scrollAccumAtIsland.current = 0;
           }
           return;
@@ -1030,7 +1029,7 @@ const Ship = forwardRef<
         if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
           lastExitedIsland.current = pausedAtIsland;
           setPausedAtIsland(null);
-          globalPausedIsland = null;
+
           scrollAccumAtIsland.current = 0;
         } else {
           return;
@@ -1195,7 +1194,7 @@ const Ship = forwardRef<
 
         if (distToIsland < 35) {
           setPausedAtIsland(i);
-          globalPausedIsland = i;
+
           scrollAccumAtIsland.current = 0;
           if (onDock) onDock(i);
           break;
@@ -1219,7 +1218,7 @@ const Ship = forwardRef<
 
       if (distToPausedIsland > 40) {
         setPausedAtIsland(null);
-        globalPausedIsland = null;
+
         if (onDock) onDock(null);
       }
     }

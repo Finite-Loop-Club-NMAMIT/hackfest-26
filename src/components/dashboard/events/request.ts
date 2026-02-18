@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import type z from "zod";
 import type { GetAllEventsResponse } from "~/db/data/events";
-import { events } from "~/db/schema";
+
 import { apiFetch } from "~/lib/fetcher";
 import type { eventSchema } from "~/lib/validation/event";
 

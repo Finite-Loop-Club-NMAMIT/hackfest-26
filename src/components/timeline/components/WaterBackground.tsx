@@ -8,7 +8,7 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 extend({ Water });
 
 function Ocean() {
-  const waterRef = useRef<any>(null);
+  const waterRef = useRef<THREE.Mesh>(null);
 
   const waterGeometry = useMemo(
     () => new THREE.PlaneGeometry(10000, 10000),
@@ -37,9 +37,10 @@ function Ocean() {
     return waterInstance;
   }, [waterGeometry]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (waterRef.current) {
-      waterRef.current.material.uniforms.time.value += delta * 0.5;
+      (waterRef.current.material as THREE.ShaderMaterial).uniforms.time.value +=
+        delta * 0.5;
     }
   });
 

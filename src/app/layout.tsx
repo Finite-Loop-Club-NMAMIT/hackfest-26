@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Crimson_Text, Pirata_One, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { SessionProvider } from "next-auth/react";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import { DayNightProvider } from "~/components/providers/useDayNight";
 import { GlobalLoader } from "~/components/ui/global-loader";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
-import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({

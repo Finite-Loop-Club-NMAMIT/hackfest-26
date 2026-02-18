@@ -1,7 +1,7 @@
-export function seededRandom(seed: number) {
+export const seededRandom = (seed: number) => {
   let value = seed;
-  return function () {
+  return () => {
     value = (value * 9301 + 49297) % 233280;
     return value / 233280;
   };
-}
+};

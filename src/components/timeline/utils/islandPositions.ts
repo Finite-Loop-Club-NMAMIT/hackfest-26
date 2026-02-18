@@ -1,5 +1,5 @@
-import { seededRandom } from "./seededRandom";
 import type { IslandPosition } from "../types/timeline.types";
+import { seededRandom } from "./seededRandom";
 
 export function generateIslandPositions(numIslands: number): IslandPosition[] {
   const random = seededRandom(12345);

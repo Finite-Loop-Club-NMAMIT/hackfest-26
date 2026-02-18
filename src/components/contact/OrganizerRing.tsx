@@ -2,24 +2,27 @@
 
 import { motion } from "framer-motion";
 import { Mail, Phone } from "lucide-react";
-import { useState } from "react";
 
 const organizers = [
   {
     name: "Sampanna",
     phone: "+91 83105 56184",
+    role: "Organizer",
   },
   {
     name: "Omkar G Prabhu",
     phone: "+91 94488 46524",
+    role: "Organizer",
   },
   {
     name: "Paripoorna Bhat",
     phone: "+91 73386 52017",
+    role: "Organizer",
   },
   {
     name: "Rahul N Bangera",
     phone: "+91 80503 38576",
+    role: "Organizer",
   },
 ];
 
@@ -98,7 +101,7 @@ function OrganizerCard({
   organizer,
   index,
 }: {
-  organizer: any;
+  organizer: { name: string; phone: string; role?: string };
   index: number;
 }) {
   return (

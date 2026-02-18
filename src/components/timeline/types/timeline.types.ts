@@ -17,7 +17,7 @@ export type IslandPosition = [number, number, number];
 export interface EventLabelProps {
   event: TimelineEvent;
   isFirstOfDay: boolean;
-  onSelect: (e: any) => void;
+  onSelect: (e: TimelineEvent) => void;
   islandIndex: number;
   totalIslands: number;
 }
@@ -26,6 +26,6 @@ export interface IslandProps {
   position: IslandPosition;
   event?: TimelineEvent;
   isFirstOfDay?: boolean;
-  onSelect: (e: any) => void;
+  onSelect: (e: TimelineEvent) => void;
   islandIndex: number;
 }
