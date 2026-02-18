@@ -305,7 +305,7 @@ function EventLabel({
   return (
     <Html
       center
-      distanceFactor={isMobile ? 15 : 40}
+      distanceFactor={isMobile ? 40 : 40}
       position={[0, 18, 0]}
       style={{
         pointerEvents: "none",
@@ -336,8 +336,8 @@ function EventLabel({
           padding: 0,
           transform: isVeryClose
             ? isMobile
-              ? "scale(2.0)"
-              : "scale(1.3)"
+              ? "scale(1.2)"
+              : "scale(1.5)"
             : "scale(1)",
           opacity: fadeOpacity,
         }}
@@ -393,9 +393,9 @@ function EventLabel({
               linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent)
             `,
             color: theme.ink,
-            padding: isMobile ? "14px 18px" : "14px 20px",
-            minWidth: isMobile ? "130px" : "160px",
-            maxWidth: isMobile ? "220px" : "240px",
+            padding: isMobile ? "16px 20px" : "18px 24px",
+            minWidth: isMobile ? "200px" : "200px",
+            maxWidth: isMobile ? "320px" : "300px",
             textAlign: "center",
             position: "relative",
             borderRadius: "2px",
@@ -435,7 +435,7 @@ function EventLabel({
 
           <div
             style={{
-              fontSize: isMobile ? "22px" : "24px",
+              fontSize: isMobile ? "26px" : "28px",
               fontFamily: "var(--font-pirata), serif",
               fontWeight: 400,
               lineHeight: "1.1",
@@ -459,7 +459,7 @@ function EventLabel({
 
           <div
             style={{
-              fontSize: isMobile ? "16px" : "16px",
+              fontSize: isMobile ? "16px" : "18px",
               fontFamily: "var(--font-cinzel), serif",
               fontWeight: 600,
               display: "flex",
@@ -681,84 +681,34 @@ function buildShipPath(
   return new THREE.CatmullRomCurve3(waypoints, false, "centripetal", 0.5);
 }
 
-function getSkyGradient(progressIndex: number): string {
-  const keyframes = [
-    {
-      idx: 0,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-    {
-      idx: 4,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-    {
-      idx: 5,
-      grad: "linear-gradient(to bottom, #FF6B35 0%, #F7931E 30%, #FDB44B 60%, #FFE5B4 100%)",
-    },
-    {
-      idx: 6,
-      grad: "linear-gradient(to bottom, #0A1128 0%, #1C2541 40%, #3A506B 100%)",
-    },
-    {
-      idx: 7,
-      grad: "linear-gradient(to bottom, #0A1128 0%, #1C2541 40%, #2C3E5A 100%)",
-    },
-    {
-      idx: 7.8,
-      grad: "linear-gradient(to bottom, #FF6B6B 0%, #FFB347 30%, #FFD166 60%, #87CEEB 100%)",
-    },
-    {
-      idx: 8,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-    {
-      idx: 11,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-    {
-      idx: 12,
-      grad: "linear-gradient(to bottom, #0A1128 0%, #1C2541 40%, #3A506B 100%)",
-    },
-    {
-      idx: 13,
-      grad: "linear-gradient(to bottom, #0A1128 0%, #1C2541 40%, #2C3E5A 100%)",
-    },
-    {
-      idx: 13.8,
-      grad: "linear-gradient(to bottom, #FF6B6B 0%, #FFB347 30%, #FFD166 60%, #87CEEB 100%)",
-    },
-    {
-      idx: 14,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-    {
-      idx: 20,
-      grad: "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-    },
-  ];
+// Sky colors per island — [topColor, bottomColor]
+// Times from src/constants/timeline.ts
+const ISLAND_SKY: Record<number, [string, string]> = {
+  0: ["#5BB8D4", "#C8EAF8"], // Day1 10-11AM   — bright morning blue
+  1: ["#4AACCC", "#B8E4F5"], // Day1 11AM-12PM — midday blue
+  2: ["#42A8C8", "#B0E0F2"], // Day1 12-1PM    — midday blue
+  3: ["#5AAECC", "#C0E8F5"], // Day1 1-4PM     — afternoon blue
+  4: ["#D4903A", "#F0C870"], // Day1 4-4:30PM  — golden hour
+  5: ["#C85020", "#F08040"], // Day1 5PM       — sunset orange-red
+  6: ["#1A0A35", "#3A1A60"], // Day1 8PM       — deep purple dusk
+  7: ["#050510", "#0D1020"], // Day1 9PM       — deep night
+  8: ["#D06030", "#F0A050"], // Day2 8-9AM     — warm sunrise
+  9: ["#42A8C8", "#B0E0F2"], // Day2 1-2PM     — midday blue
+  10: ["#5AAECC", "#C0E8F5"], // Day2 3-4PM     — afternoon blue
+  11: ["#D4903A", "#F0C870"], // Day2 4PM       — golden hour
+  12: ["#1A0A35", "#3A1A60"], // Day2 8-9PM     — deep purple dusk
+  13: ["#050510", "#0D1020"], // Day2 9PM       — deep night
+  14: ["#A04020", "#D08050"], // Day3 7AM       — early dawn pink-orange
+  15: ["#D06030", "#F0A050"], // Day3 7-8AM     — warm sunrise
+  16: ["#5BB8D4", "#C8EAF8"], // Day3 9:30AM+   — morning blue
+  17: ["#42A8C8", "#B0E0F2"], // Day3 12-1:30PM — midday blue
+  18: ["#5AAECC", "#C0E8F5"], // Day3 1:30PM    — afternoon blue
+  19: ["#5AAECC", "#C0E8F5"], // Day3 1:30PM    — afternoon blue
+  20: ["#6AAECC", "#D0E8F5"], // Day3 3PM       — late afternoon
+};
 
-  let lower = keyframes[0];
-  let upper = keyframes[keyframes.length - 1];
-
-  for (let i = 0; i < keyframes.length - 1; i++) {
-    if (
-      progressIndex >= keyframes[i].idx &&
-      progressIndex < keyframes[i + 1].idx
-    ) {
-      lower = keyframes[i];
-      upper = keyframes[i + 1];
-      break;
-    }
-  }
-
-  const t = (progressIndex - lower.idx) / (upper.idx - lower.idx || 1);
-  const clampedT = Math.max(0, Math.min(1, t));
-
-  if (clampedT < 0.5) {
-    return lower.grad;
-  } else {
-    return upper.grad;
-  }
+function getSkyForIsland(idx: number): [string, string] {
+  return ISLAND_SKY[idx] ?? ["#87CEEB", "#E0F6FF"];
 }
 
 function DockMarkers({ activeIsland }: { activeIsland: number }) {
@@ -1103,16 +1053,28 @@ const Ship = forwardRef<
           return;
         }
 
+        if (pausedAtIsland !== null) {
+          scrollAccumAtIsland.current += Math.abs(clampedDelta);
+          if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD_TO_CONTINUE) {
+            lastExitedIsland.current = pausedAtIsland;
+            setPausedAtIsland(null);
+            scrollAccumAtIsland.current = 0;
+          } else {
+            return;
+          }
+        }
+
         scrollAccumRef.current += clampedDelta;
 
         scrollAccumRef.current = Math.max(0, scrollAccumRef.current);
 
         const segmentSize = 400;
         const segments = totalIslands + 1;
+        const totalScrollMax = segmentSize * segments;
 
         const newTarget = Math.min(
           1,
-          Math.max(0, scrollAccumRef.current / (segmentSize * segments)),
+          Math.max(0, scrollAccumRef.current / totalScrollMax),
         );
         targetProgressRef.current = newTarget;
       }
@@ -1192,9 +1154,19 @@ const Ship = forwardRef<
           (point.x - island[0]) ** 2 + (point.z - island[2]) ** 2,
         );
 
-        if (distToIsland < 35) {
-          setPausedAtIsland(i);
+        const isLastIsland = i === islandPositions.length - 1;
+        const dockingRadius = isLastIsland ? 120 : 35;
 
+        if (distToIsland < dockingRadius) {
+          setPausedAtIsland(i);
+          
+          // Hard stop: reset target and accumulation to current position to kill lerp
+          const segmentSize = 400;
+          const segments = totalIslands + 1;
+          const progressVal = progressRef.current;
+          targetProgressRef.current = progressVal;
+          scrollAccumRef.current = progressVal * (segmentSize * segments);
+          
           scrollAccumAtIsland.current = 0;
           if (onDock) onDock(i);
           break;
@@ -1216,9 +1188,11 @@ const Ship = forwardRef<
         (point.x - pausedIsland[0]) ** 2 + (point.z - pausedIsland[2]) ** 2,
       );
 
-      if (distToPausedIsland > 40) {
-        setPausedAtIsland(null);
+      const isLastIsland = pausedAtIsland === islandPositions.length - 1;
+      const undockRadius = isLastIsland ? 150 : 40;
 
+      if (distToPausedIsland > undockRadius) {
+        setPausedAtIsland(null);
         if (onDock) onDock(null);
       }
     }
@@ -1682,12 +1656,133 @@ export default function TimelineScene() {
     };
   }, []);
 
-  const handleShipProgress = (scrollAccum: number) => {
-    if (bgOverlayRef.current) {
-      // Convert raw scroll accumulation to island index for sky gradient
-      const segmentSize = 400;
-      const islandIndex = scrollAccum / segmentSize;
-      bgOverlayRef.current.style.backgroundImage = getSkyGradient(islandIndex);
+  const lastDockedIslandRef = useRef<number | null>(null);
+  // Tracks which island's sky has already been pre-triggered (to avoid re-firing every frame)
+  const skyTriggeredForRef = useRef<number | null>(null);
+  // Proxy objects GSAP tweens — holds current r,g,b for top and bottom sky colors
+  const skyTopColor = useRef({ r: 0x5b, g: 0xb8, b: 0xd4 });
+  const skyBottomColor = useRef({ r: 0xc8, g: 0xea, b: 0xf8 });
+
+  // Scene environment refs for GSAP tweening
+  const ambientLightRef = useRef<THREE.AmbientLight>(null);
+  const mainSunLightRef = useRef<THREE.DirectionalLight>(null);
+  const fogRef = useRef<THREE.Fog | null>(null);
+  const fogColorProxy = useRef({ r: 0x1a, g: 0x2a, b: 0x3a });
+
+  function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const h = hex.replace("#", "");
+    return {
+      r: parseInt(h.slice(0, 2), 16),
+      g: parseInt(h.slice(2, 4), 16),
+      b: parseInt(h.slice(4, 6), 16),
+    };
+  }
+
+  function applySkyToEl(el: HTMLDivElement) {
+    const t = skyTopColor.current;
+    const b = skyBottomColor.current;
+    el.style.background = `linear-gradient(to bottom, rgb(${t.r},${t.g},${t.b}), rgb(${b.r},${b.g},${b.b}))`;
+  }
+
+  function tweenSkyTo(
+    topHex: string,
+    bottomHex: string,
+    duration: number,
+    el: HTMLDivElement,
+  ) {
+    const topTarget = hexToRgb(topHex);
+    const bottomTarget = hexToRgb(bottomHex);
+    gsap.killTweensOf(skyTopColor.current);
+    gsap.killTweensOf(skyBottomColor.current);
+    gsap.to(skyTopColor.current, {
+      ...topTarget,
+      duration,
+      ease: "power2.inOut",
+      onUpdate: () => applySkyToEl(el),
+    });
+    gsap.to(skyBottomColor.current, {
+      ...bottomTarget,
+      duration,
+      ease: "power2.inOut",
+      onUpdate: () => applySkyToEl(el),
+    });
+
+    // Determine if target is night (dark) or day (bright)
+    // We use the bottom target's brightness as a heuristic
+    const isNight = bottomTarget.r + bottomTarget.g + bottomTarget.b < 150;
+
+    // Ambient light: Day = 3.0, Night = 0.5
+    if (ambientLightRef.current) {
+      gsap.to(ambientLightRef.current, {
+        intensity: isNight ? 0.5 : 3,
+        duration,
+        ease: "power2.inOut",
+      });
+    }
+
+    // Main lighting: Day = 8.0, Night = 1.0
+    if (mainSunLightRef.current) {
+      gsap.to(mainSunLightRef.current, {
+        intensity: isNight ? 1 : 8,
+        duration,
+        ease: "power2.inOut",
+      });
+    }
+
+    // Fog color: Day matches bottom sky color (roughly), Night = 0x1a2a3a
+    const fogTarget = isNight ? { r: 26, g: 42, b: 58 } : bottomTarget;
+    gsap.killTweensOf(fogColorProxy.current);
+    gsap.to(fogColorProxy.current, {
+      ...fogTarget,
+      duration,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        if (fogRef.current) {
+          fogRef.current.color.setRGB(
+            fogColorProxy.current.r / 255,
+            fogColorProxy.current.g / 255,
+            fogColorProxy.current.b / 255,
+          );
+        }
+      },
+    });
+  }
+
+  const handleDock = (idx: number | null) => {
+    setActiveDock(idx);
+    if (idx !== null && bgOverlayRef.current) {
+      lastDockedIslandRef.current = idx;
+      skyTriggeredForRef.current = idx;
+      const [topHex, bottomHex] = getSkyForIsland(idx);
+      tweenSkyTo(topHex, bottomHex, 1.5, bgOverlayRef.current);
+      
+      // Auto-open focus for the final island
+      if (idx === ISLAND_POSITIONS.length - 1) {
+        setSelectedEvent(events[idx]);
+      }
+    }
+  };
+
+  const handleShipProgress = (_scrollAccum: number) => {
+    if (!bgOverlayRef.current) return;
+    const el = bgOverlayRef.current;
+    const PRE_TRIGGER_DIST = 200;
+
+    for (let i = 0; i < ISLAND_POSITIONS.length; i++) {
+      if (i === lastDockedIslandRef.current) continue;
+      if (i === skyTriggeredForRef.current) continue;
+
+      const pos = ISLAND_POSITIONS[i];
+      const dx = globalShipPosition.x - pos[0];
+      const dz = globalShipPosition.z - pos[2];
+      const dist = Math.sqrt(dx * dx + dz * dz);
+
+      if (dist < PRE_TRIGGER_DIST) {
+        skyTriggeredForRef.current = i;
+        const [topHex, bottomHex] = getSkyForIsland(i);
+        tweenSkyTo(topHex, bottomHex, 4, el);
+        break;
+      }
     }
   };
 
@@ -1710,9 +1805,8 @@ export default function TimelineScene() {
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundImage:
-            "linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)",
-          transition: "background-image 2s ease",
+          background:
+            "linear-gradient(to bottom, rgb(91,184,212), rgb(200,234,248))",
           pointerEvents: "none",
         }}
       />
@@ -1739,6 +1833,8 @@ export default function TimelineScene() {
         style={{ background: "transparent" }}
         onCreated={({ gl, scene }) => {
           scene.fog = new THREE.Fog(0x1a2a3a, 400, 1200);
+          fogRef.current = scene.fog as THREE.Fog;
+
           const handleContextLost = (event: Event) => {
             event.preventDefault();
             if (!allowRecoveryRef.current) return;
@@ -1750,8 +1846,12 @@ export default function TimelineScene() {
           gl.domElement.addEventListener("webglcontextlost", handleContextLost);
         }}
       >
-        <ambientLight intensity={3} />
-        <directionalLight position={[100, 100, 100]} intensity={8} />
+        <ambientLight ref={ambientLightRef} intensity={3} />
+        <directionalLight
+          ref={mainSunLightRef}
+          position={[100, 100, 100]}
+          intensity={8}
+        />
         <directionalLight position={[-100, 80, -50]} intensity={5} />
         <directionalLight position={[0, 60, 100]} intensity={5} />
 
@@ -1764,7 +1864,7 @@ export default function TimelineScene() {
           ref={shipControlsRef}
           islandPositions={ISLAND_POSITIONS}
           onProgress={handleShipProgress}
-          onDock={setActiveDock}
+          onDock={handleDock}
         />
       </Canvas>
 
@@ -1775,7 +1875,7 @@ export default function TimelineScene() {
         onOpenChange={(open) => !open && setSelectedEvent(null)}
       >
         <DialogContent
-          className="sm:max-w-95 border-none bg-transparent shadow-none p-0 overflow-visible [&>button]:hidden"
+          className="w-[90vw] max-w-[90vw] sm:w-auto sm:max-w-2xl border-none bg-transparent shadow-none p-0 overflow-visible [&>button]:hidden"
           style={{ perspective: "1000px" }}
         >
           {selectedEvent &&
@@ -1789,7 +1889,7 @@ export default function TimelineScene() {
                       linear-gradient(to bottom right, rgba(0,0,0,0.05), transparent)
                     `,
                     borderRadius: "6px",
-                    padding: isMobile ? "24px 20px 20px" : "36px 30px 30px",
+                    padding: isMobile ? "40px 24px 32px" : "48px 44px 40px",
                     position: "relative",
                     boxShadow:
                       "0 20px 50px rgba(0,0,0,0.5), inset 0 0 60px rgba(139, 69, 19, 0.2)",
@@ -1799,10 +1899,10 @@ export default function TimelineScene() {
                   <div
                     style={{
                       position: "absolute",
-                      top: "-18px",
-                      left: "-18px",
-                      width: "56px",
-                      height: "56px",
+                      top: isMobile ? "-16px" : "-18px",
+                      left: isMobile ? "-16px" : "-18px",
+                      width: isMobile ? "60px" : "56px",
+                      height: isMobile ? "60px" : "56px",
                       backgroundColor: theme.wax,
                       backgroundImage: `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), transparent 60%)`,
                       borderRadius: "50%",
@@ -1819,7 +1919,7 @@ export default function TimelineScene() {
                     <div
                       style={{
                         color: "rgba(255,255,255,0.9)",
-                        fontSize: "11px",
+                        fontSize: isMobile ? "12px" : "11px",
                         fontFamily: "var(--font-cinzel), serif",
                         fontWeight: 700,
                         textTransform: "uppercase",
@@ -1904,7 +2004,7 @@ export default function TimelineScene() {
 
                   <DialogHeader>
                     <DialogTitle
-                      className={`text-center mb-2 mt-2 ${isMobile ? "text-2xl" : "text-3xl"}`}
+                      className={`text-center mb-2 mt-2 ${isMobile ? "text-3xl" : "text-4xl"}`}
                       style={{
                         fontFamily: "var(--font-pirata), serif",
                         color: theme.ink,
@@ -1933,11 +2033,23 @@ export default function TimelineScene() {
                       fontFamily: "var(--font-cinzel), serif",
                     }}
                   >
-                    <span style={{ fontSize: "20px" }}>{theme.icon}</span>
-                    <span style={{ fontSize: "18px", fontWeight: 700 }}>
+                    <span style={{ fontSize: isMobile ? "40px" : "28px" }}>
+                      {theme.icon}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: isMobile ? "28px" : "24px",
+                        fontWeight: 700,
+                      }}
+                    >
                       {selectedEvent.time}
                     </span>
-                    <span style={{ fontSize: "14px", opacity: 0.6 }}>
+                    <span
+                      style={{
+                        fontSize: isMobile ? "20px" : "18px",
+                        opacity: 0.6,
+                      }}
+                    >
                       • Day {selectedEvent.day}
                     </span>
                   </div>
