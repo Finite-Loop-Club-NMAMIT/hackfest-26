@@ -1,5 +1,5 @@
 "use client";
-import { Check, Edit2, MoreVertical, Trash2, X } from "lucide-react";
+import { Edit2, MoreVertical, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "~/components/ui/badge";

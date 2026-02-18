@@ -5,6 +5,7 @@ import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { motion, useAnimationFrame } from "framer-motion";
 import Lenis from "lenis";
+import Link from "next/link";
 import type { Session } from "next-auth";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
@@ -122,7 +123,7 @@ function Background({
         materialRef.current.uMediaRes2.set(waterImg.width, waterImg.height);
       }
 
-      // Nausea Effect Logic - always calming down now since loading is handled globally
+      // Nausea Effect Logic
       materialRef.current.uNausea = THREE.MathUtils.lerp(
         materialRef.current.uNausea,
         0,
@@ -283,10 +284,10 @@ function LandingContent({
         const { height } = ref.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         // Exact pages needed for content
-        const newPages = Math.max(3, height / viewportHeight);
+        const newPages = height / viewportHeight;
 
         // Only update if difference is significant
-        if (Math.abs(newPages - pages) > 0.02) {
+        if (Math.abs(newPages - pages) > 0.01) {
           setPages(newPages);
         }
         setContentHeight(height);
@@ -431,27 +432,43 @@ function LandingContent({
               whileInView={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-md md:h-112 rounded-full bg-yellow-500/5 blur-2xl" />
+              {/* Animated glow rings */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10 animate-[ping_4s_ease-in-out_infinite]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20 animate-[ping_3s_ease-in-out_infinite_0.5s]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-md md:h-112 rounded-full bg-yellow-500/5 blur-3xl" />
 
               {/* The number */}
               <span className="text-sm md:text-lg font-mono font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
                 Worth Over
               </span>
               <span
-                className="text-6xl md:text-8xl lg:text-[12rem] font-black font-sans leading-none tracking-tight"
+                className="text-8xl md:text-[12rem] font-black font-sans leading-none tracking-tight"
                 style={{
                   color: "#eab308",
-                  textShadow: "0 0 40px rgba(234,179,8,0.4)",
+                  textShadow:
+                    "0 0 40px rgba(234,179,8,0.5), 0 0 80px rgba(234,179,8,0.3), 0 0 120px rgba(234,179,8,0.15)",
                 }}
               >
-                ₹3,00,000
+                ₹3L
                 <span className="text-yellow-400/70">+</span>
               </span>
               <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
                 IN PRIZES
               </span>
+
+              <Link href="/timeline" passHref>
+                <button
+                  type="button"
+                  className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide mt-8"
+                  // Prevent scroll on focus
+                  onFocus={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="relative z-10">Explore Timeline</span>
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                </button>
+              </Link>
             </motion.div>
           </div>
         </motion.section>
@@ -536,7 +553,7 @@ export default function Scene({ session }: { session: Session | null }) {
       wrapper: htmlElement, // The container with overflow: auto
       content: htmlElement.firstElementChild as HTMLElement, // The content inside
       duration: 1.0, // Slower duration for "stronger" smooth effect
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
+      easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)), // Custom easing
       smoothWheel: true,
       syncTouch: true, 
       touchMultiplier: 2, 
