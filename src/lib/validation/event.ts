@@ -15,7 +15,7 @@ export const eventSchema = z.object({
   maxTeamSize: z.number().min(1),
 });
 
-export const eventUserSchema = z.object({
+export const updateEventUserSchema = z.object({
   state: z.enum(stateEnum.enumValues, {
     message: "Please select a valid state",
   }),
@@ -25,4 +25,4 @@ export const eventUserSchema = z.object({
   collegeId: z.string().min(1, "College is required"),
 });
 
-export type EventUserInput = z.infer<typeof eventUserSchema>;
+export type UpdateEventUserInput = z.infer<typeof updateEventUserSchema>;

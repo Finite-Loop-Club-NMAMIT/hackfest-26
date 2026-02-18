@@ -1,11 +1,57 @@
-import { count, eq } from "drizzle-orm";
 import db from "~/db";
 import { query } from "~/db/data";
-import { deleteParticipant } from "~/db/data/event-users";
+import {
+  addParticipant,
+  deleteParticipant,
+  findByEvent,
+  findById,
+  findMembersByTeam,
+  updateById,
+} from "~/db/data/event-users";
 import { eventParticipants, eventTeams } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { successResponse } from "~/lib/response/success";
+import type { UpdateEventUserInput } from "~/lib/validation/event";
+import { findByEventId } from "../data/event";
+import { findByIdandEvent, memberCount, teamCount } from "../data/event-teams";
+
+export async function updateUserDetails(
+  userId: string,
+  data: UpdateEventUserInput,
+) {
+  const user = await findById(userId);
+
+  if (user?.gender || user?.state || user?.collegeId) {
+    return errorResponse(
+      new AppError("USER_DETAILS_ALREADY_SET", 400, {
+        title: "User details already set",
+        description:
+          "You have already set your user details. You cannot update them again.",
+      }),
+    );
+  }
+
+  const updatedUser = await updateById(userId, data);
+
+  if (!updatedUser) {
+    return errorResponse(
+      new AppError("USER_UPDATE_FAILED", 500, {
+        title: "User update failed",
+        description:
+          "An error occurred while updating your your details. Please try again.",
+      }),
+    );
+  }
+
+  return successResponse(
+    { user: updatedUser },
+    {
+      title: "User details updated",
+      description: "Your user details have been updated successfully.",
+    },
+  );
+}
 
 export async function createEventTeam(
   eventId: string,
@@ -13,20 +59,11 @@ export async function createEventTeam(
   teamName: string,
   confirm = false,
 ) {
-  const event = await query.events.findOne({
-    where: (e, { and, eq, not }) =>
-      and(eq(e.id, eventId), not(eq(e.status, "Draft"))),
-  });
+  const event = await findByEventId(eventId);
 
-  const teamCount =
-    (
-      await db
-        .select({ value: count() })
-        .from(eventTeams)
-        .where(eq(eventTeams.eventId, eventId))
-    )[0].value ?? 0;
+  const teams = await teamCount(eventId);
 
-  if (event && teamCount >= event.maxTeams)
+  if (event && teams >= event.maxTeams)
     return errorResponse(
       new AppError("MAX_TEAMS_REACHED", 400, {
         title: "Max teams reached",
@@ -80,10 +117,7 @@ export async function leaveEventTeam(
   teamId: string,
   userId: string,
 ) {
-  const participant = await query.eventParticipants.findOne({
-    where: (p, { and, eq }) =>
-      and(eq(p.eventId, eventId), eq(p.teamId, teamId), eq(p.userId, userId)),
-  });
+  const participant = await findByEvent(eventId, userId);
 
   if (!participant)
     return errorResponse(
@@ -93,9 +127,7 @@ export async function leaveEventTeam(
       }),
     );
 
-  const team = await query.eventTeams.findOne({
-    where: (t, { and, eq }) => and(eq(t.id, teamId), eq(t.eventId, eventId)),
-  });
+  const team = await findByIdandEvent(eventId, teamId);
 
   if (team?.isComplete)
     return errorResponse(
@@ -116,12 +148,19 @@ export async function leaveEventTeam(
 
 export async function joinEventTeam(
   eventId: string,
-  teamId: string,
   userId: string,
+  collegeId: string,
+  teamId: string,
 ) {
-  const team = await query.eventTeams.findOne({
-    where: (t, { and, eq }) => and(eq(t.id, teamId), eq(t.eventId, eventId)),
-  });
+  if (!collegeId)
+    return errorResponse(
+      new AppError("COLLEGE_ID_REQUIRED", 400, {
+        title: "College ID required",
+        description: "You must have a college ID to join a team.",
+      }),
+    );
+
+  const team = await findByIdandEvent(eventId, teamId);
 
   if (!team)
     return errorResponse(
@@ -131,12 +170,19 @@ export async function joinEventTeam(
       }),
     );
 
-  const participant = await query.eventParticipants.insert({
-    eventId: eventId,
-    teamId: teamId,
-    userId: userId,
-    isLeader: false,
-  });
+  const members = await findMembersByTeam(teamId);
+  const leader = members.find((m) => m.isLeader);
+  const leaderCollegeId = (await findById(leader?.userId ?? ""))?.collegeId;
+
+  if (leaderCollegeId !== collegeId)
+    return errorResponse(
+      new AppError("COLLEGE_MISMATCH", 400, {
+        title: "College mismatch",
+        description: "You can only join teams from your own college.",
+      }),
+    );
+
+  const participant = await addParticipant(eventId, teamId, userId, false);
 
   if (!participant)
     return errorResponse(
@@ -157,22 +203,25 @@ export async function joinEventTeam(
 }
 
 export async function confirmEventTeam(eventId: string, teamId: string) {
-  const event = await query.events.findOne({
-    where: (e, { eq }) => eq(e.id, eventId),
-  });
-  const memberCount =
-    (
-      await db
-        .select({ value: count() })
-        .from(eventParticipants)
-        .where(eq(eventParticipants.teamId, teamId))
-    )[0].value ?? 0;
+  const event = await findByEventId(eventId);
+  const members = await memberCount(eventId, teamId);
 
-  if (event && memberCount < event.minTeamSize)
+  if (event && members < event.minTeamSize)
     return errorResponse(
       new AppError("MIN_TEAM_SIZE_NOT_MET", 400, {
         title: "Minimum team size not met",
         description: `Your team must have at least ${event.minTeamSize} members to be confirmed.`,
+      }),
+    );
+
+  const teams = await teamCount(eventId);
+
+  if (event && teams > event.maxTeams)
+    return errorResponse(
+      new AppError("MAX_TEAMS_REACHED", 400, {
+        title: "Max teams reached",
+        description:
+          "The maximum number of teams for this event has been reached.",
       }),
     );
 

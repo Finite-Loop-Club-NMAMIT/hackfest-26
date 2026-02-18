@@ -1,5 +1,5 @@
 {
-  "id": "94643d58-d188-4132-9747-c1f1554a8ed4",
+  "id": "4a1779a1-7aef-47fd-acb5-a20bdd146d57",
   "prevId": "643e5cc9-451b-4fac-8ade-808f24cd8882",
   "version": "7",
   "dialect": "postgresql",
@@ -2033,6 +2033,13 @@
         },
         "registrations_open": {
           "name": "registrations_open",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "event_registrations_open": {
+          "name": "event_registrations_open",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,

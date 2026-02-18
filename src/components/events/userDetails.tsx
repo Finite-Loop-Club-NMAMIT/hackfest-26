@@ -1,19 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { UpdateSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "~/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -29,21 +23,26 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { stateEnum } from "~/db/enum";
+import { genderEnum, stateEnum } from "~/db/enum";
 import { apiFetch } from "~/lib/fetcher";
-import { cn } from "~/lib/utils";
-import { type EventUserInput, eventUserSchema } from "~/lib/validation/event";
+import {
+  type UpdateEventUserInput,
+  updateEventUserSchema,
+} from "~/lib/validation/event";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "../ui/combobox";
 
 interface College {
   id: string;
@@ -51,9 +50,13 @@ interface College {
   state: string | null;
 }
 
-type FormValues = EventUserInput;
+type FormValues = UpdateEventUserInput;
 
-export function UserDetailsForm() {
+export function UserDetailsForm({
+  sessionUpdate,
+}: {
+  sessionUpdate: UpdateSession;
+}) {
   const router = useRouter();
 
   const [colleges, setColleges] = useState<College[]>([]);
@@ -61,7 +64,7 @@ export function UserDetailsForm() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(eventUserSchema),
+    resolver: zodResolver(updateEventUserSchema),
     defaultValues: {
       state: undefined,
       gender: undefined,
@@ -69,11 +72,13 @@ export function UserDetailsForm() {
     },
   });
 
+  console.log("Form data:", form.watch());
+
   useEffect(() => {
     async function loadColleges() {
       try {
         const result = await apiFetch<{ colleges: College[] }>(
-          "/api/colleges/list",
+          "/api/colleges/events/list",
         );
         setColleges(result?.colleges ?? []);
       } catch (_err) {
@@ -85,20 +90,19 @@ export function UserDetailsForm() {
     loadColleges();
   }, []);
 
-  async function onSubmit(data: EventUserInput) {
+  async function onSubmit(data: UpdateEventUserInput) {
     try {
       setSubmitting(true);
 
-      await apiFetch("/api/events/userDetails", {
+      await apiFetch("/api/events/users/update", {
         method: "POST",
         body: JSON.stringify(data),
       });
 
-      toast.success("Registered successfully");
-      router.push("/teams");
+      await sessionUpdate();
       router.refresh();
     } catch (_err) {
-      toast.error("Registration failed");
+      console.error("Error updating user details:", _err);
     } finally {
       setSubmitting(false);
     }
@@ -127,9 +131,11 @@ export function UserDetailsForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="MALE">Male</SelectItem>
-                      <SelectItem value="FEMALE">Female</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
+                      {genderEnum.enumValues.map((gender) => (
+                        <SelectItem key={gender} value={gender}>
+                          {gender}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -144,51 +150,29 @@ export function UserDetailsForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>State</FormLabel>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "justify-between",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ?? "Select state"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-
-                    <PopoverContent className="p-0">
-                      <Command>
-                        <CommandInput placeholder="Search state..." />
-                        <CommandList>
-                          <CommandEmpty>No state found.</CommandEmpty>
-
-                          {stateEnum.enumValues.map((state) => (
-                            <CommandItem
-                              key={state}
-                              value={state}
-                              onSelect={() => field.onChange(state)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  state === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {state}
-                            </CommandItem>
-                          ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <Combobox
+                    items={stateEnum.enumValues}
+                    onValueChange={field.onChange}
+                  >
+                    <ComboboxInput
+                      placeholder="Select state"
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>No state found.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(state) => (
+                          <ComboboxItem
+                            key={state}
+                            value={state}
+                            onSelect={() => field.onChange(state)}
+                          >
+                            {state}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
 
                   <FormMessage />
                 </FormItem>
@@ -202,63 +186,64 @@ export function UserDetailsForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>College</FormLabel>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "justify-between",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value
-                            ? colleges.find((c) => c.id === field.value)?.name
-                            : loadingColleges
-                              ? "Loading..."
-                              : "Select college"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-
-                    <PopoverContent className="p-0">
-                      <Command>
-                        <CommandInput placeholder="Search college..." />
-                        <CommandList>
-                          <CommandEmpty>No college found.</CommandEmpty>
-
-                          {colleges.map((college) => (
-                            <CommandItem
-                              key={college.id}
-                              value={`${college.name} ${college.state}`}
-                              onSelect={() => field.onChange(college.id)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  college.id === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {college.name} ({college.state})
-                            </CommandItem>
-                          ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-
+                  <Combobox
+                    disabled={
+                      form.watch("state") == null ||
+                      form.watch("state") === undefined
+                    }
+                    items={colleges.filter(
+                      (college) => college.state === form.watch("state"),
+                    )}
+                    itemToStringLabel={(college: (typeof colleges)[number]) =>
+                      college.name ?? "Unknown College"
+                    }
+                    onValueChange={(value) => field.onChange(value?.id)}
+                  >
+                    <ComboboxInput
+                      disabled={
+                        form.watch("state") == null ||
+                        form.watch("state") === undefined
+                      }
+                      placeholder={
+                        loadingColleges
+                          ? "Loading colleges..."
+                          : "Select college"
+                      }
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>No college found.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(college) => (
+                          <ComboboxItem
+                            key={college.name}
+                            value={college}
+                            onSelect={() => field.onChange(college.id)}
+                          >
+                            {college.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Submitting..." : "Register"}
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <div className="flex items-center justify-center gap-2">
+                  Submitting
+                  <LoaderCircle className="animate-spin" />
+                </div>
+              ) : (
+                "Register"
+              )}
             </Button>
           </form>
         </Form>

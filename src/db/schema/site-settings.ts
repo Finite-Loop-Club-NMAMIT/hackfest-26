@@ -5,6 +5,7 @@ export const siteSettings = pgTable("site-settings", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   registrationsOpen: boolean("registrations_open").default(false),
+  eventRegistrationsOpen: boolean("event_registrations_open").default(false),
   resultsOut: boolean("results_out").default(false),
   paymentsOpen: boolean("payment_open").default(false),
 });

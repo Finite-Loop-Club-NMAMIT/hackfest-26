@@ -9,7 +9,7 @@ export default function EventsLayout({
     <SessionProvider basePath="/api/auth/event">
       <div
         className="bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{ backgroundImage: "url('/images/underwater.png')" }}
+        style={{ backgroundImage: "url('/images/underwater.webp')" }}
       >
         {children}
       </div>

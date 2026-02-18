@@ -62,7 +62,12 @@ export const POST = protectedEventRoute(
         }
         case "join": {
           const { teamId } = await req.json();
-          return await joinEventTeam(eventId, user.id, teamId);
+          return await joinEventTeam(
+            eventId,
+            user.id,
+            user.collegeId ?? "",
+            teamId,
+          );
         }
         case "confirm": {
           if (!eventUser) return notRegisteredError;

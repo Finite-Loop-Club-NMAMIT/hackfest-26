@@ -3,6 +3,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import db from "~/db";
 import { query } from "~/db/data";
+import { findById } from "~/db/data/event-users";
 import {
   eventAccounts,
   eventSessions,
@@ -44,6 +45,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         await query.eventUsers.update(user.id ?? "", {
+          state: participant?.state ?? null,
+          gender: participant?.gender ?? null,
           collegeId: participant?.collegeId ?? null,
         });
       }
@@ -54,16 +57,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const pSession = await pAuth();
       if (pSession?.user?.id) {
         if (user.email !== pSession.user.email)
-          return "/events?error=email-mismatch";
+          return "/error?error=email-mismatch";
       }
       return true;
     },
-    async redirect({ baseUrl }) {
+    async redirect({ url, baseUrl }) {
+      if (url.includes("/error?error=email-mismatch"))
+        return `${baseUrl}/events?error=email-mismatch`;
+
+      if (url.startsWith(baseUrl)) return url;
+
       return `${baseUrl}/events`;
     },
     async session({ session, user }) {
       if (user.id) {
-        session.eventUser = user;
+        const eventUser = await findById(user.id);
+        if (eventUser) {
+          session.eventUser = {
+            ...session.user,
+            id: user.id,
+            collegeId: eventUser.collegeId,
+          };
+        }
       }
       return session;
     },
