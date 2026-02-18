@@ -15,6 +15,7 @@ import { Navbar } from "./Navbar";
 import { TransitionMaterial } from "./shader/TransitionMaterial";
 import Timeline from "./Timeline";
 import TracksSection from "./Tracks";
+import PrizePool from "./Prizepool";
 
 // Register the custom shader material
 extend({ TransitionMaterial });
@@ -323,54 +324,7 @@ function LandingContent({
         {/* TIMELINE SECTION */}
         <Timeline />
 
-        {/* DEEP SEA (PRIZE POOL) */}
-        <motion.section
-          className="flex flex-col items-center justify-center relative px-4 py-8"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
-        >
-          <div className="relative z-10 flex flex-col items-center text-center w-full pt-16 pb-8">
-            <motion.h2
-              className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              Prize Pool
-            </motion.h2>
-
-            {/* ─── MASSIVE AMOUNT ─── */}
-            <motion.div
-              className="relative mb-20 flex flex-col items-center"
-              initial={{ scale: 0.8, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
-            >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 md:w-md md:h-112 rounded-full bg-yellow-500/5 blur-2xl" />
-
-              {/* The number */}
-              <span className="text-sm md:text-lg font-mono font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
-                Worth Over
-              </span>
-              <span
-                className="text-6xl md:text-8xl lg:text-[12rem] font-black font-sans leading-none tracking-tight"
-                style={{
-                  color: "#eab308",
-                  textShadow: "0 0 40px rgba(234,179,8,0.4)",
-                }}
-              >
-                ₹3,00,000
-                <span className="text-yellow-400/70">+</span>
-              </span>
-              <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
-                IN PRIZES
-              </span>
-            </motion.div>
-          </div>
-        </motion.section>
+        <PrizePool />
       </div>
 
       <Footer />
