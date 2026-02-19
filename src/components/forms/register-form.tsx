@@ -23,8 +23,6 @@ import {
   type RegisterParticipantInput,
   registerParticipantSchema,
 } from "~/lib/validation/participant";
-import { useDayNight } from "~/components/providers/useDayNight";
-
 interface College {
   id: string;
   name: string | null;
@@ -141,8 +139,8 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
           <Image
             src={
               isNight
-                ? "/images/shipwreck/shipwreckNight.png"
-                : "/images/shipwreck/shipwreckDay.png"
+                ? "/images/shipwreck/shipwreckNight.webp"
+                : "/images/shipwreck/shipwreckDay.webp"
             }
             alt="Shipwreck background"
             fill
