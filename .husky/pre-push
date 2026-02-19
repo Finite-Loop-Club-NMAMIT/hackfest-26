@@ -1,5 +1,4 @@
 rm -rf .next
 
-pnpm lint
-pnpm format
-pnpm build
+pnpm lint-staged
+pnpm run build
