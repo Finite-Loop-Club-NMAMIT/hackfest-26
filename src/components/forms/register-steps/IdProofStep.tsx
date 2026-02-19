@@ -3,7 +3,7 @@
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import type { UseFormReturn } from "react-hook-form";
-import { CloudinaryUpload } from "~/components/cloudinary-upload"; // Assuming this accepts className, if not, the wrapper handles positioning
+import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { Button } from "~/components/ui/button";
 import {
   FormControl,
@@ -22,15 +22,18 @@ interface IdProofStepProps {
 
 export function IdProofStep({ form, onNext }: IdProofStepProps) {
   return (
-    <div className="w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+    // Removed accidental `font-pirate` from this root div so it doesn't mess with normal text
+    <div className="w-full flex flex-col items-center font-pirate animate-in fade-in slide-in-from-bottom-8 duration-700">
       <FormField
         control={form.control}
         name="idProof"
         render={({ field }) => (
-          <FormItem className="w-full max-w-2xl space-y-8 text-center">
-            {/* Header Section */}
-            <div className="space-y-2">
-              <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight tracking-wide">
+          // Changed max-w-2xl to max-w-lg to match State and Github steps perfectly, and added flex column centering
+          <FormItem className="w-full max-w-lg space-y-8 flex flex-col items-center">
+            {/* Header Section strictly centered */}
+            <div className="flex flex-col items-center justify-center text-center space-y-2 w-full">
+              {/* Added `block` to ensure the label takes up the full width for proper text-centering */}
+              <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight block tracking-wide">
                 Upload your ID Proof
               </FormLabel>
               <p className="text-white/60 text-lg">
@@ -39,68 +42,60 @@ export function IdProofStep({ form, onNext }: IdProofStepProps) {
             </div>
 
             <FormControl>
-              <div className="flex justify-center w-full">
+              <div className="relative w-full">
                 {field.value ? (
-                  /* IMAGE PREVIEW STATE */
-                  <div className="relative group w-full max-w-lg aspect-video overflow-hidden rounded-2xl border border-white/20 shadow-2xl bg-black/20 backdrop-blur-sm transition-all hover:scale-[1.01]">
-                    <Image
-                      src={field.value}
-                      alt="ID Proof"
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="lg"
-                        className="gap-2 rounded-full shadow-lg hover:bg-red-600"
-                        onClick={() => field.onChange(undefined)}
-                      >
-                        <X className="h-5 w-5" />
-                        Remove Image
-                      </Button>
+                  /* IMAGE PREVIEW */
+                  <div className="relative group w-full rounded-xl border border-white/10 bg-white/90 overflow-hidden shadow-lg transition-all duration-200">
+                    <div className="relative group w-full rounded-xl border border-white/10 bg-white/90 overflow-hidden shadow-lg transition-all duration-200">
+                      <Image
+                        src={field.value}
+                        alt="ID Proof"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-full h-auto"
+                      />
                     </div>
 
-                    {/* Badge */}
-                    <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
-                      UPLOADED
+                    {/* Remove Button */}
+                    <div className="absolute top-3 right-3">
+                      <button
+                        type="button"
+                        onClick={() => field.onChange(undefined)}
+                        className="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest bg-white border border-white/20 text-[#10569c] hover:bg-white/80 transition shadow-sm"
+                      >
+                        <X className="h-4 w-4" />
+                        Remove
+                      </button>
                     </div>
                   </div>
                 ) : (
-                  /* UPLOAD STATE WRAPPER */
-                  <div className="w-full max-w-lg">
+                  /* UPLOAD CARD */
+                  <div className="w-full">
                     <div
                       className="
-                      relative 
-                      group
-                      flex flex-col items-center justify-center 
-                      w-full min-h-[300px] 
-                      rounded-3xl 
-                      border-2 border-dashed border-white/20 
-                      bg-white/5 
-                      hover:bg-white/10 hover:border-white/40 
-                      transition-all duration-300
-                    "
+                        group
+                        flex flex-col items-center justify-center
+                        w-full h-64          {/* <-- Changed from h-40 to h-64 */}
+                        rounded-xl
+                        border border-white/10
+                        bg-white/90
+                        transition-all duration-200
+                        hover:bg-white/80 hover:border-white/30
+                        shadow-sm
+                      "
                     >
-                      {/* NOTE: Assuming CloudinaryUpload renders a button. 
-                         We position it centrally. 
-                         If CloudinaryUpload has its own styling, this wrapper provides the 'glass' container context.
-                      */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <div className="p-4 rounded-full bg-white/10 mb-4">
-                          <UploadCloud className="w-10 h-10 text-white" />
-                        </div>
-                        <p className="text-white/80 font-medium">
-                          Click to upload
-                        </p>
-                        <p className="text-white/40 text-sm mt-1">JPG, PNG</p>
-                      </div>
+                      <UploadCloud className="w-8 h-8 text-[#10569c]/60 mb-2" />
 
-                      {/* The actual functional component - Positioned relative to accept clicks */}
-                      <div className="z-10 w-full h-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity p-8">
+                      <p className="text-lg font-medium font-pirate text-[#10569c]">
+                        Upload ID Proof
+                      </p>
+
+                      <p className="text-sm text-[#10569c]/60">
+                        JPG, PNG • Max 1MB
+                      </p>
+
+                      <div className="mt-4">
                         <CloudinaryUpload
                           onUpload={(url) => {
                             field.onChange(url);
@@ -108,7 +103,7 @@ export function IdProofStep({ form, onNext }: IdProofStepProps) {
                           }}
                           allowedFormats={["png", "jpg", "jpeg"]}
                           maxFileSize={1024 * 1024}
-                          label="Select File" // Changed label to be simpler since we have custom text above
+                          label="Select File"
                           folder="idProof"
                         />
                       </div>
@@ -118,7 +113,7 @@ export function IdProofStep({ form, onNext }: IdProofStepProps) {
               </div>
             </FormControl>
 
-            <FormMessage className="text-red-300 text-lg" />
+            <FormMessage className="text-[#e54d2e] text-2xl" />
           </FormItem>
         )}
       />

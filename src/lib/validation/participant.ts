@@ -24,8 +24,12 @@ export const participantSchema = z.object({
 });
 
 export const registerParticipantSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  phone: z.string().min(1, "Phone number is required"),
+  name: z.string().min(3, "Name must be greater than 3 characters"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be 10 digits")
+    .max(10, "Phone number must be 10 digits")
+    .regex(/^[0-9]+$/, "Phone number must contain only digits"),
   state: z.enum(stateEnum.enumValues, {
     message: "Please select a valid state",
   }),

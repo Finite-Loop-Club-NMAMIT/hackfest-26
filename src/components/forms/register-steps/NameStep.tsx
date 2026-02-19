@@ -17,6 +17,8 @@ interface NameStepProps {
   onBack?: () => void;
 }
 
+//we let them enter full name, if its too long, we ask them to enter a additional name (to be printed in ID) which will have 15 letters limit
+
 export function NameStep({ form, onNext }: NameStepProps) {
   return (
     <div className="w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -47,6 +49,7 @@ export function NameStep({ form, onNext }: NameStepProps) {
                   h-auto py-6 
                   transition-all duration-300
                   shadow-none
+                  font-pirate
                 "
                 placeholder="Type your answer here..."
                 autoComplete="off"
@@ -54,10 +57,10 @@ export function NameStep({ form, onNext }: NameStepProps) {
               />
             </FormControl>
 
-            <FormMessage className="text-red-300 text-lg" />
+            <FormMessage className="text-[#e54d2e] text-2xl" />
 
             {/* "Press Enter" Hint - Classic Typeform Touch */}
-            <div className="flex items-center justify-center gap-2 text-white/50 text-sm mt-4 animate-pulse">
+            <div className="flex items-center font-pirate text-xl justify-center gap-2 text-white/80 mt-4 animate-pulse">
               <span>
                 Press <span className="font-bold text-white">Enter ↵</span>
               </span>

@@ -8,13 +8,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import {
   Form,
   FormControl,
   FormField,
@@ -98,127 +91,146 @@ export function TeamForm() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 w-full">
       {/* --- CREATE TEAM CARD --- */}
-      <Card className="border-white/30 bg-black/20 backdrop-blur-xl shadow-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-white/20 rounded-lg ring-1 ring-white/10">
-              <Users className="w-6 h-6 text-white" />
+      <div className="w-full rounded-2xl border border-white/50 bg-white/90 backdrop-blur-md p-5 shadow-xl transition-all">
+        <div className="mb-4 space-y-1">
+          <div className="flex items-center gap-3">
+            {/* Flipped icon colors */}
+            <div className="p-1.5 bg-[#10569c]/10 rounded-xl ring-1 ring-[#10569c]/20 shadow-sm">
+              <Users className="w-5 h-5 text-[#10569c]" />
             </div>
-            <CardTitle className="text-2xl text-white font-bold tracking-tight">
+            <h2 className="text-2xl font-pirate font-bold text-[#10569c] tracking-wide drop-shadow-sm">
               Create Team
-            </CardTitle>
+            </h2>
           </div>
-          <CardDescription className="text-white/80 text-base font-medium">
+          <p className="text-[#10569c]/70 text-sm md:text-base font-medium">
             Create a new team and become the team leader.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...createForm}>
-            <form
-              onSubmit={createForm.handleSubmit(onCreateTeam)}
-              className="space-y-6"
-            >
-              <FormField
-                control={createForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white font-semibold">
-                      Team Name
-                    </FormLabel>
-                    <FormControl>
-                      {/* Darker input background for better contrast against the glass card */}
-                      <Input
-                        placeholder="e.g. The Hackers"
-                        {...field}
-                        className="bg-black/20 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/50 h-12 text-lg"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-300 font-medium" />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                disabled={loading || createForm.formState.isSubmitting}
-                className="w-full bg-white text-[#10569c] hover:bg-white/90 font-bold h-12 text-lg shadow-lg transition-transform active:scale-[0.98]"
-              >
-                {createForm.formState.isSubmitting ? (
-                  "Creating..."
-                ) : (
-                  <>
-                    Create Team <ArrowRight className="ml-2 w-5 h-5" />
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
 
-      {/* Separator / OR */}
-      <div className="relative flex py-2 items-center">
+        <Form {...createForm}>
+          <form
+            onSubmit={createForm.handleSubmit(onCreateTeam)}
+            className="space-y-4"
+          >
+            <FormField
+              control={createForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xl font-pirate text-[#10569c] tracking-wide">
+                    Team Name
+                  </FormLabel>
+                  <FormControl>
+                    {/* Pure white input to pop off the white/90 background */}
+                    <Input
+                      placeholder="e.g. The Black Pearl"
+                      {...field}
+                      className="
+                        w-full h-12 rounded-xl border border-[#10569c]/20 bg-white px-4 
+                        text-lg font-medium font-pirate text-[#10569c] 
+                        placeholder:text-[#10569c]/40 leading-none shadow-sm
+                        focus-visible:ring-2 focus-visible:ring-[#10569c]/40 focus-visible:border-[#10569c]/40
+                        transition-all duration-200
+                      "
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[#e54d2e] text-lg font-pirate" />
+                </FormItem>
+              )}
+            />
+            {/* Flipped button colors */}
+            <Button
+              type="submit"
+              disabled={loading || createForm.formState.isSubmitting}
+              className="
+                w-full h-12 rounded-xl text-lg font-pirate font-bold shadow-md transition-all tracking-wide
+                bg-[#10569c] text-white hover:bg-[#10569c]/90 hover:scale-[1.01] active:scale-[0.99]
+                disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center
+              "
+            >
+              {createForm.formState.isSubmitting ? (
+                "Creating..."
+              ) : (
+                <>
+                  Create Team <ArrowRight className="ml-2 w-5 h-5" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+      </div>
+
+      {/* Separator / OR (Left untouched as it sits on the main background) */}
+      <div className="relative flex py-1 items-center">
         <div className="flex-grow border-t border-white/30"></div>
-        <span className="flex-shrink-0 mx-4 text-white/80 font-bold text-sm tracking-widest">
+        <span className="flex-shrink-0 mx-4 text-white/90 font-pirate font-bold text-xl tracking-widest drop-shadow-sm">
           OR
         </span>
         <div className="flex-grow border-t border-white/30"></div>
       </div>
 
       {/* --- JOIN TEAM CARD --- */}
-      {/* Increased opacity (bg-black/30) here specifically because it sits on the bright sand */}
-      <Card className="border-white/30 bg-black/30 backdrop-blur-xl shadow-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-white/20 rounded-lg ring-1 ring-white/10">
-              <UserPlus className="w-6 h-6 text-white" />
+      <div className="w-full rounded-2xl border border-white/50 bg-white/90 backdrop-blur-md p-5 shadow-xl transition-all">
+        <div className="mb-4 space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-[#10569c]/10 rounded-xl ring-1 ring-[#10569c]/20 shadow-sm">
+              <UserPlus className="w-5 h-5 text-[#10569c]" />
             </div>
-            <CardTitle className="text-2xl text-white font-bold tracking-tight">
+            <h2 className="text-2xl font-pirate font-bold text-[#10569c] tracking-wide drop-shadow-sm">
               Join Team
-            </CardTitle>
+            </h2>
           </div>
-          <CardDescription className="text-white/80 text-base font-medium">
+          <p className="text-[#10569c]/70 text-sm md:text-base font-medium">
             Enter the Team ID shared by the team leader.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...joinForm}>
-            <form
-              onSubmit={joinForm.handleSubmit(onJoinTeam)}
-              className="space-y-6"
+          </p>
+        </div>
+
+        <Form {...joinForm}>
+          <form
+            onSubmit={joinForm.handleSubmit(onJoinTeam)}
+            className="space-y-4"
+          >
+            <FormField
+              control={joinForm.control}
+              name="teamId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xl font-pirate text-[#10569c] tracking-wide">
+                    Team ID
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. 1234-5678"
+                      {...field}
+                      className="
+                        w-full h-12 rounded-xl border border-[#10569c]/20 bg-white px-4 
+                        text-lg font-medium font-pirate text-[#10569c] 
+                        placeholder:text-[#10569c]/40 leading-none shadow-sm
+                        focus-visible:ring-2 focus-visible:ring-[#10569c]/40 focus-visible:border-[#10569c]/40
+                        transition-all duration-200
+                      "
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[#e54d2e] text-lg font-pirate" />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              disabled={loading || joinForm.formState.isSubmitting}
+              className="
+                w-full h-12 rounded-xl text-lg font-pirate font-bold shadow-md transition-all tracking-wide
+                bg-[#10569c] text-white hover:bg-[#10569c]/90 hover:scale-[1.01] active:scale-[0.99]
+                disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center
+              "
             >
-              <FormField
-                control={joinForm.control}
-                name="teamId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white font-semibold">
-                      Team ID
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. 1234-5678"
-                        {...field}
-                        className="bg-black/20 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/50 h-12 font-crimson text-lg"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-300 font-medium" />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                disabled={loading || joinForm.formState.isSubmitting}
-                className="w-full bg-white/10 text-white hover:bg-white/20 border border-white/30 font-bold h-12 text-lg backdrop-blur-md shadow-lg transition-transform active:scale-[0.98]"
-              >
-                {joinForm.formState.isSubmitting ? "Joining..." : "Join Team"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              {joinForm.formState.isSubmitting ? "Joining..." : "Join Team"}
+            </Button>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }

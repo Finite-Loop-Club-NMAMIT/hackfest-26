@@ -21,63 +21,78 @@ interface CourseStepProps {
 
 export function CourseStep({ form, onNext }: CourseStepProps) {
   return (
-    <div className="w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="w-full flex flex-col font-pirate items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
       <FormField
         control={form.control}
         name="course"
-        render={({ field }) => (
-          <FormItem className="w-full max-w-lg space-y-8">
-            {/* Header Section */}
-            <div className="text-center">
-              <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight tracking-wide">
-                What course are you in?
-              </FormLabel>
-            </div>
+        render={({ field }) => {
+          // Sort the courses so the selected one is always structurally at the top
+          const sortedCourses = [...courseEnum.enumValues].sort((a, b) => {
+            if (a === field.value) return -1;
+            if (b === field.value) return 1;
+            return 0;
+          });
 
-            <FormControl>
-              {/* Option List Container */}
-              <div className="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar space-y-3 pt-4">
-                {courseEnum.enumValues.map((course, index) => (
-                  <button
-                    key={course}
-                    type="button"
-                    onClick={() => {
-                      field.onChange(course);
-                      onNext();
-                    }}
-                    // Staggered animation for list items
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    className={cn(
-                      // FIXED: Removed 'hover:scale-[1.02]' to prevent overflow
-                      "group flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 text-left transition-all duration-300 hover:bg-white/20 hover:border-white/30 active:scale-[0.98] animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards",
-                      field.value === course &&
-                        "bg-white/20 border-white/50 ring-1 ring-white/50 shadow-lg sticky top-0 z-10 backdrop-blur-md",
-                    )}
-                  >
-                    {/* Course Name - Added group-hover:pl-2 for the internal movement effect */}
-                    <span className="text-xl font-medium text-white group-hover:pl-2 transition-all duration-300">
-                      {course}
-                    </span>
-
-                    {/* Selection Indicator */}
-                    <div className="flex items-center gap-3">
-                      {field.value === course && (
-                        <Check className="h-5 w-5 text-white animate-in zoom-in" />
-                      )}
-
-                      {/* Keyboard shortcut hint */}
-                      <span className="hidden group-hover:block text-xs font-bold uppercase tracking-widest text-white/50 bg-white/10 px-2 py-1 rounded">
-                        Select
-                      </span>
-                    </div>
-                  </button>
-                ))}
+          return (
+            <FormItem className="w-full max-w-lg space-y-8 flex flex-col items-center">
+              {/* Header Section */}
+              <div className="text-center w-full">
+                <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight tracking-wide block">
+                  What course are you in?
+                </FormLabel>
               </div>
-            </FormControl>
 
-            <FormMessage className="text-center text-red-300 text-lg" />
-          </FormItem>
-        )}
+              <FormControl>
+                <div className="w-full max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar space-y-2 relative">
+                  {sortedCourses.map((course, index) => {
+                    const isSelected = field.value === course;
+
+                    return (
+                      <button
+                        key={course}
+                        type="button"
+                        onClick={() => {
+                          field.onChange(course);
+                          onNext();
+                        }}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        className={cn(
+                          "group flex w-full h-16 items-center justify-between rounded-xl border border-white/10 bg-white/90 px-4 text-left transition-all duration-200 hover:bg-white/80 hover:border-white/30 active:scale-[0.98] animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards leading-none",
+                          // Apply sticky & highlighting only to the selected item
+                          isSelected && "bg-white sticky top-0 z-10 shadow-md",
+                        )}
+                      >
+                        {/* Course Name */}
+                        <span
+                          className={cn(
+                            "text-xl font-medium font-pirate transition-all duration-200 text-[#10569c]",
+                          )}
+                        >
+                          {course}
+                        </span>
+
+                        {/* Selection Indicator */}
+                        <div className="flex items-center gap-3">
+                          {isSelected ? (
+                            // Changed to blue so it shows up on the white background
+                            <Check className="h-6 w-6 text-[#10569c] animate-in zoom-in" />
+                          ) : (
+                            // Only show "Select" on items that aren't currently selected
+                            <span className="hidden group-hover:block text-xs font-bold uppercase tracking-widest text-[#10569c] bg-white border border-[#10569c]/20 px-2 py-1 rounded shadow-sm">
+                              Select
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </FormControl>
+
+              <FormMessage className="text-[#e54d2e] text-2xl" />
+            </FormItem>
+          );
+        }}
       />
     </div>
   );

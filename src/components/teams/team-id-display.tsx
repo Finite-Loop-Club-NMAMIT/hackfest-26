@@ -25,13 +25,13 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
   }
 
   return (
-    <div className="bg-black/40 border border-white/20 rounded-lg p-3 shadow-2xl backdrop-blur-xl transition-all hover:bg-black/50 flex flex-col items-start gap-2 min-w-[280px]">
+    <div className="bg-white/90 border border-[#10569c]/20 rounded-xl p-3 shadow-md backdrop-blur-md transition-all hover:bg-white flex flex-col items-start gap-2 min-w-[280px]">
       <div className="flex items-center justify-between w-full gap-3">
         <div className="flex flex-col">
-          <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
+          <p className="text-[10px] text-[#10569c]/60 uppercase tracking-widest font-bold">
             Team ID
           </p>
-          <code className="text-sm font-crimson font-bold text-white tracking-wide">
+          <code className="text-sm font-crimson font-bold text-[#10569c] tracking-wide">
             {shortenedId}
           </code>
         </div>
@@ -41,13 +41,13 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
           size="sm"
           variant="ghost"
           className="
-            h-8 px-2
-            text-white/70 hover:text-white hover:bg-white/10
+            h-8 px-2 rounded-lg
+            text-[#10569c]/70 hover:text-[#10569c] hover:bg-[#10569c]/10
             transition-all
           "
         >
           {copied ? (
-            <Check className="h-4 w-4 text-green-400" />
+            <Check className="h-4 w-4 text-green-600" />
           ) : (
             <Copy className="h-4 w-4" />
           )}

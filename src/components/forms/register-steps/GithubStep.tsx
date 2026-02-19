@@ -8,7 +8,6 @@ import {
   FormItem,
   FormLabel,
 } from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
 import type { RegisterParticipantInput } from "~/lib/validation/participant";
 
 interface GithubStepProps {
@@ -20,12 +19,12 @@ interface GithubStepProps {
 
 export function GithubStep({ form, initialGithubUsername }: GithubStepProps) {
   return (
-    <div className="w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="w-full flex flex-col items-center font-pirate animate-in fade-in slide-in-from-bottom-8 duration-700">
       <FormField
         control={form.control}
         name="github"
         render={({ field }) => (
-          <FormItem className="w-full space-y-8 text-center px-4">
+          <FormItem className="w-full space-y-8 text-center">
             {/* Icon Decoration */}
             <div className="flex justify-center mb-4">
               <div className="p-4 bg-white/10 rounded-full border border-white/20 backdrop-blur-md shadow-lg">
@@ -38,40 +37,32 @@ export function GithubStep({ form, initialGithubUsername }: GithubStepProps) {
               <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight block tracking-wide">
                 GitHub Username
               </FormLabel>
-              <p className="text-white/60 text-lg">
+              <p className="text-white/80 text-pirate text-lg">
                 This account is linked to your registration
               </p>
             </div>
 
             <FormControl>
-              <div className="relative w-full max-w-xl mx-auto">
-                {/* INPUT FIELD (Plain & Simple) */}
-                <Input
-                  readOnly
+              <div className="relative w-full max-w-lg mx-auto">
+                {/* Custom Div replacing the Input field */}
+                <div
                   title={field.value ?? initialGithubUsername ?? ""}
                   className="
-                    block w-full 
-                    bg-transparent 
-                    border-0 border-b-2 border-white/20 
-                    border-dashed
-                    rounded-4xl
-                    
-                    /* TEXT STYLING */
-                    text-center font-crimson text-white/90 
-                    text-xl px-0
-                    md:text-4xl 
-                    
-                    /* INTERACTION */
-                    cursor-not-allowed
-                    focus-visible:ring-0 focus-visible:border-white/40
-                    focus-visible:outline-none 
-                    py-4
-                    transition-all duration-300
-                    overflow-hidden text-ellipsis
-                    placeholder:text-white/20
+                    w-full
+                    h-16
+                    flex items-center justify-center
+                    rounded-xl
+                    border border-white/20
+                    bg-white
+                    shadow-sm
+
+                    px-4
+                    text-xl font-pirate font-medium font-mono text-[#10569c]
+                    cursor-default
                   "
-                  value={field.value ?? initialGithubUsername ?? ""}
-                />
+                >
+                  {field.value ?? initialGithubUsername ?? ""}
+                </div>
               </div>
             </FormControl>
           </FormItem>

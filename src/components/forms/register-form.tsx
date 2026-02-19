@@ -118,14 +118,15 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   return (
     <Form {...form}>
       <form
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isLastStep) {
+            e.preventDefault();
+          }
+        }}
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
           console.log("Validation errors:", errors);
         })}
-        className={`relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden text-white transition-colors duration-1000 ${
-          isNight
-            ? "bg-linear-to-b from-[#0f172a] via-[#1e1a78] to-[#2d5f7c]"
-            : "bg-linear-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb]"
-        }`}
+        className="relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden text-white"
       >
         {/* --- TOP PROGRESS BAR --- */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-white/20 z-50">
@@ -135,29 +136,20 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
           />
         </div>
 
-        <div className="absolute inset-0 w-full h-full z-0 opacity-20 pointer-events-none mix-blend-multiply">
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <Image
-            src="/images/palm-tree.png"
-            alt="Palm trees"
+            src={
+              isNight
+                ? "/images/shipwreck/shipwreckNight.webp"
+                : "/images/shipwreck/shipwreckDay.webp"
+            }
+            alt="Shipwreck background"
             fill
             className="object-cover object-bottom"
             priority
           />
         </div>
 
-        {/* --- DECORATIVE ELEMENTS (The Beach) --- */}
-        <div
-          className={`absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] rounded-[100%] blur-3xl z-0 pointer-events-none transition-colors duration-1000 ${
-            isNight ? "bg-[#1e1b4b]/40" : "bg-[#fffac2]/40"
-          }`}
-        />
-        <div
-          className={`absolute -bottom-[12%] left-[-10%] w-[120%] h-[30vh] rounded-[50%] z-0 pointer-events-none transition-colors duration-1000 ${
-            isNight
-              ? "bg-[#312e81] shadow-[0_-10px_50px_rgba(30,27,75,0.8)]"
-              : "bg-[#fbf6db] shadow-[0_-10px_50px_rgba(240,230,180,0.8)]"
-          }`}
-        />
         {/* Step Counter Text */}
         <div className="absolute top-8 left-6 text-sm text-white/80 z-20 font-medium tracking-wide">
           STEP {step + 1} OF {steps.length}
@@ -226,13 +218,14 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               <Button
                 type="button"
                 // Changed to 'ghost' to remove default borders
-                variant="ghost"
                 onClick={handleBack}
                 className="
                   // Colors
-                  bg-white/40                // Soft translucent white base
+                  bg-white/60                // Soft translucent white base
                   text-[#10569c]               // Deep blue text for contrast on both Sky & Sand
-                  hover:bg-white/40            // Brightens on hover
+                  hover:bg-white/70            // Brightens on hover
+                  hover:scale-[1.01] 
+                  active:scale-[0.99]
                   
                   // Effects
                   backdrop-blur-md             // Glass effect
