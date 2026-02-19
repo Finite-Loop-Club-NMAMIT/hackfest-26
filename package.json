@@ -22,12 +22,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "setup:env": "cp .env.example .env && echo AUTH_SECRET=$(openssl rand -base64 32) && echo 'Setup complete'"
   },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "pnpm biome format --write",
-      "pnpm biome check"
-    ]
-  },
+
   "dependencies": {
     "@auth/core": "^0.34.3",
     "@auth/drizzle-adapter": "^1.11.1",
