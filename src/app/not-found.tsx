@@ -13,7 +13,7 @@ export default function NotFound() {
       {/* Full-screen background — swaps based on day/night */}
       {/* biome-ignore lint/performance/noImgElement: static 404 page */}
       <img
-        src={isNight ? "/images/404-dark.png" : "/images/404-light.png"}
+        src={isNight ? "/images/404-dark.webp" : "/images/404-light.webp"}
         alt="404 – Broken Submarine"
         className="absolute inset-0 w-full h-full object-cover object-center opacity-90 transition-opacity duration-700"
         key={isNight ? "dark" : "light"}
