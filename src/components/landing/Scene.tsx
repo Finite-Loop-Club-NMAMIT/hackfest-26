@@ -199,15 +199,11 @@ function FixedHero({
           >
             <div className="absolute -z-10" />
             <img
-              src="/logo.webp"
+              src="/logo11.png"
               alt="HF Logo"
-              className="w-48 ml-11 md:w-64 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
+              className="w-64 md:w-120 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
             />
           </motion.div>
-
-          <h1 className="text-6xl md:text-9xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
-            HACKFEST '26
-          </h1>
 
           {/* PLANK */}
           <motion.div
