@@ -8,12 +8,15 @@ import { useDayNight } from "~/components/providers/useDayNight";
 export default function NotFound() {
   const { isNight } = useDayNight();
 
-  const desktopSrc = isNight ? "/images/404-dark.webp" : "/images/404-light.webp";
-  const mobileSrc  = isNight ? "/images/404-dark-mobile.webp" : "/images/404-light-mobile.webp";
+  const desktopSrc = isNight
+    ? "/images/404-dark.webp"
+    : "/images/404-light.webp";
+  const mobileSrc = isNight
+    ? "/images/404-dark-mobile.webp"
+    : "/images/404-light-mobile.webp";
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-black">
-
       {/* ── DESKTOP background (md+) ── */}
       {/* biome-ignore lint/performance/noImgElement: static 404 page */}
       <img
@@ -41,7 +44,6 @@ export default function NotFound() {
       {/* ── DESKTOP content — right-aligned, vertically centered ── */}
       <div className="hidden md:flex relative z-10 min-h-screen items-center justify-end px-8 md:px-20">
         <div className="flex flex-col items-start gap-6 max-w-lg">
-
           <span className="text-sm font-mono font-bold tracking-[0.5em] text-cyan-400/80 uppercase">
             Error 404
           </span>
@@ -68,14 +70,12 @@ export default function NotFound() {
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </button>
           </Link>
-
         </div>
       </div>
 
       {/* ── MOBILE content — top-aligned, centered ── */}
       <div className="flex md:hidden relative z-10 min-h-screen items-start justify-center px-6 pt-16">
         <div className="flex flex-col items-center text-center gap-5 max-w-sm">
-
           <span className="text-xs font-mono font-bold tracking-[0.5em] text-cyan-400/80 uppercase">
             Error 404
           </span>
@@ -102,10 +102,8 @@ export default function NotFound() {
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </button>
           </Link>
-
         </div>
       </div>
-
     </main>
   );
 }
