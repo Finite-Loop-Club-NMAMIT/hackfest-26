@@ -65,7 +65,7 @@ export function GithubStep({ form, initialGithubUsername }: GithubStepProps) {
                 </div>
               </div>
             </FormControl>
-            </FormItem>
+          </FormItem>
         )}
       />
     </div>

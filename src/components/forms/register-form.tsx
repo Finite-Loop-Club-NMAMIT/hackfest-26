@@ -23,6 +23,7 @@ import {
   type RegisterParticipantInput,
   registerParticipantSchema,
 } from "~/lib/validation/participant";
+
 interface College {
   id: string;
   name: string | null;

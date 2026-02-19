@@ -32,8 +32,8 @@ export function StateStep({ form, onNext }: StateStepProps) {
     // A. Filter by search term first
     const options = search
       ? stateEnum.enumValues.filter((state) =>
-        state.toLowerCase().includes(search.toLowerCase()),
-      )
+          state.toLowerCase().includes(search.toLowerCase()),
+        )
       : stateEnum.enumValues;
 
     // B. Sort: Move selected item to the top
@@ -103,7 +103,7 @@ export function StateStep({ form, onNext }: StateStepProps) {
                     className={cn(
                       "group flex w-full h-16 items-center justify-between rounded-xl border border-white/10 bg-white/90 px-4 text-left transition-all hover:bg-white/80 hover:border-white/30 active:scale-[0.98]",
                       field.value === state &&
-                      "bg-white border-white/50 ring-1 ring-[#10569c]/50 sticky top-0 z-10 shadow-lg",
+                        "bg-white border-white/50 ring-1 ring-[#10569c]/50 sticky top-0 z-10 shadow-lg",
                     )}
                   >
                     {/* State Name */}
@@ -123,7 +123,6 @@ export function StateStep({ form, onNext }: StateStepProps) {
                       )}
                     </div>
                   </button>
-
                 ))
               ) : (
                 <div className="text-center py-8 text-white/40 italic">

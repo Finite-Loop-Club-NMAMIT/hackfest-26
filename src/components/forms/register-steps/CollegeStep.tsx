@@ -28,8 +28,7 @@ interface CollegeStepProps {
   loadingColleges: boolean;
 }
 
-/* remove select option on 1st row
-*/
+/* remove select option on 1st row */
 
 export function CollegeStep({
   form,
@@ -127,7 +126,7 @@ export function CollegeStep({
                     className={cn(
                       "group flex w-full min-h-16 items-center justify-between rounded-xl border border-white/10 bg-white/90 px-4 text-left transition-all duration-200 hover:bg-white/80 hover:border-white/30 active:scale-[0.98]",
                       field.value === college.id &&
-                      "bg-white border-white/50 sticky top-0 z-10 backdrop-blur-md shadow-lg",
+                        "bg-white border-white/50 sticky top-0 z-10 backdrop-blur-md shadow-lg",
                     )}
                   >
                     <div className="flex flex-col gap-1">
