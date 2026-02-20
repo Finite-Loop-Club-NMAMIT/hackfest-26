@@ -22,7 +22,7 @@ export default function BrochureDownload() {
         transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
         viewport={{ once: true }}
       >
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-black/40 backdrop-blur-sm shadow-[0_0_50px_rgba(6,182,212,0.15)] group pl-6">
+        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-black/40 backdrop-blur-sm shadow-[0_0_50px_rgba(6,182,212,0.15)] group">
           <div className="relative z-10 flex flex-col md:flex-row items-center p-8 md:p-12 gap-8 md:gap-12">
             <motion.div
               className="relative shrink-0 w-64 md:w-76 aspect-3/4 rounded-lg overflow-hidden border border-cyan-500/20 shadow-2xl -rotate-3 group-hover:rotate-0 transition-transform duration-500"

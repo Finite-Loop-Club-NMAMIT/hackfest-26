@@ -6,14 +6,14 @@ const social = [
   {
     link: "https://www.instagram.com/hackfest.dev",
     icon: (
-      <Instagram className="text-cyan-400 hover:text-cyan-300 w-6 h-6 transition-colors" />
+      <Instagram className="h-6 w-6 text-sky-800 transition-colors hover:text-sky-900" />
     ),
     name: "Instagram",
   },
   {
     link: "mailto:admin@hackfest.dev",
     icon: (
-      <Mail className="text-cyan-400 hover:text-cyan-300 w-6 h-6 transition-colors" />
+      <Mail className="h-6 w-6 text-sky-800 transition-colors hover:text-sky-900" />
     ),
     name: "E-mail",
   },
@@ -24,7 +24,7 @@ const social = [
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 640 512"
-        className="text-cyan-400 hover:text-cyan-300 w-6 h-6 fill-current transition-colors"
+        className="h-6 w-6 fill-current text-sky-800 transition-colors hover:text-sky-900"
         aria-label="Discord"
       >
         <title>Discord</title>
@@ -37,98 +37,103 @@ const social = [
 
 const Footer = () => {
   return (
-    <footer className="w-full flex-col border-t border-cyan-900/30 bg-black/90 px-4 backdrop-blur-md relative z-20">
-      <div className="flex h-full flex-col items-center justify-evenly space-y-12 p-4 py-8 lg:flex-row relative">
-        {/* Glow effect */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-linear-to-r from-transparent via-cyan-500/50 to-transparent blur-sm" />
+    <footer className="relative z-20 w-full flex flex-col">
+      <div className="relative h-45 w-full bg-transparent bg-[url('/images/corals_cropped.png')] bg-repeat-x bg-size-[auto_100%] bg-top-left">
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/10 via-black/25 to-black/45" />
+      </div>
+      <div className="relative z-20 w-full flex-col overflow-hidden border-t border-stone-700/30 bg-linear-to-b from-[#d2c1a2] via-[#a2825a] to-[#5b4630] backdrop-blur-md">
+        <div className="relative z-10 flex h-full flex-col items-center justify-evenly space-y-12 p-4 py-8 lg:flex-row">
+          {/* Glow effect */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-linear-to-r from-transparent via-cyan-500/50 to-transparent blur-sm" />
 
-        <div className="flex flex-col items-center gap-8 z-10">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="flex flex-row items-center justify-center gap-6">
-              <Image
-                src="/logo.webp"
-                priority
-                alt="Logo - Hackfest"
-                width={95}
-                height={50}
-                className=""
-              />
-              <Link href="https://www.finiteloop.co.in/" target="_blank">
+          <div className="flex flex-col items-center gap-8 z-10">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="flex flex-row items-center justify-center gap-6">
                 <Image
-                  src="/logos/flc_logo_crop.png"
+                  src="/logo.webp"
                   priority
-                  alt="Logo - Finite Loop Club"
-                  width={75}
+                  alt="Logo - Hackfest"
+                  width={95}
                   height={50}
+                  className=""
+                />
+                <Link href="https://www.finiteloop.co.in/" target="_blank">
+                  <Image
+                    src="/logos/flc_logo_crop.png"
+                    priority
+                    alt="Logo - Finite Loop Club"
+                    width={75}
+                    height={50}
+                    className="opacity-80 hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
+              <Link href="https://nmamit.nitte.edu.in/" target="_blank">
+                <Image
+                  src="/logos/NMAMITLogo.png"
+                  priority
+                  alt="Logo - NMAMIT"
+                  width={180}
+                  height={100}
                   className="opacity-80 hover:opacity-100 transition-opacity"
                 />
               </Link>
             </div>
-            <Link href="https://nmamit.nitte.edu.in/" target="_blank">
-              <Image
-                src="/logos/NMAMITLogo.png"
-                priority
-                alt="Logo - NMAMIT"
-                width={180}
-                height={100}
-                className="opacity-80 hover:opacity-100 transition-opacity"
-              />
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-4 md:gap-4">
-            <p className="text-base font-normal text-cyan-100/70">
-              Connect with us:
-            </p>
-            <ul className="flex gap-6 md:gap-6">
-              {social.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.link}
-                    className="text-2xl text-cyan-200 transition hover:text-cyan-400 hover:scale-110 block"
-                    target="_blank"
-                  >
-                    {link.icon}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <div className="flex flex-col items-center gap-8 z-10">
-          <div className="flex flex-col items-center justify-center gap-10 md:flex-row">
-            <div className="overflow-hidden rounded-lg border border-cyan-800/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-              <iframe
-                title="Maps"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3884.6730533394866!2d74.93141407492217!3d13.183002587152156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbb56415ad85e5b%3A0x10b77ac6f6afc7fa!2sN.M.A.M.%20Institute%20of%20Technology!5e0!3m2!1sen!2sin!4v1705002903689!5m2!1sen!2sin"
-                width="250"
-                height="180"
-                style={{ border: 0 }}
-                className="filter grayscale hover:grayscale-0 transition-all duration-500"
-                aria-hidden="false"
-              ></iframe>
-            </div>
-            <div className="flex flex-col gap-2 text-center text-cyan-100/80">
-              <h1 className="text-lg font-semibold text-cyan-400">
-                NMAM Institute of Technology, Nitte
-              </h1>
-              <p className="text-sm opacity-70">
-                Karkala, Udupi District, Karnataka
+            <div className="flex flex-col items-center gap-4 md:gap-4">
+              <p className="text-base font-normal text-stone-900/90">
+                Connect with us:
               </p>
+              <ul className="flex gap-6 md:gap-6">
+                {social.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.link}
+                      className="block text-2xl text-stone-800 transition hover:scale-110 hover:text-sky-900"
+                      target="_blank"
+                    >
+                      {link.icon}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-          <p className="text-center text-base font-normal text-cyan-100/60">
-            Interested to sponsor? Let us know{" "}
-            <Link
-              href="mailto:sponsor@hackfest.dev"
-              className="text-cyan-400 underline hover:text-cyan-300 transition-colors"
-            >
-              sponsor@hackfest.dev
-            </Link>
-          </p>
+          <div className="flex flex-col items-center gap-8 z-10">
+            <div className="flex flex-col items-center justify-center gap-10 md:flex-row">
+              <div className="overflow-hidden rounded-lg border border-cyan-800/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                <iframe
+                  title="Maps"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3884.6730533394866!2d74.93141407492217!3d13.183002587152156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbb56415ad85e5b%3A0x10b77ac6f6afc7fa!2sN.M.A.M.%20Institute%20of%20Technology!5e0!3m2!1sen!2sin!4v1705002903689!5m2!1sen!2sin"
+                  width="250"
+                  height="180"
+                  style={{ border: 0 }}
+                  className="filter grayscale hover:grayscale-0 transition-all duration-500"
+                  aria-hidden="false"
+                ></iframe>
+              </div>
+              <div className="flex flex-col gap-2 text-center text-stone-900/90">
+                <h1 className="text-lg font-semibold text-sky-900">
+                  NMAM Institute of Technology, Nitte
+                </h1>
+                <p className="text-sm text-stone-900/75">
+                  Karkala, Udupi District, Karnataka
+                </p>
+              </div>
+            </div>
+            <p className="text-center text-base font-normal text-stone-900/85">
+              Interested to sponsor? Let us know{" "}
+              <Link
+                href="mailto:sponsor@hackfest.dev"
+                className="text-sky-900 underline transition-colors hover:text-sky-950"
+              >
+                sponsor@hackfest.dev
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="w-full border-t border-cyan-900/30 py-5 text-center font-normal text-sm text-cyan-100/30">
-        <p>2026 &copy; Hackfest | All rights reserved</p>
+        <div className="w-full border-t border-stone-700/35 py-5 text-center font-normal text-sm text-stone-900/65">
+          <p>2026 &copy; Hackfest | All rights reserved</p>
+        </div>
       </div>
     </footer>
   );
