@@ -230,6 +230,32 @@ export default function TimelineScene() {
 
       {isMobile && <MobileControls shipControls={shipControlsRef} />}
 
+      {/* Desktop Scroll Hint */}
+      {!isMobile && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2 animate-bounce opacity-80">
+          <p className="text-xs font-crimson tracking-[0.3em] uppercase text-white drop-shadow-md">
+            Navigate Timeline
+          </p>
+          <div className="text-lg font-bold text-white drop-shadow-md">
+            Scroll or Use Arrow Keys
+          </div>
+          <svg
+            className="w-6 h-6 text-white drop-shadow-md"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <title>Scroll or Use Arrow Keys</title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
+          </svg>
+        </div>
+      )}
+
       <FocusDialog
         selectedEvent={selectedEvent}
         onClose={() => setSelectedEvent(null)}
