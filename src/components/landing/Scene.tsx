@@ -29,9 +29,11 @@ useTexture.preload([
 
 function Background({
   isNight,
+  nightProgressRef,
   scrollRef,
 }: {
   isNight: boolean;
+  nightProgressRef: React.RefObject<number>;
   scrollRef: React.MutableRefObject<number>;
 }) {
   const { viewport } = useThree();
@@ -130,11 +132,7 @@ function Background({
         0.02,
       );
 
-      materialRef.current.uIsNight = THREE.MathUtils.lerp(
-        materialRef.current.uIsNight,
-        isNight ? 1.0 : 0.0,
-        0.05,
-      );
+      materialRef.current.uIsNight = nightProgressRef.current;
     }
   });
 
@@ -566,7 +564,7 @@ export default function Scene({ session }: { session: Session | null }) {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const htmlScrollRef = useRef<HTMLDivElement>(null);
-  const { isNight } = useDayNight();
+  const { isNight, nightProgressRef } = useDayNight();
 
   // Initialize Lenis
   useEffect(() => {
@@ -671,7 +669,7 @@ export default function Scene({ session }: { session: Session | null }) {
             htmlElement={htmlScrollRef.current}
           />
           <ScrollSync setUnderwater={setIsUnderwater} scrollRef={scrollRef} />
-          <Background isNight={isNight} scrollRef={scrollRef} />
+          <Background isNight={isNight} nightProgressRef={nightProgressRef} scrollRef={scrollRef} />
         </Suspense>
       </Canvas>
       <style jsx global>{`
