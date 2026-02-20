@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { UpdateSession } from "next-auth/react";
@@ -8,12 +9,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -72,16 +68,20 @@ export function UserDetailsForm({
     },
   });
 
-  console.log("Form data:", form.watch());
+  const selectedState = form.watch("state");
+
+  useEffect(() => {
+    form.setValue("collegeId", "");
+  }, [form]);
 
   useEffect(() => {
     async function loadColleges() {
       try {
         const result = await apiFetch<{ colleges: College[] }>(
-          "/api/colleges/events/list",
+          "/api/colleges/list",
         );
         setColleges(result?.colleges ?? []);
-      } catch (_err) {
+      } catch {
         toast.error("Failed to load colleges");
       } finally {
         setLoadingColleges(false);
@@ -93,160 +93,186 @@ export function UserDetailsForm({
   async function onSubmit(data: UpdateEventUserInput) {
     try {
       setSubmitting(true);
-
       await apiFetch("/api/events/users/update", {
         method: "POST",
         body: JSON.stringify(data),
       });
-
       await sessionUpdate();
       router.refresh();
-    } catch (_err) {
-      console.error("Error updating user details:", _err);
+    } catch {
+      toast.error("Failed to update details. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const filteredColleges = colleges.filter(
+    (college) => college.state === selectedState,
+  );
+
+  const stateNotSelected = !selectedState;
+
   return (
     <Dialog open={true}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Complete Registration</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-md w-full rounded-2xl">
+        <VisuallyHidden>
+          <DialogTitle>Complete Your Registration Details</DialogTitle>
+        </VisuallyHidden>
+        {/* Header strip — matches TeamRegistrationDialog */}
+        <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#39577c]/50">
+          <span className="text-sm font-semibold tracking-widest uppercase text-[#f4d35e]/60">
+            Complete Registration
+          </span>
+        </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Gender */}
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {genderEnum.enumValues.map((gender) => (
-                        <SelectItem key={gender} value={gender}>
-                          {gender}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="px-5 py-6">
+          <p className="text-white/50 text-sm mb-5">
+            We need a few more details before you can register for events.
+          </p>
 
-            {/* State */}
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>State</FormLabel>
-                  <Combobox
-                    items={stateEnum.enumValues}
-                    onValueChange={field.onChange}
-                  >
-                    <ComboboxInput
-                      placeholder="Select state"
-                      className="w-full"
-                    />
-                    <ComboboxContent>
-                      <ComboboxEmpty>No state found.</ComboboxEmpty>
-                      <ComboboxList>
-                        {(state) => (
-                          <ComboboxItem
-                            key={state}
-                            value={state}
-                            onSelect={() => field.onChange(state)}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Gender */}
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
+                      Gender
+                    </FormLabel>
+                    <Select onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="bg-[#133c55]/50 border-[#39577c] text-white focus:ring-[#f4d35e]/40 data-placeholder:text-white/30">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#0f1823] border-[#39577c] text-white">
+                        {genderEnum.enumValues.map((gender) => (
+                          <SelectItem
+                            key={gender}
+                            value={gender}
+                            className="focus:bg-[#133c55] focus:text-white"
                           >
-                            {state}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
+                            {gender}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )}
+              />
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* State */}
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
+                      State
+                    </FormLabel>
+                    <Combobox
+                      items={stateEnum.enumValues}
+                      onValueChange={field.onChange}
+                    >
+                      <ComboboxInput
+                        placeholder="Select state"
+                        className="w-full bg-[#133c55]/50 border-[#39577c] text-white placeholder:text-white/30 focus-visible:ring-[#f4d35e]/40"
+                      />
+                      <ComboboxContent className="bg-[#0f1823] border-[#39577c]">
+                        <ComboboxEmpty className="text-white/40">
+                          No state found.
+                        </ComboboxEmpty>
+                        <ComboboxList>
+                          {(state) => (
+                            <ComboboxItem
+                              key={state}
+                              value={state}
+                              onSelect={() => field.onChange(state)}
+                              className="text-white focus:bg-[#133c55]"
+                            >
+                              {state}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )}
+              />
 
-            {/* College */}
-            <FormField
-              control={form.control}
-              name="collegeId"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>College</FormLabel>
-                  <Combobox
-                    disabled={
-                      form.watch("state") == null ||
-                      form.watch("state") === undefined
-                    }
-                    items={colleges.filter(
-                      (college) => college.state === form.watch("state"),
-                    )}
-                    itemToStringLabel={(college: (typeof colleges)[number]) =>
-                      college.name ?? "Unknown College"
-                    }
-                    onValueChange={(value) => field.onChange(value?.id)}
-                  >
-                    <ComboboxInput
-                      disabled={
-                        form.watch("state") == null ||
-                        form.watch("state") === undefined
+              {/* College */}
+              <FormField
+                control={form.control}
+                name="collegeId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
+                      College
+                    </FormLabel>
+                    <Combobox
+                      key={selectedState}
+                      disabled={stateNotSelected}
+                      items={filteredColleges}
+                      itemToStringLabel={(college: College) =>
+                        college.name ?? "Unknown College"
                       }
-                      placeholder={
-                        loadingColleges
-                          ? "Loading colleges..."
-                          : "Select college"
-                      }
-                      className="w-full"
-                    />
-                    <ComboboxContent>
-                      <ComboboxEmpty>No college found.</ComboboxEmpty>
-                      <ComboboxList>
-                        {(college) => (
-                          <ComboboxItem
-                            key={college.name}
-                            value={college}
-                            onSelect={() => field.onChange(college.id)}
-                          >
-                            {college.name}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      onValueChange={(value) => field.onChange(value?.id)}
+                    >
+                      <ComboboxInput
+                        disabled={stateNotSelected}
+                        placeholder={
+                          loadingColleges
+                            ? "Loading colleges..."
+                            : stateNotSelected
+                              ? "Select a state first"
+                              : "Select college"
+                        }
+                        className="w-full bg-[#133c55]/50 border-[#39577c] text-white placeholder:text-white/30 focus-visible:ring-[#f4d35e]/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                      />
+                      <ComboboxContent className="bg-[#0f1823] border-[#39577c]">
+                        <ComboboxEmpty className="text-white/40">
+                          No college found.
+                        </ComboboxEmpty>
+                        <ComboboxList>
+                          {(college) => (
+                            <ComboboxItem
+                              key={college.name}
+                              value={college}
+                              onSelect={() => field.onChange(college.id)}
+                              className="text-white focus:bg-[#133c55]"
+                            >
+                              {college.name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )}
+              />
 
-            <Button
-              type="submit"
-              className="w-full cursor-pointer"
-              disabled={submitting}
-            >
-              {submitting ? (
-                <div className="flex items-center justify-center gap-2">
-                  Submitting
-                  <LoaderCircle className="animate-spin" />
-                </div>
-              ) : (
-                "Register"
-              )}
-            </Button>
-          </form>
-        </Form>
+              <Button
+                type="submit"
+                className="w-full py-5 bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all duration-200 cursor-pointer"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    Submitting
+                    <LoaderCircle className="animate-spin" size={16} />
+                  </span>
+                ) : (
+                  "Complete Registration"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -12,6 +12,26 @@ import EventDetails from "./details";
 import EventDrawer from "./drawer";
 import { UserDetailsForm } from "./userDetails";
 
+export type EventTeam = {
+  id: string;
+  name: string;
+  eventId: string;
+  attended: boolean;
+  isComplete: boolean;
+  paymentStatus: "Pending" | "Paid" | "Refunded";
+};
+
+export type EventMember = {
+  id: string;
+  name: string;
+  email: string;
+  isLeader: boolean;
+  teamId: string;
+  userId: string;
+  eventId: string;
+  attended: boolean;
+};
+
 export type Event = {
   id: string;
   title: string;
@@ -26,7 +46,14 @@ export type Event = {
   maxTeamSize: number;
   image?: string;
   deadline: string;
+  team?: EventTeam;
+  isLeader?: boolean;
+  isComplete?: boolean;
+  teamMembers?: EventMember[];
 };
+
+const GRID_CLASSES =
+  "w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 md:gap-10 gap-6 items-start";
 
 const Events = ({
   searchParams,
@@ -35,30 +62,30 @@ const Events = ({
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [registration, setRegistration] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [drawerDirection, setDrawerDirection] = useState<"right" | "bottom">(
     "right",
   );
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+
   const router = useRouter();
   const error = use(searchParams).error;
   const { data: session, update } = useSession();
-  console.log("Session data:", session);
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
   const fetchEvents = useCallback(async () => {
     try {
       const response = await apiFetch<{
         events: Event[];
         registrationsOpen: boolean;
-      }>("/api/events/getAll", {
-        method: "GET",
-      });
-      console.log("Fetched events:", response);
+      }>("/api/events/getAll", { method: "GET" });
+
       setRegistration(response?.registrationsOpen ?? false);
-      if (response) setEvents(response?.events as Event[]);
-    } catch (error) {
-      console.error("Error fetching events:", error);
+      if (response) setEvents(response.events);
+    } catch {
+      toast.error("Failed to load events. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -75,12 +102,13 @@ const Events = ({
         toast.error("Email mismatch. Please log in with the correct account.");
       }, 2000);
     }
-  }, [error, router.replace]);
+  }, [error, router]);
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.matchMedia("(max-width: 767px)").matches;
-      setDrawerDirection(mobile ? "bottom" : "right");
+      setDrawerDirection(
+        window.matchMedia("(max-width: 767px)").matches ? "bottom" : "right",
+      );
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -88,8 +116,7 @@ const Events = ({
   }, []);
 
   const handleCardClick = (id: string) => {
-    const event = events.find((event) => event.id === id) as Event;
-    setSelectedEvent(event);
+    setSelectedEventId(id);
     setDrawerOpen(true);
   };
 
@@ -102,25 +129,27 @@ const Events = ({
       <EventDrawer
         event={selectedEvent}
         drawerOpen={drawerOpen}
+        fetchEvents={fetchEvents}
         setDrawerOpen={setDrawerOpen}
         registrationOpen={registration}
         drawerDirection={drawerDirection}
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-14">
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-7xl font-pirate text-transparent bg-clip-text bg-linear-to-b from-[#0f1823] to-[#133c88] drop-shadow-[0_0_12px_rgba(255,191,0,0.8)] tracking-wider">
             Events
           </h2>
         </div>
+
         {loading ? (
-          <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 md:gap-10 gap-6 justify-center items-center">
+          <div className={GRID_CLASSES}>
             {Array.from({ length: 6 }, (_, i) => i).map((i) => (
               <Card
                 key={`event-skeleton-${i}`}
-                className="w-full max-w-xs bg-[#0f1823]"
+                className="w-full bg-[#0f1823] border border-[#39577c]"
               >
-                <CardHeader>
+                <CardHeader className="gap-2">
                   <Skeleton className="h-4 w-2/3 bg-[#133c55]" />
                   <Skeleton className="h-4 w-1/2 bg-[#133c55]" />
                 </CardHeader>
@@ -133,10 +162,13 @@ const Events = ({
         ) : events.length > 0 ? (
           <EventDetails events={events} handleCardClick={handleCardClick} />
         ) : (
-          <div className="flex justify-center items-center">
-            <div className="w-full max-w-md flex flex-col p-10 rounded-xl gap-5 justify-center items-center text-center text-white text-xl">
-              <TriangleAlert size={50} />
-              No events found
+          <div className="flex justify-center items-center py-20">
+            <div className="flex flex-col gap-4 items-center text-center text-white">
+              <TriangleAlert size={48} className="text-[#f4d35e]/60" />
+              <p className="text-xl font-semibold">No events found</p>
+              <p className="text-sm text-white/40">
+                Check back soon for upcoming events.
+              </p>
             </div>
           </div>
         )}

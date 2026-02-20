@@ -37,6 +37,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   events: {
     async signIn({ user }) {
+      const eventUser = await query.eventUsers.findOne({
+        where: (eventUsers, { eq }) => eq(eventUsers.id, user.id ?? ""),
+      });
+      if (eventUser?.collegeId) return;
+
       const pSession = await pAuth();
       if (pSession?.user?.id) {
         const participant = await query.participants.findOne({

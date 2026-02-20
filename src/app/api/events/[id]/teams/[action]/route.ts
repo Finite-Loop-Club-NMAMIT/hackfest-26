@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { protectedEventRoute } from "~/auth/route-handlers";
-import { eventRegistrationOpen } from "~/db/data/event";
+import { eventRegistrationOpen, findByEventId } from "~/db/data/event";
 import { findByEvent } from "~/db/data/event-users";
 import {
   confirmEventTeam,
@@ -25,6 +25,16 @@ export const POST = protectedEventRoute(
     }
 
     const { id: eventId, action } = await context.params;
+    const event = await findByEventId(eventId);
+    if (event?.status === "Draft") {
+      return errorResponse(
+        new AppError("Event not found", 404, {
+          title: "Event Not Found",
+          description: "The specified event does not exist.",
+        }),
+      );
+    }
+
     const eventUser = await findByEvent(eventId, user.id);
 
     if (!eventUser && action !== "create") {

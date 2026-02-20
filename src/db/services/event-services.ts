@@ -28,24 +28,37 @@ export async function getAllEvents(userId?: string) {
 
   const participants = await query.eventParticipants.findMany({});
   const teams = await query.eventTeams.findMany({});
+  const users = await query.eventUsers.findMany({});
+  const usersMap = new Map(
+    users.map((u) => [u.id, { name: u.name, email: u.email }]),
+  );
 
   const res = events.map(async (e) => {
     const participant = participants.find(
       (p) => p.eventId === e.id && p.userId === userId,
     );
 
-    if (!participant) return { ...e, userStatus: "NOT_REGISTERED" };
-
-    if (e.type === "Solo") return { ...e, userStatus: "REGISTERED" };
-
+    if (!participant)
+      return {
+        ...e,
+        team: null,
+        isComplete: false,
+        isLeader: false,
+        teamMembers: [],
+      };
     const team = teams.find((t) => t.id === participant.teamId);
     const members = participants.filter((p) => p.teamId === team?.id);
 
     return {
       ...e,
-      userStatus: team?.isComplete ? "TEAM_REGISTERED" : "PENDING_CONFIRMATION",
+      team: team,
+      isComplete: team?.isComplete,
       isLeader: participant.isLeader,
-      teamMembers: members.map((em) => em.userId),
+      teamMembers: members.map((em) => ({
+        ...em,
+        name: usersMap.get(em.userId)?.name ?? "Unknown User",
+        email: usersMap.get(em.userId)?.email ?? "Unknown Email",
+      })),
     };
   });
 

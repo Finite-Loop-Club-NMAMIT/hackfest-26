@@ -4,18 +4,25 @@ import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { getCurrentEventUser, getCurrentUser } from "./get-current-user";
 
+type User = NonNullable<Session["user"]>;
+type EventUser = NonNullable<Session["eventUser"]>;
+
 type RouteHandler = (
   request: NextRequest,
   context: { params: Promise<Record<string, string>> },
-  user: Session["user"],
+  user: User,
 ) => Promise<NextResponse>;
-
-type EventUser = NonNullable<Session["eventUser"]>;
 
 type EventRouteHandler = (
   request: NextRequest,
   context: { params: Promise<Record<string, string>> },
   user: EventUser,
+) => Promise<NextResponse>;
+
+type GlobalRouteHandler = (
+  request: NextRequest,
+  context: { params: Promise<Record<string, string>> },
+  user: User | EventUser,
 ) => Promise<NextResponse>;
 
 export function protectedRoute(handler: RouteHandler) {
@@ -79,6 +86,30 @@ export function protectedEventRoute(handler: EventRouteHandler) {
         );
       }
 
+      return await handler(request, context, user);
+    } catch (err) {
+      return errorResponse(err);
+    }
+  };
+}
+
+export function protectedGlobalRoute(handler: GlobalRouteHandler) {
+  return async (
+    request: NextRequest,
+    context: { params: Promise<Record<string, string>> },
+  ) => {
+    const user = (await getCurrentUser()) ?? (await getCurrentEventUser());
+
+    if (!user) {
+      return errorResponse(
+        new AppError("UNAUTHORIZED", 401, {
+          title: "Unauthorized",
+          description: "You must be logged in to perform this action.",
+        }),
+      );
+    }
+
+    try {
       return await handler(request, context, user);
     } catch (err) {
       return errorResponse(err);
