@@ -37,11 +37,15 @@ const social = [
 
 const Footer = () => {
   return (
-    <footer className="relative z-20 w-full flex flex-col">
+    <footer className="relative z-20 w-full flex flex-col select-text!">
       <div className="relative h-45 w-full bg-black/50">
-        <div className="absolute inset-0 z-10 bg-transparent bg-[url('/images/corals_cropped.png')] bg-repeat-x bg-size-[auto_100%] bg-top-left pointer-events-none" />
+        <div className="absolute inset-0 z-10 bg-transparent bg-[url('/images/corals_cropped.png')] bg-repeat-x bg-size-[auto_100%] bg-top-left pointer-events-none brightness-70" />
       </div>
-      <div className="relative z-20 w-full flex-col overflow-hidden border-t border-stone-700/30 bg-linear-to-b from-[#d2c1a2] via-[#a2825a] to-[#5b4630] backdrop-blur-md">
+      <div className="relative z-20 w-full flex-col overflow-hidden bg-[url('/images/sand_texture.png')]">
+        <div
+          className="absolute inset-0 bg-black/15 z-0 pointer-events-none"
+          aria-hidden="true"
+        />
         <div className="relative z-10 flex h-full flex-col items-center justify-evenly space-y-12 p-4 py-8 lg:flex-row">
           {/* Glow effect */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-linear-to-r from-transparent via-cyan-500/50 to-transparent blur-sm" />
@@ -80,7 +84,7 @@ const Footer = () => {
               </Link>
             </div>
             <div className="flex flex-col items-center gap-4 md:gap-4">
-              <p className="text-base font-normal text-stone-900/90">
+              <p className="font-normal text-stone-900 text-2xl">
                 Connect with us:
               </p>
               <ul className="flex gap-6 md:gap-6">
@@ -111,16 +115,16 @@ const Footer = () => {
                   aria-hidden="false"
                 ></iframe>
               </div>
-              <div className="flex flex-col gap-2 text-center text-stone-900/90">
+              <div className="flex flex-col gap-2 text-center text-stone-900">
                 <h1 className="text-lg font-semibold text-sky-900">
                   NMAM Institute of Technology, Nitte
                 </h1>
-                <p className="text-sm text-stone-900/75">
+                <p className="text-sm text-stone-900">
                   Karkala, Udupi District, Karnataka
                 </p>
               </div>
             </div>
-            <p className="text-center text-base font-normal text-stone-900/85">
+            <p className="text-center text-base font-normal text-stone-900">
               Interested to sponsor? Let us know{" "}
               <Link
                 href="mailto:sponsor@hackfest.dev"
@@ -131,7 +135,7 @@ const Footer = () => {
             </p>
           </div>
         </div>
-        <div className="w-full border-t border-stone-700/35 py-5 text-center font-normal text-sm text-stone-900/65">
+        <div className="w-full border-t border-stone-700/35 py-5 text-center font-normal text-sm text-stone-900">
           <p>2026 &copy; Hackfest | All rights reserved</p>
         </div>
       </div>
