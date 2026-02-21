@@ -69,7 +69,7 @@ export function NameStep({ form, onNext }: NameStepProps) {
       />
 
       <div
-        className={`w-full transition-all duration-500 overflow-hidden ${currentName.length > 0 ? "max-h-64 opacity-100 mt-12" : "max-h-0 opacity-0 mt-0"}`}
+        className={`w-full transition-all duration-500 overflow-hidden ${currentName.length > 0 ? "max-h-96 pb-6 opacity-100 mt-12" : "max-h-0 opacity-0 mt-0"}`}
       >
         <FormField
           control={form.control}
@@ -77,13 +77,16 @@ export function NameStep({ form, onNext }: NameStepProps) {
           render={({ field }) => (
             <FormItem className="w-full space-y-4">
               <FormLabel className="text-xl md:text-2xl font-pirate font-bold text-white/80 drop-shadow-sm leading-tight tracking-wide flex flex-col items-center text-center">
-                <span>Short Name for ID</span>
+                <span>Short Name for ID Card</span>
+                <span className="text-sm font-normal text-white/60 mt-2 max-w-sm">
+                  Your full name will be printed on the ID. If you prefer a shorter name, or if your name is too long, enter it here.
+                </span>
                 <span
-                  className={`text-lg font-normal mt-1 ${needsAlias ? "text-[#e54d2e]" : "text-white/50"}`}
+                  className={`text-lg font-normal mt-2 ${needsAlias ? "text-[#e54d2e]" : "text-white/50"}`}
                 >
                   {needsAlias
-                    ? "(Required - max 15 chars)"
-                    : "(Optional - max 15 chars)"}
+                    ? "(Required - Must be 15 chars or less)"
+                    : "(Optional - Must be 15 chars or less)"}
                 </span>
               </FormLabel>
 
