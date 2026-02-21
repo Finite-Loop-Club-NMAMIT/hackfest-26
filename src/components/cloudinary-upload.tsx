@@ -76,7 +76,7 @@ export function CloudinaryUpload({
             type="button"
             variant="secondary"
             onClick={() => open()}
-            className="gap-2"
+            className="gap-2 cursor-pointer"
           >
             <Upload className="h-4 w-4" />
             {label}

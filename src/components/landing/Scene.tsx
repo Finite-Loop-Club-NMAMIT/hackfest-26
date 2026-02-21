@@ -199,15 +199,11 @@ function FixedHero({
           >
             <div className="absolute -z-10" />
             <img
-              src="/logo.webp"
+              src="/logo11.webp"
               alt="HF Logo"
-              className="w-48 ml-11 md:w-64 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
+              className="w-86 md:w-140 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
             />
           </motion.div>
-
-          <h1 className="text-6xl md:text-9xl font-pirate font-black tracking-wider drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] text-white">
-            HACKFEST '26
-          </h1>
 
           {/* PLANK */}
           <motion.div
@@ -384,30 +380,32 @@ function LandingContent({
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              Our Sponsors
+              Our Sponsor
             </motion.h2>
 
             <motion.div
-              className="flex flex-col items-center mb-12"
+              className="flex flex-col items-center mb-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <div className="group relative w-72 md:w-96 aspect-video bg-white/70 border-2 border-cyan-400/50 rounded-2xl flex items-center justify-center hover:border-cyan-300 transition-all duration-500 overflow-hidden hover:shadow-[0_0_40px_rgba(0,200,255,0.4)]">
-                <img
-                  src="/logos/nmamit.png"
-                  alt="NITTE"
-                  className="w-3/4 h-auto object-contain scale-110 group-hover:scale-115 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              <Link href="https://nitte.edu.in/nmamit/" target="_blank">
+                <div className="group relative w-72 md:w-96 aspect-video bg-white/70 border-2 border-cyan-400/50 rounded-2xl flex items-center justify-center hover:border-cyan-300 transition-all duration-500 overflow-hidden hover:shadow-[0_0_40px_rgba(0,200,255,0.4)]">
+                  <img
+                    src="/logos/nmamit.png"
+                    alt="NITTE"
+                    className="w-3/4 h-auto object-contain scale-110 group-hover:scale-115 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </Link>
               <span className="mt-3 text-sm font-crimson font-semibold tracking-[0.3em] uppercase text-cyan-300/80">
                 Executive Sponsor
               </span>
             </motion.div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div
                   className="group relative aspect-video bg-black/30 border border-cyan-500/30 rounded-xl flex items-center justify-center hover:bg-cyan-900/40 transition-all duration-500 overflow-hidden"
@@ -419,7 +417,7 @@ function LandingContent({
                   <div className="absolute inset-0 bg-linear-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </motion.section>
 
@@ -441,7 +439,7 @@ function LandingContent({
         >
           <div className="relative z-10 flex flex-col items-center text-center w-full pt-16 pb-8">
             <motion.h2
-              className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
+              className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 md:drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -459,8 +457,8 @@ function LandingContent({
               viewport={{ once: true }}
             >
               {/* Animated glow rings */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20" />
+              <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10" />
+              <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20" />
 
               {/* The number */}
               <span className="text-sm md:text-lg font-crimson font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
@@ -471,10 +469,10 @@ function LandingContent({
                 style={{
                   color: "#eab308",
                   textShadow:
-                    "0 0 40px rgba(234,179,8,0.5), 0 0 80px rgba(234,179,8,0.3), 0 0 120px rgba(234,179,8,0.15)",
+                    "0 0 20px rgba(234,179,8,0.5), 0 0 40px rgba(234,179,8,0.2)",
                 }}
               >
-                ₹3,00,000
+                ₹2,50,000
                 <span className="text-yellow-400/70">+</span>
               </span>
               <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
@@ -484,7 +482,7 @@ function LandingContent({
               <Link href="/timeline" passHref>
                 <button
                   type="button"
-                  className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide mt-8"
+                  className="group relative px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-pirate font-bold text-2xl transition-all hover:scale-105 md:hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black tracking-wide mt-8"
                   // Prevent scroll on focus
                   onFocus={(e) => {
                     e.preventDefault();
@@ -499,7 +497,7 @@ function LandingContent({
         </motion.section>
       </div>
 
-      <Footer />
+      <Footer overlayNeeded={true} />
     </div>
   );
 }

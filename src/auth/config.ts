@@ -21,6 +21,20 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-auth.session-token"
+          : "auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   adapter: DrizzleAdapter(db, {
     usersTable: participants,
     accountsTable: accounts,
@@ -85,7 +99,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async redirect({ baseUrl }) {
-      return baseUrl;
+      return `${baseUrl}/teams`;
     },
     async session({ session, user }) {
       session.user.id = user.id;

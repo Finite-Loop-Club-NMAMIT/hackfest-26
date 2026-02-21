@@ -78,7 +78,7 @@ export function GlobalLoader() {
           >
             <div className="relative w-16 h-16 md:w-20 md:h-20 opacity-90 hover:opacity-100 transition-opacity">
               <Image
-                src="/logos/glowingLogo.webp"
+                src="/logos/logowithglow.webp"
                 alt="Logo"
                 fill
                 className="object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]"

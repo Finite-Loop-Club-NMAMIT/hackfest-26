@@ -5,7 +5,6 @@ import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import {
   AnimatePresence,
   motion,
-  type PanInfo,
   useMotionValue,
   useSpring,
   useTransform,
@@ -220,69 +219,77 @@ function TrackCard3D({ activeIndex }: { activeIndex: number }) {
 }
 
 // --- Mobile Swipe Stack ---
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 function MobileTrackStack() {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) => {
-    if (info.offset.x > 100) {
-      // Swipe Right (Previous)
-      setActiveIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
-    } else if (info.offset.x < -100) {
-      // Swipe Left (Next)
-      setActiveIndex((prev) => (prev + 1) % tracks.length);
-    }
+  const goNext = () => {
+    setActiveIndex((prev) => (prev + 1) % tracks.length);
+  };
+
+  const goPrev = () => {
+    setActiveIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
   };
 
   const activeTrack = tracks[activeIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 w-full h-[45vh] relative">
-      <div className="relative w-full max-w-xs aspect-square">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeIndex}
-            className="absolute inset-0 w-full h-full bg-black/60 border border-cyan-500/30 rounded-2xl overflow-hidden shadow-2xl"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDragEnd}
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, x: -50, scale: 0.9, rotate: -5 }}
-            transition={{ duration: 0.3 }}
-            whileDrag={{ scale: 1.05, cursor: "grabbing" }}
-          >
-            <Image
-              src={activeTrack.image}
-              alt={activeTrack.title}
-              fill
-              className="object-cover opacity-80"
-              draggable={false}
+    <div className="flex flex-col items-center justify-center pt-8 w-full gap-6 relative">
+      <div className="flex flex-row items-center justify-center w-full gap-4 relative">
+        <button
+          type="button"
+          onClick={goPrev}
+          className="z-20 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
+          aria-label="Previous Track"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        <div className="relative w-full max-w-[280px] aspect-square">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              className="absolute inset-0 w-full h-full border border-cyan-500/30 rounded-2xl overflow-hidden flex items-center justify-center"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Image
+                src={activeTrack.image}
+                alt={activeTrack.title}
+                fill
+                className="object-cover"
+                draggable={false}
+                priority
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <button
+          type="button"
+          onClick={goNext}
+          className="z-20 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
+          aria-label="Next Track"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="text-center w-full z-20">
+        <h3 className="text-2xl font-bold font-crimson text-cyan-400 mb-3 tracking-wide drop-shadow-md">
+          {activeTrack.title}
+        </h3>
+        <div className="flex gap-2 justify-center mt-2">
+          {tracks.map((track, i) => (
+            <div
+              key={track.id}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === activeIndex ? "w-8 bg-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" : "w-2 bg-cyan-900"}`}
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
-
-            <div className="absolute bottom-0 left-0 w-full p-6">
-              <h3 className="text-2xl font-bold font-crimson text-cyan-400 mb-2 tracking-wide">
-                {activeTrack.title}
-              </h3>
-              <div className="mt-4 flex gap-1 justify-center">
-                {tracks.map((track, i) => (
-                  <div
-                    key={track.id}
-                    className={`h-1 rounded-full transition-all duration-300 ${i === activeIndex ? "w-6 bg-cyan-400" : "w-1 bg-cyan-800"}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Swipe Hint */}
-            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur rounded-full px-3 py-1 text-xs text-cyan-400 border border-cyan-500/30">
-              Swipe &harr;
-            </div>
-          </motion.div>
-        </AnimatePresence>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -308,8 +315,8 @@ export default function TracksSection() {
   return (
     <section className="relative w-full pt-8 pb-16 px-4 flex flex-col items-center justify-center overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute top-1/4 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="hidden md:block absolute top-1/4 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="hidden md:block absolute bottom-1/4 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto max-w-6xl z-10">
         <motion.h2
@@ -363,7 +370,7 @@ export default function TracksSection() {
                     >
                       {/* Glow background for active item */}
                       <motion.div
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/30 via-cyan-400/20 to-transparent"
+                        className="absolute inset-0 rounded-xl bg-linear-to-r from-cyan-500/30 via-cyan-400/20 to-transparent"
                         animate={{
                           opacity: isActive ? 1 : 0,
                           boxShadow: isActive

@@ -7,13 +7,13 @@ import Image from "next/image";
 export default function BrochureDownload() {
   return (
     <motion.section
-      className="w-full py-26 mt-6 flex flex-col items-center justify-center relative overflow-visible"
+      className="w-full py-12 mt-6 flex flex-col items-center justify-center relative overflow-visible"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 1 }}
       viewport={{ margin: "-100px", once: true }}
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[300px] bg-cyan-900/10 blur-3xl rounded-full pointer-events-none mix-blend-screen" />
+      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[300px] bg-cyan-900/10 blur-3xl rounded-full pointer-events-none mix-blend-screen" />
 
       <motion.div
         className="relative z-10 max-w-5xl px-8 w-full"
@@ -22,7 +22,7 @@ export default function BrochureDownload() {
         transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
         viewport={{ once: true }}
       >
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-black/40 backdrop-blur-sm shadow-[0_0_50px_rgba(6,182,212,0.15)] group pl-6">
+        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-black/70 md:bg-black/40 md:backdrop-blur-sm shadow-[0_0_30px_rgba(6,182,212,0.15)] group">
           <div className="relative z-10 flex flex-col md:flex-row items-center p-8 md:p-12 gap-8 md:gap-12">
             <motion.div
               className="relative shrink-0 w-64 md:w-76 aspect-3/4 rounded-lg overflow-hidden border border-cyan-500/20 shadow-2xl -rotate-3 group-hover:rotate-0 transition-transform duration-500"
@@ -47,7 +47,7 @@ export default function BrochureDownload() {
               </div>
 
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-cyan-400/30 blur-2xl rounded-full scale-75 animate-pulse" />
+                <div className="absolute inset-0 bg-cyan-400/30 blur-xl md:blur-2xl rounded-full scale-75 md:animate-pulse" />
                 <motion.a
                   href="/"
                   whileHover={{

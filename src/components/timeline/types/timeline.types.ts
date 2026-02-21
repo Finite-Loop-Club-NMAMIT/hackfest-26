@@ -14,12 +14,15 @@ export interface DayTheme {
 
 export type IslandPosition = [number, number, number];
 
+export interface ShipControls {
+  moveForward: (speed?: number) => void;
+  moveBackward: (speed?: number) => void;
+}
+
 export interface EventLabelProps {
   event: TimelineEvent;
-  isFirstOfDay: boolean;
   onSelect: (e: TimelineEvent) => void;
-  islandIndex: number;
-  totalIslands: number;
+  position: IslandPosition;
 }
 
 export interface IslandProps {
@@ -27,5 +30,4 @@ export interface IslandProps {
   event?: TimelineEvent;
   isFirstOfDay?: boolean;
   onSelect: (e: TimelineEvent) => void;
-  islandIndex: number;
 }

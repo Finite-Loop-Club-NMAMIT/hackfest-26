@@ -5,6 +5,7 @@ import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
 import * as THREE from "three";
 import { TransitionMaterial } from "~/components/landing/shader/TransitionMaterial";
+import { useDayNight } from "../providers/useDayNight";
 
 extend({ TransitionMaterial });
 
@@ -73,6 +74,7 @@ function AboutBackground({ isNight }: { isNight: boolean }) {
 }
 
 export default function AboutScene() {
+  const { isNight } = useDayNight();
   return (
     <div className="fixed inset-0 w-full h-full -z-10 bg-black/80">
       <Canvas
@@ -81,7 +83,7 @@ export default function AboutScene() {
         dpr={[1, 1.25]}
       >
         <Suspense fallback={null}>
-          <AboutBackground isNight={true} />
+          <AboutBackground isNight={isNight} />
         </Suspense>
       </Canvas>
 

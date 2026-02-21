@@ -14,7 +14,7 @@ export default function AboutSlate() {
                 <div className="relative w-20 h-20 md:w-24 md:h-24 mb-4">
                   <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full" />
                   <Image
-                    src="/logos/glowingLogo.webp"
+                    src="/logos/logowithglow.webp"
                     fill
                     alt="HF Logo"
                     className="object-contain drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]"
@@ -61,9 +61,9 @@ export default function AboutSlate() {
         </div>
 
         <div className="md:col-span-4 md:row-span-2">
-          <div className="relative group backdrop-blur-sm bg-black/40 border border-cyan-500/30 rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full justify-start! text-justify">
+          <div className="relative group backdrop-blur-sm bg-black/40 border border-cyan-500/30 rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full justify-start! text-justify md:text-left">
             <div className="h-full w-full p-6 relative z-10 flex flex-col justify-center">
-              <h3 className="text-xl font-pirate text-cyan-200 mb-4 border-b border-cyan-500/30 pb-2 inline-block w-full">
+              <h3 className="text-xl font-pirate text-cyan-200 mb-4 border-b border-cyan-500/30 pb-2 inline-block w-fit pr-12">
                 What is Hackfest?
               </h3>
               <p className="text-stone-300 font-crimson text-lg leading-relaxed">
@@ -71,6 +71,27 @@ export default function AboutSlate() {
                 fest. A 36-hour hackathon where 60 teams from across the seas
                 gather to foster innovation and showcase their skills in a
                 50-hour marathon of code and creativity.
+              </p>
+            </div>
+            <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+            <div className="absolute -inset-px border border-cyan-500/20 rounded-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="md:col-span-4 md:row-span-2">
+          <div className="relative group backdrop-blur-sm bg-black/40 border border-cyan-500/30 rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full justify-start! text-justify md:text-left">
+            <div className="h-full w-full p-6 relative z-10 flex flex-col justify-center">
+              <h3 className="text-xl font-pirate text-cyan-200 mb-4 border-b border-cyan-500/30 pb-2 inline-block w-fit pr-12">
+                About NMAMIT
+              </h3>
+              <p className="text-stone-300 font-crimson text-lg leading-relaxed">
+                NMAM Institute of Technology (NMAMIT), Nitte, established in
+                1986, is a premier autonomous engineering college in Udupi,
+                Karnataka, and a constituent unit of Nitte (Deemed to be
+                University). Accredited with an 'A' grade by NAAC and NBA
+                (Tier-1), it offers diverse UG (BTech), PG (MTech, MCA, MBA),
+                and PhD programs in engineering, with a strong focus on
+                research, placements, and industry-oriented curriculum.{" "}
               </p>
             </div>
             <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent pointer-events-none" />
@@ -129,35 +150,6 @@ export default function AboutSlate() {
           </div>
         </div>
 
-        <div className="md:col-span-8 md:row-span-1">
-          <div className="relative group backdrop-blur-sm rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full bg-cyan-950/30 border border-amber-500/20">
-            <div className="h-full w-full p-6 relative z-10 flex flex-col justify-center">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4">
-                <div className="text-center md:text-left">
-                  <span className="block text-stone-400 font-crimson text-sm uppercase tracking-widest mb-1">
-                    Total Bounty
-                  </span>
-                  <span className="text-5xl font-pirate text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
-                    ₹ 3,00,000+
-                  </span>
-                </div>
-
-                <a
-                  href="/"
-                  className="group flex items-center gap-3 px-6 py-3 rounded-lg bg-cyan-900/40 border border-cyan-500/30 hover:bg-cyan-800/40 hover:border-cyan-400/50 transition-all shrink-0"
-                >
-                  <span className="font-pirate text-cyan-100 text-lg group-hover:text-cyan-300">
-                    Brochure
-                  </span>
-                  <Download className="w-5 h-5 text-cyan-400 group-hover:text-cyan-200 transition-colors" />
-                </a>
-              </div>
-            </div>
-            <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent pointer-events-none" />
-            <div className="absolute -inset-px border border-cyan-500/20 rounded-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-          </div>
-        </div>
-
         <div className="md:col-span-4 md:row-span-1">
           <div className="relative group backdrop-blur-sm bg-black/40 border border-cyan-500/30 rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full opacity-80">
             <div className="h-full w-full p-6 relative z-10 flex flex-col justify-center">
@@ -173,7 +165,7 @@ export default function AboutSlate() {
                     Karnataka, India
                   </span>
                 </div>
-                <div className="relative w-12 h-12 ml-auto opacity-70 hover:opacity-100 transition-opacity">
+                <div className="relative w-12 h-12 ml-auto opacity-70 hover:opacity-100 transition-opacity hidden md:block">
                   <Image
                     src="/logos/flc_logo_crop.png"
                     alt="FLC Logo"
@@ -181,6 +173,35 @@ export default function AboutSlate() {
                     className="object-contain"
                   />
                 </div>
+              </div>
+            </div>
+            <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+            <div className="absolute -inset-px border border-cyan-500/20 rounded-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="md:col-span-12 md:row-span-1">
+          <div className="relative group backdrop-blur-sm rounded-xl overflow-hidden hover:border-cyan-400/60 transition-colors h-full bg-cyan-950/30 border border-amber-500/20">
+            <div className="h-full w-full p-6 relative z-10 flex flex-col justify-center">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-10 px-4 md:justify-around text-center">
+                <div className="text-center md:text-left">
+                  <span className="block text-stone-400 font-crimson text-sm uppercase tracking-widest mb-1">
+                    Total Bounty
+                  </span>
+                  <span className="text-5xl font-pirate text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+                    ₹ 2,50,000+
+                  </span>
+                </div>
+
+                <a
+                  href="/"
+                  className="group flex items-center gap-3 px-8 py-4 rounded-lg bg-cyan-900/40 border border-cyan-500/30 hover:bg-cyan-800/40 hover:border-cyan-400/50 transition-all shrink-0"
+                >
+                  <span className="font-pirate text-cyan-100 text-lg group-hover:text-cyan-300">
+                    Download Brochure
+                  </span>
+                  <Download className="w-5 h-5 text-cyan-400 group-hover:text-cyan-200 transition-colors" />
+                </a>
               </div>
             </div>
             <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent pointer-events-none" />

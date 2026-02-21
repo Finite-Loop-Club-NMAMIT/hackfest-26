@@ -26,6 +26,17 @@ const organizers = [
   },
 ];
 
+const faculty = [
+  {
+    name: "Dr. Shashank Shetty",
+    role: "Faculty Coordinator",
+  },
+  {
+    name: "Dr. Puneeth R P",
+    role: "Faculty Coordinator",
+  },
+];
+
 export default function OrganizerRing() {
   return (
     <div className="w-full max-w-7xl mx-auto py-12 md:py-16 flex flex-col items-center">
@@ -85,7 +96,22 @@ export default function OrganizerRing() {
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
       >
-        The Crew
+        Faculty Coordinators
+      </motion.h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 justify-center gap-6 w-full px-4 mb-24">
+        {faculty.map((org, i) => (
+          <OrganizerCard key={org.name} organizer={org} index={i} />
+        ))}
+      </div>
+
+      <motion.h2
+        className="text-4xl md:text-6xl font-pirate text-center mb-16 text-cyan-200 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        Student Organizers
       </motion.h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-4">
@@ -101,7 +127,7 @@ function OrganizerCard({
   organizer,
   index,
 }: {
-  organizer: { name: string; phone: string; role?: string };
+  organizer: { name: string; phone?: string; role?: string };
   index: number;
 }) {
   return (
@@ -115,17 +141,19 @@ function OrganizerCard({
         <h3 className="font-pirate text-3xl text-cyan-100 tracking-wide mb-2 group-hover:text-cyan-300 transition-colors">
           {organizer.name}
         </h3>
-        <p className="font-crimson text-cyan-400/80 font-bold tracking-widest text-sm uppercase mb-6">
+        <p className="font-crimson text-cyan-400/80 font-bold tracking-widest text-sm uppercase mb-2">
           {organizer.role}
         </p>
 
-        <a
-          href={`tel:${organizer.phone}`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-200 hover:text-white hover:bg-cyan-900/60 hover:border-cyan-400 transition-all group-hover:scale-105"
-        >
-          <Phone className="w-4 h-4" />
-          <span className="font-crimson text-lg">{organizer.phone}</span>
-        </a>
+        {organizer.phone && (
+          <a
+            href={`tel:${organizer.phone}`}
+            className="inline-flex items-center gap-2 px-4 py-2 mt-4 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-200 hover:text-white hover:bg-cyan-900/60 hover:border-cyan-400 transition-all group-hover:scale-105"
+          >
+            <Phone className="w-4 h-4" />
+            <span className="font-crimson text-lg">{organizer.phone}</span>
+          </a>
+        )}
       </div>
 
       <div className="absolute inset-0 bg-linear-to-t from-cyan-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

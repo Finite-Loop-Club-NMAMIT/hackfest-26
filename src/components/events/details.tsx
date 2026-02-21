@@ -27,7 +27,7 @@ export default function EventDetails({
               <div className="w-full">
                 <div className="-skew-x-37 bg-[#0f1823] absolute rounded-bl-3xl rounded-br-xl left-0 w-1/3 justify-start px-4">
                   <Image
-                    src={"/logos/glowingLogo.webp"}
+                    src={"/logos/logowithglow.webp"}
                     alt={"Hackfest Logo"}
                     width={550}
                     height={550}

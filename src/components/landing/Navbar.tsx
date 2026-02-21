@@ -18,7 +18,7 @@ function cn(...inputs: ClassValue[]) {
 const NAV_LINKS = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
-  { name: "Events", href: "#" },
+  // { name: "Events", href: "#" },
   { name: "Timeline", href: "/timeline" },
   { name: "Contact", href: "/contact" },
 ];
@@ -150,7 +150,7 @@ export function Navbar({
 
           <div className="relative w-12 h-12 md:w-14 md:h-14">
             <Image
-              src="/logos/glowingLogo.webp"
+              src="/logos/logowithglow.webp"
               alt="Hackfest Logo"
               fill
               className="object-contain drop-shadow-[0_0_12px_rgba(255,191,0,0.6)]"

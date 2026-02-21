@@ -1,10 +1,4 @@
-export let globalShipProgress = 0;
-export let globalPausedIsland: number | null = null;
+import * as THREE from "three";
 
-export function setGlobalShipProgress(progress: number) {
-  globalShipProgress = progress;
-}
-
-export function setGlobalPausedIsland(island: number | null) {
-  globalPausedIsland = island;
-}
+/** Shared ship world position — read by EventLabel every frame.  */
+export const globalShipPosition: THREE.Vector3 = new THREE.Vector3(0, 0, 0);

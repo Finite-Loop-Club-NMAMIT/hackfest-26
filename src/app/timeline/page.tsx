@@ -73,7 +73,7 @@ export default function TimelinePage() {
       <button
         type="button"
         onClick={handleToggle}
-        className="fixed top-6 right-6 z-50 transition-transform duration-300 hover:scale-105 active:scale-95"
+        className="fixed top-6 right-6 z-50 transition-all duration-300"
         aria-label="Toggle 2D and 3D mode"
       >
         <div
@@ -107,10 +107,10 @@ export default function TimelinePage() {
             </span>
             <span
               style={{
-                fontFamily: "var(--font-cinzel), serif",
+                fontFamily: "var(--font-pirata), serif",
                 color: "#8B4513",
-                fontSize: "14px",
-                fontWeight: 700,
+                fontSize: "18px",
+                fontWeight: 400,
                 textShadow: "0 1px 1px rgba(255,255,255,0.1)",
               }}
             >
@@ -128,7 +128,7 @@ export default function TimelinePage() {
               borderRadius: "18px",
               border: "1px solid #8B4513",
               boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-              transform: is3D ? "translateX(0)" : "translateX(56px)",
+              transform: is3D ? "translateX(0)" : "translateX(54px)",
               transition:
                 "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
               display: "flex",
@@ -139,12 +139,10 @@ export default function TimelinePage() {
           >
             <span
               style={{
-                fontFamily: is3D
-                  ? "var(--font-pirata), serif"
-                  : "var(--font-cinzel), serif",
+                fontFamily: "var(--font-pirata), serif",
                 color: "#2A1A0A",
-                fontSize: is3D ? "20px" : "14px",
-                fontWeight: is3D ? 400 : 700,
+                fontSize: "20px",
+                fontWeight: 400,
               }}
             >
               {is3D ? "3D" : "2D"}
@@ -152,6 +150,56 @@ export default function TimelinePage() {
           </div>
         </div>
       </button>
+
+      {/* Keyboard Arrow Hint (Only shows on Desktop) */}
+      {is3D && (
+        <div className="hidden md:flex flex-col items-end fixed top-[84px] right-6 z-40 opacity-80 gap-1 animate-pulse pointer-events-none">
+          <div className="flex flex-col items-end gap-2 p-2">
+            <div className="flex items-center gap-3 pr-2">
+              <span className="text-lg font-pirata tracking-wider text-[#2A1A0A] drop-shadow-md bg-white/40 px-2 rounded backdrop-blur-sm">
+                Forward
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-black border border-white/20 flex items-center justify-center shadow-md">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <title>Forward</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 10l7-7m0 0l7 7m-7-7v18"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pr-2">
+              <span className="text-lg font-pirata tracking-wider text-[#2A1A0A] drop-shadow-md bg-white/40 px-2 rounded backdrop-blur-sm">
+                Backward
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-black border border-white/20 flex items-center justify-center shadow-md">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <title>Backward</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {is3D ? <TimelineScene /> : <WaterBackground />}
       {!is3D && <Timeline2D />}

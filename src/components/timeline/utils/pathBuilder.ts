@@ -13,8 +13,9 @@ export function buildShipPath(
     const island = islandPositions[i];
     const isLast = i === islandPositions.length - 1;
 
-    const approachX = island[0] - 12;
-    const approachZ = island[2] + 25;
+    // Final island uses scale 90 (much larger) — park further away
+    const approachX = isLast ? island[0] - 60 : island[0] - 12;
+    const approachZ = isLast ? island[2] + 40 : island[2] + 25;
 
     waypoints.push(new THREE.Vector3(approachX, 5, approachZ));
 
@@ -27,9 +28,8 @@ export function buildShipPath(
       const midX = (island[0] + nextIsland[0]) / 2;
       const midZ = (island[2] + nextIsland[2]) / 2 + 25;
       waypoints.push(new THREE.Vector3(midX, 5, midZ));
-    } else {
-      waypoints.push(new THREE.Vector3(island[0] + 30, 5, island[2] + 25));
     }
+    // Last island: path ends here (t=1.0 = approach point in front of island)
   }
 
   return new THREE.CatmullRomCurve3(waypoints, false, "centripetal", 0.5);

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -43,6 +43,13 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   const [colleges, setColleges] = useState<College[]>([]);
   const [loadingColleges, setLoadingColleges] = useState(true);
   const [step, setStep] = useState(0);
+  const [furthestStep, setFurthestStep] = useState(0);
+
+  useEffect(() => {
+    if (step > furthestStep) {
+      setFurthestStep(step);
+    }
+  }, [step, furthestStep]);
 
   const form = useForm<FormValues>({
     // biome-ignore lint/suspicious/noExplicitAny: Resolving zod types is complex
@@ -70,6 +77,17 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
     "idProof",
   ] as const;
 
+  const stepConfig = [
+    { id: "name", label: "Personal Details" },
+    { id: "phone", label: "Contact Number" },
+    { id: "state", label: "State/Province" },
+    { id: "course", label: "Graduation Course" },
+    { id: "gender", label: "Gender" },
+    { id: "collegeId", label: "College" },
+    { id: "github", label: "GitHub Alias" },
+    { id: "idProof", label: "Identity Proof" },
+  ] as const;
+
   const currentField = steps[step];
   const isLastStep = step === steps.length - 1;
 
@@ -84,6 +102,21 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
 
   function handleBack(): void {
     if (step > 0) setStep((s) => s - 1);
+  }
+
+  async function handleTimelineClick(index: number) {
+    if (index === step) return;
+
+    if (index < step) {
+      setStep(index);
+    } else {
+      if (index <= furthestStep) {
+        const valid = await form.trigger(currentField);
+        if (valid) {
+          setStep(index);
+        }
+      }
+    }
   }
 
   useEffect(() => {
@@ -118,14 +151,15 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   return (
     <Form {...form}>
       <form
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isLastStep) {
+            e.preventDefault();
+          }
+        }}
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
           console.log("Validation errors:", errors);
         })}
-        className={`relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden text-white transition-colors duration-1000 ${
-          isNight
-            ? "bg-linear-to-b from-[#0f172a] via-[#1e1a78] to-[#2d5f7c]"
-            : "bg-linear-to-b from-[#10569c] via-[#61b2e4] to-[#eef7fb]"
-        }`}
+        className="relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden text-white"
       >
         {/* --- TOP PROGRESS BAR --- */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-white/20 z-50">
@@ -135,32 +169,75 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
           />
         </div>
 
-        <div className="absolute inset-0 w-full h-full z-0 opacity-20 pointer-events-none mix-blend-multiply">
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <Image
-            src="/images/palm-tree.png"
-            alt="Palm trees"
+            src={
+              isNight
+                ? "/images/shipwreck/shipwreckNight.webp"
+                : "/images/shipwreck/shipwreckDay.webp"
+            }
+            alt="Shipwreck background"
             fill
             className="object-cover object-bottom"
             priority
           />
         </div>
 
-        {/* --- DECORATIVE ELEMENTS (The Beach) --- */}
-        <div
-          className={`absolute -bottom-[5%] left-[-20%] w-[140%] h-[35vh] rounded-[100%] blur-3xl z-0 pointer-events-none transition-colors duration-1000 ${
-            isNight ? "bg-[#1e1b4b]/40" : "bg-[#fffac2]/40"
-          }`}
-        />
-        <div
-          className={`absolute -bottom-[12%] left-[-10%] w-[120%] h-[30vh] rounded-[50%] z-0 pointer-events-none transition-colors duration-1000 ${
-            isNight
-              ? "bg-[#312e81] shadow-[0_-10px_50px_rgba(30,27,75,0.8)]"
-              : "bg-[#fbf6db] shadow-[0_-10px_50px_rgba(240,230,180,0.8)]"
-          }`}
-        />
-        {/* Step Counter Text */}
-        <div className="absolute top-8 left-6 text-sm text-white/80 z-20 font-medium tracking-wide">
+        <div className="lg:hidden absolute top-8 left-6 text-sm text-white/80 z-20 font-medium tracking-wide">
           STEP {step + 1} OF {steps.length}
+        </div>
+
+        <div className="hidden lg:flex absolute left-6 xl:left-24 top-0 bottom-0 flex-col justify-center z-20 w-64 pointer-events-auto">
+          <div className="relative pl-6 border-l-[1.5px] border-white/20 space-y-6">
+            {stepConfig.map((s, i) => {
+              const isPast = i < step;
+              const isCurrent = i === step;
+              const isAvailable = i <= furthestStep;
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleTimelineClick(i)}
+                  disabled={!isAvailable}
+                  className={`
+                    group relative flex items-center text-left w-full transition-all duration-300
+                    ${isAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-40"}
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-lg
+                  `}
+                >
+                  <div
+                    className={`
+                      absolute -left-[33px] w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center
+                      ${
+                        isCurrent
+                          ? "bg-white border-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                          : isPast
+                            ? "bg-white/90 border-white/90"
+                            : "bg-black/40 border-white/30 group-hover:bg-white/20"
+                      }
+                    `}
+                  >
+                    {isPast && <Check className="w-3.5 h-3.5 text-[#10569c]" />}
+                  </div>
+                  <span
+                    className={`
+                      ml-2 transition-all duration-300 font-medium
+                      ${
+                        isCurrent
+                          ? "text-white text-lg tracking-widest font-pirate translate-x-2"
+                          : isPast
+                            ? "text-white/80 text-sm tracking-widest font-pirate"
+                            : "text-white/50 text-sm tracking-widest font-pirate group-hover:text-white/70"
+                      }
+                    `}
+                  >
+                    {s.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Form Container */}
@@ -226,13 +303,14 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               <Button
                 type="button"
                 // Changed to 'ghost' to remove default borders
-                variant="ghost"
                 onClick={handleBack}
                 className="
                   // Colors
-                  bg-white/40                // Soft translucent white base
+                  bg-white/60                // Soft translucent white base
                   text-[#10569c]               // Deep blue text for contrast on both Sky & Sand
-                  hover:bg-white/40            // Brightens on hover
+                  hover:bg-white/70            // Brightens on hover
+                  hover:scale-[1.01] 
+                  active:scale-[0.99]
                   
                   // Effects
                   backdrop-blur-md             // Glass effect
@@ -240,6 +318,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                   
                   // Layout & Typography
                   h-12 px-6 rounded-xl transition-all font-pirate font-bold tracking-wide
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2
                 "
               >
                 Back
@@ -254,7 +333,8 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               className="
                 flex-1 h-12 rounded-xl text-lg font-pirate font-bold shadow-lg transition-all tracking-wide
                 bg-white text-[#10569c] hover:bg-white/90 hover:scale-[1.01] active:scale-[0.99]
-                disabled:opacity-70 disabled:pointer-events-none
+                disabled:opacity-70 disabled:pointer-events-none cursor-pointer
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2
               "
             >
               {form.formState.isSubmitting ? (
