@@ -314,6 +314,45 @@ export const Ship = forwardRef<ShipControls, ShipProps>(
         }
       };
 
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          // Reversed: Up arrow moves forward (positive delta), Down arrow moves back
+          const delta = e.key === "ArrowUp" ? 10.0 : -10.0;
+
+          directionLockDist.current += Math.abs(delta);
+          const wantsRev = delta < 0;
+          if (
+            wantsRev !== isReversing &&
+            turnProgressRef.current >= 1 &&
+            directionLockDist.current >= MIN_TURN_DIST
+          ) {
+            setIsReversing(wantsRev);
+            setIsTurning(true);
+            turnProgressRef.current = 0;
+            directionLockDist.current = 0;
+            return;
+          }
+          if (pausedAtIsland !== null) {
+            if (pausedAtIsland === totalIslands - 1 && delta > 0) return;
+            scrollAccumAtIsland.current += Math.abs(delta);
+            if (scrollAccumAtIsland.current >= SCROLL_THRESHOLD) {
+              lastExitedIsland.current = pausedAtIsland;
+              setPausedAtIsland(null);
+              scrollAccumAtIsland.current = 0;
+            } else return;
+          }
+          scrollAccumRef.current = Math.max(0, scrollAccumRef.current + delta);
+          targetProgressRef.current = Math.min(
+            1,
+            Math.max(0, scrollAccumRef.current / totalScroll),
+          );
+        }
+      };
+
+      // Always allow keyboard controls even if mobile (e.g. iPad with keyboard)
+      window.addEventListener("keydown", handleKeyDown, { passive: false });
+
       if (!isMobile) {
         window.addEventListener("wheel", handleWheel, { passive: false });
         window.addEventListener("touchstart", handleTouchStart, {
@@ -324,6 +363,7 @@ export const Ship = forwardRef<ShipControls, ShipProps>(
         });
       }
       return () => {
+        window.removeEventListener("keydown", handleKeyDown);
         if (!isMobile) {
           window.removeEventListener("wheel", handleWheel);
           window.removeEventListener("touchstart", handleTouchStart);

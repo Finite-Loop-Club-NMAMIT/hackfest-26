@@ -20,6 +20,7 @@ export default function TimelineScene() {
     null,
   );
   const [activeDock, setActiveDock] = useState<number | null>(null);
+  const [showScrollHint, setShowScrollHint] = useState(true);
   const isMobile = useIsMobile();
 
   const shipControlsRef =
@@ -47,6 +48,35 @@ export default function TimelineScene() {
           webglLossHandlerRef.current,
         );
       }
+    };
+  }, []);
+
+  // Handle hiding/showing scroll hint based on user activity
+  useEffect(() => {
+    let idleTimeout: NodeJS.Timeout;
+    const handleActivity = (e: Event) => {
+      if (e.type === "keydown") {
+        const key = (e as KeyboardEvent).key;
+        if (key !== "ArrowUp" && key !== "ArrowDown") return;
+      }
+      setShowScrollHint(false);
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(() => {
+        setShowScrollHint(true);
+      }, 3000); // Reappear after 3s of idle
+    };
+
+    window.addEventListener("wheel", handleActivity, { passive: true });
+    window.addEventListener("keydown", handleActivity, { passive: true });
+    window.addEventListener("touchstart", handleActivity, { passive: true });
+    window.addEventListener("touchmove", handleActivity, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("touchstart", handleActivity);
+      window.removeEventListener("touchmove", handleActivity);
+      clearTimeout(idleTimeout);
     };
   }, []);
 
@@ -229,6 +259,36 @@ export default function TimelineScene() {
       </Canvas>
 
       {isMobile && <MobileControls shipControls={shipControlsRef} />}
+
+      {/* Desktop Scroll Hint */}
+      {!isMobile && (
+        <div
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2 animate-bounce transition-opacity duration-1000 ${
+            showScrollHint ? "opacity-80" : "opacity-0"
+          }`}
+        >
+          <p className="text-xs font-crimson tracking-[0.3em] uppercase text-white drop-shadow-md">
+            Navigate Timeline
+          </p>
+          <div className="text-lg font-bold text-white drop-shadow-md">
+            Scroll or Use Arrow Keys
+          </div>
+          <svg
+            className="w-6 h-6 text-white drop-shadow-md"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <title>Scroll or Use Arrow Keys</title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
+          </svg>
+        </div>
+      )}
 
       <FocusDialog
         selectedEvent={selectedEvent}
