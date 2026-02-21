@@ -669,7 +669,11 @@ export default function Scene({ session }: { session: Session | null }) {
             htmlElement={htmlScrollRef.current}
           />
           <ScrollSync setUnderwater={setIsUnderwater} scrollRef={scrollRef} />
-          <Background isNight={isNight} nightProgressRef={nightProgressRef} scrollRef={scrollRef} />
+          <Background
+            isNight={isNight}
+            nightProgressRef={nightProgressRef}
+            scrollRef={scrollRef}
+          />
         </Suspense>
       </Canvas>
       <style jsx global>{`

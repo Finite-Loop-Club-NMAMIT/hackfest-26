@@ -53,7 +53,12 @@ export function triggerWaveTransition(
   updateSize();
   document.body.appendChild(canvas);
 
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    canvas.remove();
+    isAnimating = false;
+    return;
+  }
 
   const layers: WaveLayer[] = [
     {
@@ -91,13 +96,13 @@ export function triggerWaveTransition(
     },
   ];
 
-  let particles: Particle[] = [];
+  const particles: Particle[] = [];
   const startTime = performance.now();
   const duration = 2000;
   let midpointFired = false;
 
   const easeInOutCubic = (t: number) =>
-    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
   const frame = (now: number) => {
     const elapsed = now - startTime;
@@ -110,9 +115,7 @@ export function triggerWaveTransition(
 
     if (onProgress) {
       const bgProgress =
-        progress > 0.55
-          ? easeInOutCubic((progress - 0.55) / 0.45)
-          : 0;
+        progress > 0.55 ? easeInOutCubic((progress - 0.55) / 0.45) : 0;
       onProgress(bgProgress);
     }
 
@@ -139,8 +142,8 @@ export function triggerWaveTransition(
         progress <= 0.4
           ? easeInOutCubic(progress / 0.4)
           : progress <= 0.55
-          ? 1
-          : 1 - easeInOutCubic((progress - 0.55) / 0.45);
+            ? 1
+            : 1 - easeInOutCubic((progress - 0.55) / 0.45);
 
       if (underlayOpacity > 0) {
         ctx.save();
@@ -160,14 +163,9 @@ export function triggerWaveTransition(
       for (let x = 0; x <= w; x += 10) {
         const y =
           currentLevel +
-          Math.sin(
-            x * layer.frequency + elapsed * layer.speed + layer.phase,
-          ) *
+          Math.sin(x * layer.frequency + elapsed * layer.speed + layer.phase) *
             layer.amplitude +
-          Math.sin(
-            x * (layer.frequency * 2) +
-              elapsed * layer.wobbleSpeed,
-          ) *
+          Math.sin(x * (layer.frequency * 2) + elapsed * layer.wobbleSpeed) *
             layer.wobbleAmp;
 
         ctx.lineTo(x, y);
@@ -180,12 +178,7 @@ export function triggerWaveTransition(
       ctx.lineTo(w, h);
       ctx.lineTo(0, h);
 
-      const grad = ctx.createLinearGradient(
-        0,
-        currentLevel - 100,
-        0,
-        h,
-      );
+      const grad = ctx.createLinearGradient(0, currentLevel - 100, 0, h);
       grad.addColorStop(0, layer.colorStart);
       grad.addColorStop(1, layer.colorEnd);
 
