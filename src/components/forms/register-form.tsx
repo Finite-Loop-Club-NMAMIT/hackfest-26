@@ -134,7 +134,9 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   const progressPercentage = ((step + 1) / steps.length) * 100;
 
   async function handleNext(): Promise<void> {
-    const valid = await form.trigger(currentField);
+    const fieldsToTrigger =
+      currentField === "name" ? (["name", "alias"] as const) : currentField;
+    const valid = await form.trigger(fieldsToTrigger);
     if (!valid) return;
     if (!isLastStep) setStep((s) => s + 1);
   }
@@ -150,7 +152,9 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       setStep(index);
     } else {
       if (index <= furthestStep) {
-        const valid = await form.trigger(currentField);
+        const fieldsToTrigger =
+          currentField === "name" ? (["name", "alias"] as const) : currentField;
+        const valid = await form.trigger(fieldsToTrigger);
         if (valid) {
           setStep(index);
         }
@@ -173,11 +177,29 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   }, []);
 
   async function onSubmit(data: RegisterParticipantInput): Promise<void> {
+    if (
+      data.name.trim().length > 15 &&
+      (!data.alias || data.alias.length > 15)
+    ) {
+      form.setError("alias", {
+        type: "manual                      ",
+        message: "Alias is required as your name is longer than 15 characters",
+      });
+      return;
+    }
+    if (data.alias && data.alias.trim().length > 15) {
+      form.setError("alias", {
+        type: "manual",
+        message: "Alias must be 15 characters or less",
+      });
+      return;
+    }
     await apiFetch("/api/users/register", {
       method: "POST",
       body: JSON.stringify({
         ...data,
         name: data.name.trim(),
+        alias: data.alias?.trim() || undefined,
         phone: data.phone.trim(),
         github: data.github?.trim() || undefined,
       }),
