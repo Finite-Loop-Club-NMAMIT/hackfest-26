@@ -38,7 +38,17 @@ export async function createTeam(data: unknown, leaderId: string) {
 }
 
 export async function listMembers(teamId: string) {
-  return query.participants.findMany({
+  const team = await query.teams.findOne({
+    where: (t, { eq }) => eq(t.id, teamId),
+    columns: { leaderId: true },
+  });
+
+  const members = await query.participants.findMany({
     where: (u, { eq }) => eq(u.teamId, teamId),
   });
+
+  return members.map((m) => ({
+    ...m,
+    isLeader: m.id === team?.leaderId,
+  }));
 }

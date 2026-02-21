@@ -16,7 +16,7 @@ export default async function RegisterPage() {
   const user = await userData.findByEmail(session.user.email);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="min-h-dvh bg-zinc-50 dark:bg-black">
       <RegisterForm initialGithubUsername={user?.github || undefined} />
     </div>
   );

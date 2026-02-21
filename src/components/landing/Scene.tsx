@@ -3,7 +3,7 @@
 
 import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
-import { motion, useAnimationFrame } from "framer-motion";
+import { useAnimationFrame } from "framer-motion";
 import Lenis from "lenis";
 import Link from "next/link";
 import type { Session } from "next-auth";
@@ -185,20 +185,10 @@ function FixedHero({
       ref={containerRef}
       className="fixed inset-0 z-0 flex flex-col items-center justify-center pointer-events-none"
     >
-      <motion.div
-        className="flex h-screen flex-col items-center justify-center relative p-8 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.5 }}
-      >
+      <div className="flex h-screen flex-col items-center justify-center relative p-8 text-center">
         <div className="z-10 flex flex-col items-center">
           {/* LOGO */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative pointer-events-auto flex flex-col items-center" // Interactive if needed
-          >
+          <div className="relative pointer-events-auto flex flex-col items-center">
             <div className="flex flex-col items-center mb-0">
               <img
                 src="/logos/nmamit.png"
@@ -215,15 +205,10 @@ function FixedHero({
               alt="HF Logo"
               className="w-84 md:w-140 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
             />
-          </motion.div>
+          </div>
 
           {/* PLANK */}
-          <motion.div
-            className="mt-8 flex flex-col items-center pointer-events-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-          >
+          <div className="mt-8 flex flex-col items-center pointer-events-auto">
             <div
               className="relative px-4 py-8 transform -rotate-2 animate-[float_4s_ease-in-out_infinite]"
               style={{
@@ -257,16 +242,11 @@ function FixedHero({
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* SCROLL INDICATOR */}
-        <motion.div
-          className="absolute bottom-0 z-20 pointer-events-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-        >
+        <div className="absolute bottom-0 z-20 pointer-events-auto">
           <div className="flex flex-col items-center gap-2 animate-bounce">
             <p className="text-xs font-crimson tracking-[0.3em] uppercase text-white/70">
               Dive Deeper
@@ -291,8 +271,8 @@ function FixedHero({
               />
             </svg>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -377,31 +357,13 @@ function LandingContent({
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/20 to-black/50 pointer-events-none z-0" />
 
         {/* UNDERWATER SECTION (SPONSORS) */}
-        <motion.section
-          className="flex flex-col items-center justify-start pt-12 relative px-4"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          viewport={{ margin: "-100px", once: true }}
-        >
+        <section className="flex flex-col items-center justify-start pt-12 relative px-4">
           <div className="w-full max-w-6xl">
-            <motion.h2
-              className="text-5xl md:text-7xl font-pirate font-bold text-center mb-16 drop-shadow-[0_0_15px_rgba(0,200,255,0.8)] text-cyan-200 tracking-wide"
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
+            <h2 className="text-5xl md:text-7xl font-pirate font-bold text-center mb-16 drop-shadow-[0_0_15px_rgba(0,200,255,0.8)] text-cyan-200 tracking-wide">
               Our Sponsor
-            </motion.h2>
+            </h2>
 
-            <motion.div
-              className="flex flex-col items-center mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
+            <div className="flex flex-col items-center mb-4">
               <Link href="https://nitte.edu.in/nmamit/" target="_blank">
                 <div className="group relative w-72 md:w-96 aspect-video bg-white/70 border-2 border-cyan-400/50 rounded-2xl flex items-center justify-center hover:border-cyan-300 transition-all duration-500 overflow-hidden hover:shadow-[0_0_40px_rgba(0,200,255,0.4)]">
                   <img
@@ -415,7 +377,7 @@ function LandingContent({
               <span className="mt-3 text-sm font-crimson font-semibold tracking-[0.3em] uppercase text-cyan-300/80">
                 Executive Sponsor
               </span>
-            </motion.div>
+            </div>
 
             {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -431,7 +393,7 @@ function LandingContent({
               ))}
             </div> */}
           </div>
-        </motion.section>
+        </section>
 
         <BrochureDownload />
 
@@ -442,32 +404,14 @@ function LandingContent({
         <Timeline />
 
         {/* DEEP SEA (PRIZE POOL) */}
-        <motion.section
-          className="flex flex-col items-center justify-center relative px-4 py-8"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 1.5 }}
-          viewport={{ once: true }}
-        >
+        <section className="flex flex-col items-center justify-center relative px-4 py-8">
           <div className="relative z-10 flex flex-col items-center text-center w-full pt-16 pb-8">
-            <motion.h2
-              className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 md:drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide"
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
+            <h2 className="text-5xl md:text-7xl font-pirate font-black text-center mb-16 text-transparent bg-clip-text bg-linear-to-b from-yellow-200 to-yellow-600 md:drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] tracking-wide">
               Prize Pool
-            </motion.h2>
+            </h2>
 
             {/* ─── MASSIVE AMOUNT ─── */}
-            <motion.div
-              className="relative mb-20 flex flex-col items-center"
-              initial={{ scale: 0.8, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.4, duration: 1.2 }}
-              viewport={{ once: true }}
-            >
+            <div className="relative mb-20 flex flex-col items-center">
               {/* Animated glow rings */}
               <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-96 md:h-96 rounded-full border border-yellow-500/10" />
               <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 rounded-full border border-yellow-500/20" />
@@ -477,7 +421,7 @@ function LandingContent({
                 Worth Over
               </span>
               <span
-                className="text-8xl md:text-[12rem] font-black font-pirata leading-none tracking-tight"
+                className="text-7xl md:text-[12rem] font-black font-pirata leading-none tracking-tight"
                 style={{
                   color: "#eab308",
                   textShadow:
@@ -504,9 +448,9 @@ function LandingContent({
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 </button>
               </Link>
-            </motion.div>
+            </div>
           </div>
-        </motion.section>
+        </section>
       </div>
 
       <Footer overlayNeeded={true} />

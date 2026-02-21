@@ -46,7 +46,7 @@ export default async function TeamsPage() {
 
             {/* Mobile Sign Out */}
             <div className="md:hidden [&_button]:!bg-white/90 [&_button]:!border-[#10569c]/30 [&_button]:!text-[#10569c] [&_button]:hover:!bg-white [&_button]:hover:!border-[#10569c]/60 [&_button]:!backdrop-blur-sm [&_button]:!rounded-xl [&_button]:!shadow-sm [&_button]:!transition-all">
-              <SignOut variant="outline" />
+              <SignOut className="font-pirate" variant="outline" />
             </div>
           </div>
 
@@ -55,7 +55,7 @@ export default async function TeamsPage() {
             <h1 className="text-3xl font-pirate font-bold drop-shadow-sm md:text-4xl tracking-wide drop-shadow-black/50">
               Team Management
             </h1>
-            <p className="text-white font-pirate text-base drop-shadow-black/50 md:text-xl leading-relaxed font-medium">
+            <p className="text-white font-crimson text-base drop-shadow-black/50 md:text-xl leading-relaxed font-medium">
               Create a new team or join an existing one.
             </p>
           </div>

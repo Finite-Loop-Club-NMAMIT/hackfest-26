@@ -39,7 +39,11 @@ export function LeaveTeamButton() {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="w-full" disabled={loading}>
+        <Button
+          variant="destructive"
+          className="w-full bg-red-400! hover:bg-red-500! transition-colors"
+          disabled={loading}
+        >
           <LogOut className="h-4 w-4 mr-2" />
           {loading ? "Leaving..." : "Leave Team"}
         </Button>

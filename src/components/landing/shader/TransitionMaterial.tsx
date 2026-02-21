@@ -162,9 +162,6 @@ void main() {
     vec2 uv = vUv;
 
     // --- NAUSEA EFFECT START ---
-    // Minecraft wobble:
-    // x += sin(y * freq + time) * amp
-    // y += cos(x * freq + time) * amp
     if (uNausea > 0.0) {
         float freq = 3.0; // Wobbly frequency
         float amp = 0.05 * uNausea; // Amplitude scales with nausea intensity
@@ -175,81 +172,83 @@ void main() {
     }
     // --- NAUSEA EFFECT END ---
 
-    vec2 uv1 = getUvs(uPlaneRes, uMediaRes1, uv);
-    vec2 uv2 = getUvs(uPlaneRes, uMediaRes2, uv);
-
     float progress = uTransitionProgress;
-    
-    // Create a wavy water surface line
-    // The 'level' moves from -0.1 to 1.1 based on progress
-    float level = mix(-0.1, 1.7, progress); 
+    vec4 finalColor;
 
-    // Wave distortion
-    float wave = sin(uv.x * 10.0 + uTime * 2.0) * 0.02;
-    wave += sin(uv.x * 23.0 - uTime * 3.5) * 0.01;
-    wave += noise(vec3(uv.x * 5.0, uTime, 0.0)) * 0.02;
+    if (progress <= 0.0) {
+        // Fully above water
+        vec2 uv1 = getUvs(uPlaneRes, uMediaRes1, uv);
+        finalColor = texture2D(tMap1, uv1);
+    } else if (progress >= 1.0) {
+        // Fully underwater
+        vec2 uv2 = getUvs(uPlaneRes, uMediaRes2, uv);
+        vec4 tex2 = texture2D(tMap2, uv2);
 
-    float surfaceY = level + wave;
+        // Underwater color correction (blulish tint and darkness)
+        tex2.rgb *= vec3(0.9, 0.95, 1.0); 
 
-    // Soft edge for the water surface
-    float mixVal = smoothstep(surfaceY + 0.01, surfaceY - 0.01, uv.y);
+        // --- NIGHT MODE TINT ---
+        if(uIsNight > 0.0) {
+            vec3 nightTint = vec3(0.2, 0.3, 0.6); 
+            tex2.rgb = mix(tex2.rgb, tex2.rgb * nightTint * 1.5, uIsNight * 0.8);
+        }
 
-    // Distortion near surface (refraction)
-    float distortStrength = smoothstep(0.1, 0.0, abs(uv.y - surfaceY)) * 0.05;
-    vec2 distortedUv2 = uv2 + vec2(
-        sin(uv.y * 50.0 + uTime) * distortStrength, 
-        cos(uv.x * 50.0 + uTime) * distortStrength
-    );
+        finalColor = tex2;
 
-    vec4 tex1 = texture2D(tMap1, uv1);
-    vec4 tex2 = texture2D(tMap2, distortedUv2);
+        float depth = smoothstep(0.8, 0.0, uv.y);
+        finalColor.rgb *= 1.0 - (depth * 0.2);
+    } else {
+        // In Transition
+        vec2 uv1 = getUvs(uPlaneRes, uMediaRes1, uv);
+        vec2 uv2 = getUvs(uPlaneRes, uMediaRes2, uv);
+        
+        // Create a wavy water surface line
+        float level = mix(-0.1, 1.7, progress); 
 
-    // Underwater color correction (blulish tint and darkness)
-    // Made slightly brighter base
-    tex2.rgb *= vec3(0.9, 0.95, 1.0); 
+        // Wave distortion
+        float wave = sin(uv.x * 10.0 + uTime * 2.0) * 0.02;
+        wave += sin(uv.x * 23.0 - uTime * 3.5) * 0.01;
+        wave += noise(vec3(uv.x * 5.0, uTime, 0.0)) * 0.02;
 
-    // --- NIGHT MODE TINT ---
-    if(uIsNight > 0.0) {
-        // Mix with a cooler, slightly brighter night blue/purple
-        // Avoid crushing blacks too hard
-        vec3 nightTint = vec3(0.2, 0.3, 0.6); 
-        tex2.rgb = mix(tex2.rgb, tex2.rgb * nightTint * 1.5, uIsNight * 0.8);
+        float surfaceY = level + wave;
+
+        // Soft edge for the water surface
+        float mixVal = smoothstep(surfaceY + 0.01, surfaceY - 0.01, uv.y);
+
+        // Distortion near surface (refraction)
+        float distortStrength = smoothstep(0.1, 0.0, abs(uv.y - surfaceY)) * 0.05;
+        vec2 distortedUv2 = uv2 + vec2(
+            sin(uv.y * 50.0 + uTime) * distortStrength, 
+            cos(uv.x * 50.0 + uTime) * distortStrength
+        );
+
+        vec4 tex1 = texture2D(tMap1, uv1);
+        vec4 tex2 = texture2D(tMap2, distortedUv2);
+
+        // Underwater color correction (blulish tint and darkness)
+        tex2.rgb *= vec3(0.9, 0.95, 1.0); 
+
+        // --- NIGHT MODE TINT ---
+        if(uIsNight > 0.0) {
+            vec3 nightTint = vec3(0.2, 0.3, 0.6); 
+            tex2.rgb = mix(tex2.rgb, tex2.rgb * nightTint * 1.5, uIsNight * 0.8);
+        }
+
+        // Final mix
+        finalColor = mix(tex1, tex2, clamp(mixVal, 0.0, 1.0));
+
+        // Deep ocean darkness at bottom when fully submerged
+        float depth = smoothstep(0.8, 0.0, uv.y);
+        float darkStrength = smoothstep(0.8, 1.0, progress);
+        finalColor.rgb *= 1.0 - (depth * 0.2 * darkStrength);
     }
-
-    // Chromatic aberration at the surface line
-    // float aberr = smoothstep(0.02, 0.0, abs(uv.y - surfaceY));
-    // if(aberr > 0.0) {
-    //     float r = texture2D(tMap2, distortedUv2 + vec2(0.005 * aberr, 0.0)).r;
-    //     float b = texture2D(tMap2, distortedUv2 - vec2(0.005 * aberr, 0.0)).b;
-    //     tex2.r = mix(tex2.r, r, aberr);
-    //     tex2.b = mix(tex2.b, b, aberr);
-    //     // Add a bright "foam" line
-    //     mixVal += aberr * 0.5 * (1.0 - progress); // Flash only during transition
-    // }
-
-    // Final mix
-    vec4 finalColor = mix(tex1, tex2, clamp(mixVal, 0.0, 1.0));
-
-    // Deep ocean darkness at bottom when fully submerged
-    // Reduced darkness strength significantly to avoid being pitch black at bottom
-    float depth = smoothstep(0.8, 0.0, uv.y);
-    float darkStrength = smoothstep(0.8, 1.0, progress); // Only apply darkness as we finish transition
-    // Multiplier changed from 0.3 to 0.6 so we preserve 60% brightness at bottom, not remove 30% of ALREADY dark
-    // Actually wait, logic was: 1.0 - (depth * 0.3) -> 0.7 multiplier at bottom. 
-    // If it was black, maybe tex2 * 0.1 * 0.7 = 0.07. 
-    // Let's reduce the fade: 1.0 - (depth * 0.2)
-    finalColor.rgb *= 1.0 - (depth * 0.2 * darkStrength);
 
     // --- NAUSEA PURPLE TINT START ---
     if (uNausea > 0.0) {
-        // Minecraft Nether portal purple: vec3(0.3, 0.0, 0.5) roughly
         vec3 portalColor = vec3(0.35, 0.05, 0.6); 
-        // Pulsate the tint strength slightly
         float pulse = 0.8 + 0.2 * sin(uTime * 4.0);
-        // Mix heavily based on nausea, but preserve some original image
         finalColor.rgb = mix(finalColor.rgb, portalColor, uNausea * 0.6 * pulse);
         
-        // Add a vignette for more portal feel
         float dist = length(vUv - 0.5);
         finalColor.rgb *= 1.0 - (dist * 0.8 * uNausea);
     }

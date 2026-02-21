@@ -141,6 +141,13 @@
       "when": 1771240487168,
       "tag": "0019_melodic_queen_noir",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1771702337486,
+      "tag": "0020_curvy_la_nuit",
+      "breakpoints": true
     }
   ]
 }

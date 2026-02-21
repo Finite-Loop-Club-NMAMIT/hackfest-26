@@ -33,7 +33,6 @@ export function PhoneStep({ form, onNext }: PhoneStepProps) {
             <FormControl>
               {/* Minimalist Underline Input */}
               <Input
-                autoFocus
                 type="tel" // Triggers numeric keyboard on mobile
                 placeholder="e.g. 9876543210"
                 className="

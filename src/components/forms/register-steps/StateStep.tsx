@@ -56,7 +56,7 @@ export function StateStep({ form, onNext }: StateStepProps) {
               <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight text-center tracking-wide">
                 Select your state
               </FormLabel>
-              <p className="text-white/80 text-lg">
+              <p className="text-white/80 text-lg font-crimson">
                 Type to search, click to select
               </p>
             </div>
@@ -67,7 +67,6 @@ export function StateStep({ form, onNext }: StateStepProps) {
                 {/* Use top-1/2 and -translate-y-1/2 for perfect vertical centering */}
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-white" />
                 <Input
-                  autoFocus
                   placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

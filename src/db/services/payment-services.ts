@@ -19,16 +19,11 @@ export async function createOrder(data: CreateOrderInput) {
       payments: true,
     },
     columns: {
-      isLeader: true,
       id: true,
     },
   });
 
   if (!user) throw new AppError("USER_NOT_FOUND", 404);
-
-  if (!user.isLeader) {
-    throw new AppError("ONLY_LEADER_CAN_CREATE_PAYMENT_ORDER", 400);
-  }
 
   const team = await db.query.teams.findFirst({
     where: eq(teams.id, data.teamId),

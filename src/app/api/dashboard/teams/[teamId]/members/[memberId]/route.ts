@@ -13,24 +13,29 @@ export const PATCH = adminProtected<MemberParams>(
     const { teamId, memberId } = await params;
     const body = await request.json();
 
+    let updatedTeam: { leaderId: string } | undefined;
+
     if (body.isLeader) {
-      await db
-        .update(participants)
-        .set({ isLeader: false })
-        .where(eq(participants.teamId, teamId));
+      [updatedTeam] = await db
+        .update(teams)
+        .set({ leaderId: memberId })
+        .where(eq(teams.id, teamId))
+        .returning();
     }
 
-    const [updated] = await db
-      .update(participants)
-      .set({ isLeader: body.isLeader })
-      .where(eq(participants.id, memberId))
-      .returning();
+    const [participant] = await db
+      .select()
+      .from(participants)
+      .where(eq(participants.id, memberId));
 
-    if (!updated) {
+    if (!participant) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+      ...participant,
+      isLeader: updatedTeam?.leaderId === participant.id || !!body.isLeader,
+    });
   },
 );
 
@@ -66,7 +71,6 @@ export const DELETE = adminProtected<MemberParams>(
       .update(participants)
       .set({
         teamId: null,
-        isLeader: false,
       })
       .where(eq(participants.id, memberId))
       .returning();
@@ -80,14 +84,12 @@ export const DELETE = adminProtected<MemberParams>(
         teamId: participant.teamId,
         teamName: teamDetails.name,
         memberName: participant.name,
-        isLeader: participant.isLeader,
       },
       newValue: {
         id: participant.id,
         teamId: updated.teamId,
         teamName: "",
         memberName: updated.name,
-        isLeader: updated.isLeader,
       },
     });
 

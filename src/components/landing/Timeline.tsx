@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
 import { Anchor, Scroll, Ship, Telescope, Trophy } from "lucide-react";
 import { useRef } from "react";
 
@@ -69,20 +68,14 @@ export default function Timeline() {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-24"
-        >
+        <div className="text-center mb-24">
           <h2 className="text-5xl md:text-7xl font-pirate font-black text-transparent bg-clip-text bg-linear-to-b from-cyan-200 to-blue-600 tracking-wider">
             Voyage Logs
           </h2>
           <p className="mt-4 text-lg md:text-xl text-cyan-200/60 font-pirate tracking-wide">
             Chart your course through the treacherous waters
           </p>
-        </motion.div>
+        </div>
 
         <div className="relative max-w-5xl mx-auto">
           {/* Central rope — Desktop */}
@@ -118,14 +111,10 @@ function TimelineItem({
   const Icon = event.icon;
 
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}
       className={`relative flex items-center flex-row ${
         isEven ? "md:flex-row" : "md:flex-row-reverse"
       }`}
@@ -154,20 +143,7 @@ function TimelineItem({
           isEven ? "md:pr-14 md:pl-0" : "md:pl-14 md:pr-0"
         }`}
       >
-        <motion.div
-          initial={{ x: isEven ? -30 : 30, opacity: 0 }}
-          animate={
-            isInView
-              ? { x: 0, opacity: 1 }
-              : { x: isEven ? -30 : 30, opacity: 0 }
-          }
-          transition={{
-            duration: 0.6,
-            delay: 0.2 + index * 0.1,
-            ease: "easeOut",
-          }}
-          className="relative group"
-        >
+        <div className="relative group">
           {/* biome-ignore lint/a11y/noStaticElementInteractions: Hover effect only */}
           <div
             className="relative overflow-hidden bg-black/40 border rounded-2xl transition-all duration-500"
@@ -259,8 +235,8 @@ function TimelineItem({
               }}
             />
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

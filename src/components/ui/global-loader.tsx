@@ -11,7 +11,7 @@ export function GlobalLoader() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (pathname?.startsWith("/dashboard")) {
+    if (pathname?.startsWith("/")) {
       setLoading(false);
       return;
     }
@@ -125,7 +125,7 @@ export function GlobalLoader() {
             className="absolute bottom-10 left-10 hidden md:block text-xs font-crimson text-neutral-600"
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
           >
-            LAT: 24.55.01 N <br /> LON: 78.12.00 W
+            LAT: 18°18'02.0"N <br /> LON: 64°49'32.2"W
           </motion.div>
         </motion.div>
       )}

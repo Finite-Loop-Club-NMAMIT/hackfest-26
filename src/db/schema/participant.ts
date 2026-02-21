@@ -16,7 +16,6 @@ export const participants = pgTable(
     state: stateEnum("state"),
     course: courseEnum("course"),
     gender: genderEnum("gender"),
-    isLeader: boolean("isLeader").notNull().default(false),
     isRegistrationComplete: boolean("is_registration_complete")
       .notNull()
       .default(false),

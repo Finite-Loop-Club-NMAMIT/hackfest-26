@@ -41,7 +41,7 @@ export function GenderStep({ form, onNext }: GenderStepProps) {
                   Select your gender
                 </FormLabel>
                 {/* Added accommodation helper text */}
-                <p className="text-white/80 text-xl tracking-wide">
+                <p className="text-white/80 font-crimson text-xl tracking-wide">
                   This helps us manage your accommodation better
                 </p>
               </div>

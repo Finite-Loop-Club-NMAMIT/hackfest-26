@@ -35,7 +35,6 @@ export function NameStep({ form, onNext }: NameStepProps) {
             <FormControl>
               {/* Minimalist Underline Input */}
               <Input
-                autoFocus
                 {...field}
                 className="
                   block w-full 

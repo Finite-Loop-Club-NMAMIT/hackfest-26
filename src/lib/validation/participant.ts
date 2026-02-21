@@ -11,7 +11,6 @@ export const participantSchema = z.object({
   state: z.enum(stateEnum.enumValues).nullable(),
   course: z.enum(courseEnum.enumValues).nullable(),
   gender: z.enum(genderEnum.enumValues).nullable(),
-  isLeader: z.boolean().default(false),
   attended: z.boolean().default(false),
   isRegistrationComplete: z.boolean().default(false),
   idProof: z.string().nullable(),

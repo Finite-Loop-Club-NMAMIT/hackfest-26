@@ -54,8 +54,8 @@ export function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonProps) {
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" className="w-full" disabled={loading}>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete Team
+          <Trash2 className="h-4 w-4 text-white mr-2" />
+          <span className="text-white">Delete Team</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

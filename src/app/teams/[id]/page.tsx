@@ -1,10 +1,12 @@
 import {
   AlertCircle,
+  BadgeCheck,
+  BadgeX,
+  BookUser,
   CheckCircle2,
   Clock,
   CreditCard,
   Home,
-  Info,
   Users,
   XCircle,
 } from "lucide-react";
@@ -126,7 +128,7 @@ export default async function TeamDetailsPage({
                   Congratulations! Your team has been selected! Please complete
                   the payment to confirm your participation.
                 </p>
-                {user.isLeader ? (
+                {team.leaderId === user.id ? (
                   paymentsOpen ? (
                     <Button
                       asChild
@@ -266,7 +268,7 @@ export default async function TeamDetailsPage({
           </CardHeader>
           <CardContent className="space-y-4">
             {!team.isCompleted &&
-              (user.isLeader ? (
+              (team.leaderId === user.id ? (
                 <div className="space-y-4">
                   <p className="text-sm md:text-base text-[#10569c]/80 font-medium">
                     As the team leader, you can confirm the team once you have
@@ -292,10 +294,8 @@ export default async function TeamDetailsPage({
                   <p className="text-sm md:text-base text-[#10569c]/80 font-medium mb-4">
                     You can leave the team before it is confirmed by the leader.
                   </p>
-                  {/* Leave Button uses standard outlined white/blue */}
-                  <div className="[&_button]:w-full [&_button]:bg-white/90 [&_button]:border-[#10569c]/30 [&_button]:text-[#10569c] [&_button]:hover:bg-white [&_button]:hover:border-[#10569c]/60 [&_button]:font-bold [&_button]:shadow-sm [&_button]:transition-all [&_button]:h-12 [&_button]:rounded-xl">
-                    <LeaveTeamButton />
-                  </div>
+                  {/* Leave Button */}
+                  <LeaveTeamButton />
                 </div>
               ))}
 
@@ -314,7 +314,7 @@ export default async function TeamDetailsPage({
                       submission={submission}
                     />
                   </div>
-                ) : user.isLeader ? (
+                ) : team.leaderId === user.id ? (
                   <div className="text-[#10569c]">
                     <TeamSubmissionForm teamId={team.id} />
                   </div>
@@ -390,11 +390,10 @@ export default async function TeamDetailsPage({
               </h1>
 
               {/* ID */}
-              {user.isLeader && (
-                <div className="shrink-0">
-                  <TeamIdDisplay teamId={team.id} />
-                </div>
-              )}
+
+              <div className="shrink-0">
+                <TeamIdDisplay teamId={team.id} />
+              </div>
             </div>
 
             {/* 3. MOBILE ONLY: Sign Out */}
@@ -408,7 +407,7 @@ export default async function TeamDetailsPage({
             <h1 className="text-4xl font-pirate font-bold text-white drop-shadow-sm drop-shadow-black/50 text-center wrap-break-word leading-tight tracking-wide">
               {team.name}
             </h1>
-            {user.isLeader && (
+            {team.leaderId === user.id && (
               <div className="flex justify-center">
                 <TeamIdDisplay teamId={team.id} />
               </div>
@@ -428,7 +427,7 @@ export default async function TeamDetailsPage({
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-[#10569c]/10 rounded-lg ring-1 ring-[#10569c]/20 shadow-sm">
-                  <Info className="w-5 h-5 text-[#10569c]" />
+                  <BookUser className="w-5 h-5 text-[#10569c]" />
                 </div>
                 <CardTitle className="text-[#10569c] font-pirate text-2xl tracking-wide">
                   Team Details
@@ -478,7 +477,14 @@ export default async function TeamDetailsPage({
                     Team Members
                   </CardTitle>
                   <CardDescription className="text-[#10569c]/60 font-bold font-crimson text-lg">
-                    {members.length} / 4
+                    <div className="flex items-center">
+                      {members.length >= 3 ? (
+                        <BadgeCheck className="w-4 h-4 mr-1 inline text-green-500" />
+                      ) : (
+                        <BadgeX className="w-4 h-4 mr-1 inline text-red-500" />
+                      )}
+                      {members.length} / 4
+                    </div>
                   </CardDescription>
                 </div>
               </div>
@@ -498,7 +504,7 @@ export default async function TeamDetailsPage({
                         {member.email}
                       </div>
                     </div>
-                    {member.isLeader && (
+                    {team.leaderId === member.id && (
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-md shadow-sm">
                         Leader
                       </span>

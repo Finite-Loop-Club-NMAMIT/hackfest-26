@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -44,6 +44,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
   const [loadingColleges, setLoadingColleges] = useState(true);
   const [step, setStep] = useState(0);
   const [furthestStep, setFurthestStep] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (step > furthestStep) {
@@ -65,6 +66,44 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       idProof: undefined,
     },
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("hackfest_register_progress");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.step !== undefined) setStep(parsed.step);
+        if (parsed.furthestStep !== undefined)
+          setFurthestStep(parsed.furthestStep);
+        if (parsed.formData) {
+          form.reset({
+            ...parsed.formData,
+            github: initialGithubUsername || undefined,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse saved registration progress", e);
+      }
+    }
+    setIsLoaded(true);
+  }, [form, initialGithubUsername]);
+
+  const formValues = form.watch();
+  useEffect(() => {
+    if (isLoaded) {
+      // biome-ignore lint/correctness/noUnusedVariables: strip github from localStorage
+      const { github, ...formDataToSave } = formValues;
+      const dataToSave = {
+        step,
+        furthestStep,
+        formData: formDataToSave,
+      };
+      localStorage.setItem(
+        "hackfest_register_progress",
+        JSON.stringify(dataToSave),
+      );
+    }
+  }, [isLoaded, step, furthestStep, formValues]);
 
   const steps = [
     "name",
@@ -144,6 +183,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       }),
     });
 
+    localStorage.removeItem("hackfest_register_progress");
     router.push("/teams");
     router.refresh();
   }
@@ -159,7 +199,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
           console.log("Validation errors:", errors);
         })}
-        className="relative flex min-h-screen flex-col items-center justify-center px-6 overflow-hidden text-white"
+        className="relative flex min-h-dvh flex-col items-center justify-center px-6 overflow-hidden text-white"
       >
         {/* --- TOP PROGRESS BAR --- */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-white/20 z-50">
@@ -298,31 +338,23 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
 
           {/* Navigation Buttons */}
           <div className="flex w-full items-center gap-3 pt-6">
-            {/* BACK BUTTON - FRAMELESS GLASS */}
-            {step > 0 && (
+            {/* BACK BUTTON OR SPACER */}
+            {step > 0 ? (
               <Button
                 type="button"
-                // Changed to 'ghost' to remove default borders
                 onClick={handleBack}
                 className="
-                  // Colors
-                  bg-white/60                // Soft translucent white base
-                  text-[#10569c]               // Deep blue text for contrast on both Sky & Sand
-                  hover:bg-white/70            // Brightens on hover
-                  hover:scale-[1.01] 
-                  active:scale-[0.99]
-                  
-                  // Effects
-                  backdrop-blur-md             // Glass effect
-                  shadow-sm                    // Subtle depth
-                  
-                  // Layout & Typography
-                  h-12 px-6 rounded-xl transition-all font-pirate font-bold tracking-wide
+                gap-4
+                  flex-1 h-12 rounded-xl text-lg font-pirate font-bold shadow-sm transition-all tracking-wide
+                  bg-white text-[#10569c] hover:bg-white/70 hover:scale-[1.01] active:scale-[0.99] backdrop-blur-md
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2
                 "
               >
-                Back
+                <ArrowLeft className="w-5 h-5" />{" "}
+                <span className="mr-16">Back</span>
               </Button>
+            ) : (
+              <div className="flex-1" />
             )}
 
             {/* CONTINUE / SUBMIT BUTTON */}
@@ -331,6 +363,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
               onClick={!isLastStep ? handleNext : undefined}
               disabled={form.formState.isSubmitting}
               className="
+                gap-4
                 flex-1 h-12 rounded-xl text-lg font-pirate font-bold shadow-lg transition-all tracking-wide
                 bg-white text-[#10569c] hover:bg-white/90 hover:scale-[1.01] active:scale-[0.99]
                 disabled:opacity-70 disabled:pointer-events-none cursor-pointer
@@ -341,11 +374,13 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                 "Submitting..."
               ) : isLastStep ? (
                 <>
-                  Submit <ArrowRight className="ml-2 w-5 h-5" />
+                  <span className="ml-16">Submit</span>{" "}
+                  <ArrowRight className="w-5 h-5" />
                 </>
               ) : (
                 <>
-                  Continue <ArrowRight className="ml-2 w-5 h-5" />
+                  <span className="ml-16">Next</span>{" "}
+                  <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </Button>
