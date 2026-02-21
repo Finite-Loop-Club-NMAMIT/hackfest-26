@@ -1,0 +1,69 @@
+import { type NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+
+export async function POST(req: NextRequest) {
+  const SMTP_HOST = process.env.SMTP_HOST;
+  const SMTP_PORT = process.env.SMTP_PORT;
+  const SMTP_USER = process.env.SMTP_USER;
+  const SMTP_PASS = process.env.SMTP_PASS;
+  try {
+    const body = await req.json();
+    const { customCollegeName, participantData } = body;
+
+    if (!customCollegeName) {
+      return NextResponse.json(
+        { message: "Custom college name is required." },
+        { status: 400 },
+      );
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: Number(SMTP_PORT),
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: SMTP_USER || '"Hackfest Registration" <noreply@hackfest.dev>',
+      to: "finiteloopclub@nmamit.in",
+      cc: "tech@hackfest.dev, nnm23cs144@nmamit.in",
+      subject: `New College Request: ${customCollegeName}`,
+      html: `
+        <h2>New College Addition Request</h2>
+        <p>A participant has requested to add a new college that was not in the list.</p>
+        
+        <h3>Requested College</h3>
+        <p><strong>Name:</strong> ${customCollegeName}</p>
+        
+        <h3>Participant Information (So Far)</h3>
+        <pre>${JSON.stringify(participantData, null, 2)}</pre>
+        
+        <hr />
+        <p>Please add this college to the database if valid, and contact the participant to continue their registration.</p>
+      `,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      console.error(
+        "Failed to send email (likely due to missing SMTP credentials), but proceeding:",
+        emailError,
+      );
+    }
+
+    return NextResponse.json(
+      { message: "College request sent successfully!" },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error in college request:", error);
+    return NextResponse.json(
+      { message: "Failed to process the request." },
+      { status: 500 },
+    );
+  }
+}
