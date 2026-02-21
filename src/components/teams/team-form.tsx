@@ -32,6 +32,7 @@ type JoinTeamInput = z.infer<typeof joinTeamSchema>;
 export function TeamForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [suggestedNames, setSuggestedNames] = useState<string[]>([]);
 
   const createForm = useForm<CreateTeamInput>({
     resolver: zodResolver(createTeamSchema),
@@ -48,13 +49,41 @@ export function TeamForm() {
   });
 
   async function onCreateTeam(data: CreateTeamInput) {
+    const teamName = data.name.trim();
+    if (!teamName) return;
+
     setLoading(true);
+    setSuggestedNames([]);
+
     try {
+      try {
+        const checkRes = await fetch(
+          process.env.NEXT_PUBLIC_TEAM_NAME_CHECK_API_URL!,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ teamName }),
+          },
+        );
+
+        if (checkRes.status === 405) {
+          const checkData2 = await checkRes.json();
+          const checkData = checkData2[0].output;
+          if (checkData.suggested_names && checkData.suggested_names.length > 0) {
+            setSuggestedNames(checkData.suggested_names);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Team name validation API failed:", err);
+      }
+
       const result = await apiFetch<{ team: { id: string } }>(
         "/api/teams/create",
         {
           method: "POST",
-          body: JSON.stringify(data),
+          body: JSON.stringify({ name: teamName }),
         },
       );
 
@@ -136,7 +165,29 @@ export function TeamForm() {
                       "
                     />
                   </FormControl>
-                  <FormMessage className="text-[#e54d2e] text-lg font-pirate" />
+                  <FormMessage className="text-[#e54d2e] text-lg font-crimson" />
+                  {suggestedNames.length > 0 && (
+                    <div className="pt-2">
+                      <p className="text-sm md:text-base font-crimson font-medium text-[#e54d2e] mb-2 tracking-wide">
+                        That name is not allowed. Try one of these:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedNames.map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => {
+                              createForm.setValue("name", name);
+                              setSuggestedNames([]);
+                            }}
+                            className="text-sm font-crimson font-semibold px-3 py-1.5 rounded-xl bg-[#10569c]/10 text-[#10569c] border border-[#10569c]/30 hover:bg-[#10569c]/20 hover:border-[#10569c]/50 transition-all shadow-sm active:scale-95"
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
