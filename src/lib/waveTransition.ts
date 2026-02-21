@@ -42,12 +42,14 @@ export function triggerWaveTransition(
   });
 
   const dpr = window.devicePixelRatio || 1;
+
   const updateSize = () => {
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
     const ctx = canvas.getContext("2d");
     if (ctx) ctx.scale(dpr, dpr);
   };
+
   updateSize();
   document.body.appendChild(canvas);
 
@@ -63,7 +65,7 @@ export function triggerWaveTransition(
       speed: 0.003,
       phase: 0,
       wobbleSpeed: 0.002,
-      wobbleAmp: 20
+      wobbleAmp: 20,
     },
     {
       colorStart: "rgba(14, 100, 120, 0.4)",
@@ -74,7 +76,7 @@ export function triggerWaveTransition(
       speed: 0.005,
       phase: 2,
       wobbleSpeed: 0.003,
-      wobbleAmp: 15
+      wobbleAmp: 15,
     },
     {
       colorStart: "rgba(40, 170, 185, 0.35)",
@@ -85,8 +87,8 @@ export function triggerWaveTransition(
       speed: 0.007,
       phase: 4,
       wobbleSpeed: 0.004,
-      wobbleAmp: 10
-    }
+      wobbleAmp: 10,
+    },
   ];
 
   let particles: Particle[] = [];
@@ -94,7 +96,7 @@ export function triggerWaveTransition(
   const duration = 2000;
   let midpointFired = false;
 
-  const easeInOutCubic = (t: number) => 
+  const easeInOutCubic = (t: number) =>
     t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   const frame = (now: number) => {
@@ -107,25 +109,46 @@ export function triggerWaveTransition(
     ctx.clearRect(0, 0, w, h);
 
     if (onProgress) {
-      onProgress(easeInOutCubic(progress));
+      const bgProgress =
+        progress > 0.55
+          ? easeInOutCubic((progress - 0.55) / 0.45)
+          : 0;
+      onProgress(bgProgress);
     }
 
     let level: number;
 
     if (progress <= 0.4) {
       const p = easeInOutCubic(progress / 0.4);
-      level = h + 200 - (p * (h + 400));
-    } 
-    else if (progress <= 0.55) {
+      level = h + 200 - p * (h + 400);
+    } else if (progress <= 0.55) {
       level = -200;
       if (!midpointFired) {
         midpointFired = true;
         onMidpoint();
       }
-    } 
-    else {
+    } else {
       const p = easeInOutCubic((progress - 0.55) / 0.45);
-      level = -200 + (p * (h + 400));
+      level = -200 + p * (h + 400);
+    }
+
+    {
+      const underlayLevel = level;
+
+      const underlayOpacity =
+        progress <= 0.4
+          ? easeInOutCubic(progress / 0.4)
+          : progress <= 0.55
+          ? 1
+          : 1 - easeInOutCubic((progress - 0.55) / 0.45);
+
+      if (underlayOpacity > 0) {
+        ctx.save();
+        ctx.globalAlpha = underlayOpacity;
+        ctx.fillStyle = "rgb(4, 30, 45)";
+        ctx.fillRect(0, underlayLevel, w, h - underlayLevel);
+        ctx.restore();
+      }
     }
 
     layers.forEach((layer) => {
@@ -135,10 +158,18 @@ export function triggerWaveTransition(
       ctx.moveTo(0, h);
 
       for (let x = 0; x <= w; x += 10) {
-        const y = currentLevel + 
-          Math.sin(x * layer.frequency + elapsed * layer.speed + layer.phase) * layer.amplitude +
-          Math.sin(x * (layer.frequency * 2) + elapsed * layer.wobbleSpeed) * layer.wobbleAmp;
-        
+        const y =
+          currentLevel +
+          Math.sin(
+            x * layer.frequency + elapsed * layer.speed + layer.phase,
+          ) *
+            layer.amplitude +
+          Math.sin(
+            x * (layer.frequency * 2) +
+              elapsed * layer.wobbleSpeed,
+          ) *
+            layer.wobbleAmp;
+
         ctx.lineTo(x, y);
 
         if (progress < 0.9 && Math.random() < 0.05 && y < h) {
@@ -148,10 +179,16 @@ export function triggerWaveTransition(
 
       ctx.lineTo(w, h);
       ctx.lineTo(0, h);
-      
-      const grad = ctx.createLinearGradient(0, currentLevel - 100, 0, h);
+
+      const grad = ctx.createLinearGradient(
+        0,
+        currentLevel - 100,
+        0,
+        h,
+      );
       grad.addColorStop(0, layer.colorStart);
       grad.addColorStop(1, layer.colorEnd);
+
       ctx.fillStyle = grad;
       ctx.fill();
 
@@ -185,17 +222,18 @@ function spawnParticle(x: number, y: number, particles: Particle[]) {
     size: Math.random() * 3 + 1,
     life: 1.0,
     maxLife: 1.0,
-    alpha: Math.random() * 0.5 + 0.3
+    alpha: Math.random() * 0.5 + 0.3,
   });
 }
 
 function updateAndDrawParticles(
-  ctx: CanvasRenderingContext2D, 
-  particles: Particle[], 
-  limitY: number
+  ctx: CanvasRenderingContext2D,
+  particles: Particle[],
+  limitY: number,
 ) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
+
     p.x += p.vx;
     p.y += p.vy;
     p.life -= 0.02;
