@@ -186,7 +186,7 @@ export default function AboutSlate() {
                     Total Prizes Worth
                   </span>
                   <span className="text-5xl font-pirate text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
-                    ₹ 2,50,000+
+                    ₹ 4,50,000+
                   </span>
                 </div>
 

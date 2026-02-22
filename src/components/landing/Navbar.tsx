@@ -82,7 +82,7 @@ export function Navbar({
           )}
         >
           <Image
-            src="/teal-leather.png"
+            src="/teal-leather.webp"
             alt="Leather Background"
             fill
             className="object-cover scale-[1.3]"
@@ -109,7 +109,7 @@ export function Navbar({
           )}
         >
           <Image
-            src="/teal-leather.png"
+            src="/teal-leather.webp"
             alt="Leather Background"
             fill
             className="object-cover scale-[1.3]"

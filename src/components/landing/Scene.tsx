@@ -428,7 +428,7 @@ function LandingContent({
                     "0 0 20px rgba(234,179,8,0.5), 0 0 40px rgba(234,179,8,0.2)",
                 }}
               >
-                ₹2,50,000
+                ₹4,50,000
                 <span className="text-yellow-400/70">+</span>
               </span>
               <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">

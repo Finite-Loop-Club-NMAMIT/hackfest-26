@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -21,36 +20,8 @@ interface CourseStepProps {
 }
 
 export function CourseStep({ form, onNext }: CourseStepProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(pointer: fine)").matches) {
-      setTimeout(() => containerRef.current?.focus(), 50);
-    }
-  }, []);
-
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: Need keydown on wrapper for enter selection.
-    <div
-      ref={containerRef}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const currentVal = form.getValues("course");
-          const sortedCourses = [...courseEnum.enumValues].sort((a, b) => {
-            if (a === currentVal) return -1;
-            if (b === currentVal) return 1;
-            return 0;
-          });
-          const valueToSelect = currentVal || sortedCourses[0];
-          if (valueToSelect) {
-            form.setValue("course", valueToSelect);
-            onNext();
-          }
-        }
-      }}
-      className="w-full flex flex-col font-pirate items-center animate-in fade-in slide-in-from-bottom-8 duration-700 focus:outline-none"
-    >
+    <div className="w-full flex flex-col font-pirate items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
       <FormField
         control={form.control}
         name="course"

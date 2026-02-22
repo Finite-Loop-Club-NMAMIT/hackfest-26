@@ -2,7 +2,7 @@
 
 import FuzzySearch from "fuzzy-search";
 import { Check, Loader2, Phone, Search } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import {
@@ -39,13 +39,6 @@ export function CollegeStep({
   loadingColleges,
 }: CollegeStepProps) {
   const [search, setSearch] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(pointer: fine)").matches) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, []);
 
   // 1. Watch the current selection
   const selectedCollegeId = form.watch("collegeId");
@@ -123,24 +116,9 @@ export function CollegeStep({
                 {/* Fixed alignment for the search icon */}
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-white" />
                 <Input
-                  ref={inputRef}
                   placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const valueToSelect =
-                        field.value ||
-                        (filteredColleges.length > 0
-                          ? filteredColleges[0].id
-                          : null);
-                      if (valueToSelect) {
-                        field.onChange(valueToSelect);
-                        onNext();
-                      }
-                    }
-                  }}
                   className="
                     w-full 
                     h-16            {/* Explicit height instead of padding */}
