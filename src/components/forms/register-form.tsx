@@ -182,7 +182,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       (!data.alias || data.alias.length > 15)
     ) {
       form.setError("alias", {
-        type: "manual                      ",
+        type: "manual",
         message: "Alias is required as your name is longer than 15 characters",
       });
       return;
@@ -193,6 +193,12 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
         message: "Alias must be 15 characters or less",
       });
       return;
+    }
+    if (data.name.trim().length < 15) {
+      data.alias = "";
+    }
+    if (data.alias?.trim() === "") {
+      form.setValue("alias", data.name.trim());
     }
     await apiFetch("/api/users/register", {
       method: "POST",
@@ -290,7 +296,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                           ? "text-white text-lg tracking-widest font-pirate translate-x-2"
                           : isPast
                             ? "text-white/80 text-sm tracking-widest font-pirate"
-                            : "text-white/50 text-sm tracking-widest font-pirate group-hover:text-white/70"
+                            : "text-white/60 text-sm tracking-widest font-pirate group-hover:text-white/70"
                       }
                     `}
                   >

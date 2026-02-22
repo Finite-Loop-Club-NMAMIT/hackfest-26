@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -20,8 +21,36 @@ interface CourseStepProps {
 }
 
 export function CourseStep({ form, onNext }: CourseStepProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => containerRef.current?.focus(), 50);
+    }
+  }, []);
+
   return (
-    <div className="w-full flex flex-col font-pirate items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+    // biome-ignore lint/a11y/noStaticElementInteractions: Need keydown on wrapper for enter selection.
+    <div
+      ref={containerRef}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const currentVal = form.getValues("course");
+          const sortedCourses = [...courseEnum.enumValues].sort((a, b) => {
+            if (a === currentVal) return -1;
+            if (b === currentVal) return 1;
+            return 0;
+          });
+          const valueToSelect = currentVal || sortedCourses[0];
+          if (valueToSelect) {
+            form.setValue("course", valueToSelect);
+            onNext();
+          }
+        }
+      }}
+      className="w-full flex flex-col font-pirate items-center animate-in fade-in slide-in-from-bottom-8 duration-700 focus:outline-none"
+    >
       <FormField
         control={form.control}
         name="course"
@@ -65,7 +94,7 @@ export function CourseStep({ form, onNext }: CourseStepProps) {
                         {/* Course Name */}
                         <span
                           className={cn(
-                            "text-xl font-medium font-pirate transition-all duration-200 text-[#10569c]",
+                            "text-xl font-bold font-crimson transition-all duration-200 text-[#10569c]",
                           )}
                         >
                           {course}

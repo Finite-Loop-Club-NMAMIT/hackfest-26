@@ -23,27 +23,27 @@ const tracks = [
   {
     id: "fintech",
     title: "FinTech",
-    image: "/images/tracks/FinTech.png",
+    image: "/images/tracks/Fintech.webp",
   },
   {
     id: "healthcare",
     title: "Healthcare",
-    image: "/images/tracks/Healthcare.png",
+    image: "/images/tracks/Healthcare.webp",
   },
   {
     id: "logistics",
     title: "Logistics",
-    image: "/images/tracks/Logistics.png",
+    image: "/images/tracks/Logistics.webp",
   },
   {
     id: "open-innovation",
     title: "Open Innovation",
-    image: "/images/tracks/OpenInnovation.png",
+    image: "/images/tracks/OpenInnovation.webp",
   },
   {
     id: "sustainable-dev",
     title: "Sustainable Dev",
-    image: "/images/tracks/SustainableDev.png",
+    image: "/images/tracks/SustainableDev.webp",
   },
 ];
 

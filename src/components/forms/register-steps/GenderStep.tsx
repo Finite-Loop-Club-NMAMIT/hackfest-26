@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -20,8 +21,36 @@ interface GenderStepProps {
 }
 
 export function GenderStep({ form, onNext }: GenderStepProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => containerRef.current?.focus(), 50);
+    }
+  }, []);
+
   return (
-    <div className="w-full flex flex-col items-center animate-in font-pirate fade-in slide-in-from-bottom-8 duration-700">
+    // biome-ignore lint/a11y/noStaticElementInteractions: Need keydown on wrapper for enter selection.
+    <div
+      ref={containerRef}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const currentVal = form.getValues("gender");
+          const sortedGenders = [...genderEnum.enumValues].sort((a, b) => {
+            if (a === currentVal) return -1;
+            if (b === currentVal) return 1;
+            return 0;
+          });
+          const valueToSelect = currentVal || sortedGenders[0];
+          if (valueToSelect) {
+            form.setValue("gender", valueToSelect);
+            onNext();
+          }
+        }
+      }}
+      className="w-full flex flex-col items-center animate-in font-pirate fade-in slide-in-from-bottom-8 duration-700 focus:outline-none"
+    >
       <FormField
         control={form.control}
         name="gender"
@@ -67,7 +96,7 @@ export function GenderStep({ form, onNext }: GenderStepProps) {
                         )}
                       >
                         {/* Gender Label - No conditional bolding here */}
-                        <span className="text-xl font-medium font-pirate text-[#10569c] capitalize transition-all duration-200">
+                        <span className="text-xl font-bold font-crimson text-[#10569c] capitalize transition-all duration-200">
                           {gender}
                         </span>
 

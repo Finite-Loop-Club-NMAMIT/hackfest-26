@@ -44,7 +44,7 @@ export default function EventDrawer({
             <div className="flex justify-center relative">
               <Image
                 // TODO: Update to dynamic image path when available
-                src="/images/tracks/FinTech.png"
+                src="/images/tracks/Fintech.webp"
                 alt={event.title}
                 width={500}
                 height={500}

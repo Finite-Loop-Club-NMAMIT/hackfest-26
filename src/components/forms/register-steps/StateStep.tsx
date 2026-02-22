@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -23,6 +23,13 @@ interface StateStepProps {
 
 export function StateStep({ form, onNext }: StateStepProps) {
   const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, []);
 
   // 1. Get the current selected value
   const selectedState = form.watch("state");
@@ -67,9 +74,20 @@ export function StateStep({ form, onNext }: StateStepProps) {
                 {/* Use top-1/2 and -translate-y-1/2 for perfect vertical centering */}
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-white" />
                 <Input
+                  ref={inputRef}
                   placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const valueToSelect = field.value || filteredStates[0];
+                      if (valueToSelect) {
+                        field.onChange(valueToSelect);
+                        onNext();
+                      }
+                    }
+                  }}
                   className="
                     w-full 
                     h-16            {/* Explicit height instead of padding */}
@@ -77,7 +95,7 @@ export function StateStep({ form, onNext }: StateStepProps) {
                     border border-white/10
                     bg-white/90
                     px-4 pl-12      {/* Removed py-4 */}
-                    text-xl font-medium font-pirate text-white
+                    text-xl font-medium font-crimson text-white
                     placeholder:text-white/80
                     leading-none
                     focus-visible:ring-1 focus-visible:ring-white
@@ -106,7 +124,7 @@ export function StateStep({ form, onNext }: StateStepProps) {
                     )}
                   >
                     {/* State Name */}
-                    <span className="text-xl font-medium font-pirate text-[#10569c] transition-all duration-200">
+                    <span className="text-xl font-crimson font-bold text-[#10569c] transition-all duration-200">
                       {state}
                     </span>
 

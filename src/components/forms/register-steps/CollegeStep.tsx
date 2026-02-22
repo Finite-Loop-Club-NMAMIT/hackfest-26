@@ -1,7 +1,8 @@
 "use client";
 
+import FuzzySearch from "fuzzy-search";
 import { Check, Loader2, Phone, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import {
@@ -38,6 +39,13 @@ export function CollegeStep({
   loadingColleges,
 }: CollegeStepProps) {
   const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, []);
 
   // 1. Watch the current selection
   const selectedCollegeId = form.watch("collegeId");
@@ -77,12 +85,11 @@ export function CollegeStep({
     // A. Filter by search term
     let result = colleges;
     if (search) {
-      const lowerSearch = search.toLowerCase();
-      result = colleges.filter(
-        (c) =>
-          (c.name?.toLowerCase() ?? "").includes(lowerSearch) ||
-          (c.state?.toLowerCase() ?? "").includes(lowerSearch),
-      );
+      const searcher = new FuzzySearch(colleges, ["name", "state"], {
+        caseSensitive: false,
+        sort: true,
+      });
+      result = searcher.search(search);
     }
 
     // B. Sort: Move selected item to the top
@@ -116,9 +123,24 @@ export function CollegeStep({
                 {/* Fixed alignment for the search icon */}
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-white" />
                 <Input
+                  ref={inputRef}
                   placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const valueToSelect =
+                        field.value ||
+                        (filteredColleges.length > 0
+                          ? filteredColleges[0].id
+                          : null);
+                      if (valueToSelect) {
+                        field.onChange(valueToSelect);
+                        onNext();
+                      }
+                    }
+                  }}
                   className="
                     w-full 
                     h-16            {/* Explicit height instead of padding */}
@@ -156,32 +178,34 @@ export function CollegeStep({
                           onNext();
                         }}
                         className={cn(
-                          "group flex w-full min-h-16 items-center justify-between rounded-xl border border-white/10 bg-white/90 px-4 text-left transition-all duration-200 hover:bg-white/80 hover:border-white/30 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:scale-[1.02]",
+                          "group flex flex-col w-full min-h-16 justify-center rounded-xl border border-white/10 bg-white/90 px-4 py-3 text-left transition-all duration-200 hover:bg-white/80 hover:border-white/30 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:scale-[1.02]",
                           field.value === college.id &&
                             "bg-white border-white/50 sticky top-0 z-10 backdrop-blur-md shadow-lg",
                         )}
                       >
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xl font-medium font-pirate text-[#10569c] leading-none">
+                        <div className="flex w-full items-start justify-between gap-4">
+                          <span className="text-xl font-bold font-crimson text-[#10569c] leading-tight flex-1">
                             {college.name ?? "Unnamed College"}
                           </span>
-                          <span className="text-sm text-[#10569c]/60 leading-none">
+                          <div className="flex items-center gap-3 shrink-0 pt-0.5">
+                            {field.value === college.id ? (
+                              <Check className="h-5 w-5 text-[#10569c] animate-in zoom-in" />
+                            ) : (
+                              <span className="hidden group-hover:block text-xs font-bold uppercase tracking-widest text-[#10569c] bg-white px-2 py-1 rounded shadow-sm">
+                                Select
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex w-full justify-end mt-1">
+                          <span className="text-sm text-[#10569c]/60 leading-none font-crimson font-medium">
                             {college.state}
                           </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {field.value === college.id ? (
-                            <Check className="h-5 w-5 text-[#10569c] animate-in zoom-in" />
-                          ) : (
-                            <span className="hidden group-hover:block text-xs font-bold uppercase tracking-widest text-[#10569c] bg-white px-2 py-1 rounded shadow-sm">
-                              Select
-                            </span>
-                          )}
                         </div>
                       </button>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-[#10569c]/60 italic border border-dashed border-white/10 rounded-xl">
+                    <div className="text-center py-8 text-white/80 italic border bg-[#10569c]/30 border-dashed border-white/10 rounded-xl">
                       No college found matching "{search}"
                     </div>
                   )}
@@ -273,7 +297,6 @@ export function CollegeStep({
                       px-4 text-lg font-pirate text-white placeholder:text-white/50
                       focus-visible:ring-2 focus-visible:ring-white focus-visible:border-transparent
                     "
-                    autoFocus
                   />
 
                   <div className="flex gap-3 pt-2">

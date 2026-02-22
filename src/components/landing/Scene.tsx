@@ -432,7 +432,7 @@ function LandingContent({
                 <span className="text-yellow-400/70">+</span>
               </span>
               <span className="text-lg md:text-2xl font-pirate text-yellow-300/50 tracking-[0.3em] mt-2">
-                IN PRIZES
+                WORTH PRIZE POOL
               </span>
 
               <Link href="/timeline" passHref>

@@ -183,7 +183,7 @@ export default function AboutSlate() {
               <div className="flex flex-col md:flex-row items-center justify-center gap-10 px-4 md:justify-around text-center">
                 <div className="text-center md:text-left">
                   <span className="block text-stone-400 font-crimson text-sm uppercase tracking-widest mb-1">
-                    Total Bounty
+                    Total Prizes Worth
                   </span>
                   <span className="text-5xl font-pirate text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
                     ₹ 2,50,000+
