@@ -1,8 +1,8 @@
 "use client";
 
+import FuzzySearch from "fuzzy-search";
 import { Check, Loader2, Phone, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import FuzzySearch from "fuzzy-search";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import {
@@ -130,7 +130,11 @@ export function CollegeStep({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      const valueToSelect = field.value || (filteredColleges.length > 0 ? filteredColleges[0].id : null);
+                      const valueToSelect =
+                        field.value ||
+                        (filteredColleges.length > 0
+                          ? filteredColleges[0].id
+                          : null);
                       if (valueToSelect) {
                         field.onChange(valueToSelect);
                         onNext();
@@ -176,7 +180,7 @@ export function CollegeStep({
                         className={cn(
                           "group flex flex-col w-full min-h-16 justify-center rounded-xl border border-white/10 bg-white/90 px-4 py-3 text-left transition-all duration-200 hover:bg-white/80 hover:border-white/30 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:scale-[1.02]",
                           field.value === college.id &&
-                          "bg-white border-white/50 sticky top-0 z-10 backdrop-blur-md shadow-lg",
+                            "bg-white border-white/50 sticky top-0 z-10 backdrop-blur-md shadow-lg",
                         )}
                       >
                         <div className="flex w-full items-start justify-between gap-4">

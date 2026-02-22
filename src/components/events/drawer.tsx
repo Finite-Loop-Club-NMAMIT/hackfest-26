@@ -33,8 +33,9 @@ export default function EventDrawer({
           <VisuallyHidden>Event Details</VisuallyHidden>
         </DrawerTitle>
         <div
-          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 ${drawerDirection === "bottom" ? "pt-2" : "pt-6"
-            }`}
+          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 ${
+            drawerDirection === "bottom" ? "pt-2" : "pt-6"
+          }`}
         >
           <h2 className="text-4xl lg:text-5xl font-bold text-[#f4d35e] wrap-break-word text-center">
             {event?.title}

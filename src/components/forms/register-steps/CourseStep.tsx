@@ -30,9 +30,9 @@ export function CourseStep({ form, onNext }: CourseStepProps) {
   }, []);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Need keydown on wrapper for enter selection.
     <div
       ref={containerRef}
-      tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
