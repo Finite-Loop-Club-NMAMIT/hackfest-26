@@ -63,7 +63,7 @@ export function Navbar({
       ref={navRef}
       layout // This enables the smooth height expansion
       className={cn(
-        "fixed left-1/2 -translate-x-1/2 z-100 w-[95%] max-w-4xl pointer-events-auto",
+        "fixed left-1/2 -translate-x-1/2 z-100 w-[85%] md:w-[75%] lg:w-[85%] max-w-5xl pointer-events-auto",
         "transition-all duration-500 ease-out",
         // Disable shrinking if menu is open so it doesn't look cramped
         scrolled && !isMobileMenuOpen ? "top-2 scale-[0.98]" : "top-6",
@@ -130,7 +130,7 @@ export function Navbar({
       </motion.div>
 
       {/* NAVBAR CONTENT */}
-      <div className="relative flex items-center justify-between px-6 py-3 md:px-20 md:py-4">
+      <div className="relative flex items-center justify-between px-6 py-3 md:px-8 lg:px-12 xl:px-20 md:py-3 xl:py-4">
         <Link
           href="/"
           className="group relative shrink-0 transition-transform hover:scale-105 active:scale-95"
@@ -140,7 +140,7 @@ export function Navbar({
           <div className="absolute inset-0 -z-10 flex items-center justify-center overflow">
             <div
               className={cn(
-                "w-16 h-16 md:w-20 md:h-5 rounded-full blur-2xl opacity-100 transition-colors duration-500",
+                "w-16 h-16 md:w-16 md:h-16 xl:w-20 xl:h-5 rounded-full blur-2xl opacity-100 transition-colors duration-500",
                 isUnderwater
                   ? "bg-linear-to-r from-cyan-400 via-blue-300 to-cyan-500"
                   : "bg-linear-to-r from-amber-400 via-yellow-300 to-amber-500",
@@ -148,7 +148,7 @@ export function Navbar({
             />
           </div>
 
-          <div className="relative w-12 h-12 md:w-14 md:h-14">
+          <div className="relative w-12 h-12 md:w-12 md:h-12 xl:w-14 xl:h-14">
             <Image
               src="/logos/logowithglow.webp"
               alt="Hackfest Logo"
@@ -159,7 +159,7 @@ export function Navbar({
         </Link>
 
         {/* DESKTOP LINKS (Hidden on Mobile) */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -167,7 +167,7 @@ export function Navbar({
                 key={link.name}
                 href={link.href}
                 className={cn(
-                  "relative font-pirate text-xl font-bold tracking-wide transition-colors duration-500",
+                  "relative font-pirate text-lg xl:text-xl font-bold tracking-wide transition-colors duration-500",
                   isActive
                     ? isUnderwater
                       ? "text-cyan-400 shadow-cyan-500/50 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
@@ -249,7 +249,7 @@ export function Navbar({
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "text-2xl font-pirate font-bold tracking-widest uppercase transition-colors",
+                      "text-xl lg:text-2xl font-pirate font-bold tracking-widest uppercase transition-colors",
                       isActive
                         ? isUnderwater
                           ? "text-cyan-400"
@@ -303,7 +303,7 @@ function AuthButton({
 
   // Base button styles
   const buttonClass = cn(
-    "group relative px-6 py-2 font-pirate text-lg font-bold transition-all duration-500 cursor-pointer",
+    "group relative px-4 py-1.5 xl:px-6 xl:py-2 font-pirate text-base xl:text-lg font-bold transition-all duration-500 cursor-pointer",
     isUnderwater
       ? "text-cyan-100 hover:text-white"
       : "text-amber-100 hover:text-white",

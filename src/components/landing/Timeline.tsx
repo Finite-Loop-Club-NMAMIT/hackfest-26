@@ -25,8 +25,8 @@ const timelineEvents = [
     accentRgb: "248,113,113",
   },
   {
-    day: "08",
-    month: "APR",
+    day: "28",
+    month: "MAR",
     year: "2026",
     title: "The Captain's Call",
     description: "Shortlist Announced - Only the worthiest ships proceed.",
