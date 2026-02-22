@@ -5,11 +5,8 @@ import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { successResponse } from "~/lib/response/success";
 
-export async function POST(
-  req: NextRequest,
-  context: { params: Promise<Record<string, string>> },
-) {
-  return registrationRequiredRoute(async (_req, _ctx, user) => {
+export const POST = registrationRequiredRoute(
+  async (req: NextRequest, _ctx, user) => {
     const { teamId, pdfUrl, trackId } = await req.json();
     try {
       const result = await submitIdea({
@@ -30,5 +27,5 @@ export async function POST(
         }),
       );
     }
-  })(req, context);
-}
+  },
+);

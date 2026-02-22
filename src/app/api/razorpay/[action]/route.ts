@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { registrationRequiredRoute } from "~/auth/route-handlers";
 import { createOrder, savePayment } from "~/db/services/payment-services";
+import { rateLimiters } from "~/lib/rate-limit";
 
 export const POST = registrationRequiredRoute(
   async (req: NextRequest, _context, user) => {
@@ -42,4 +43,5 @@ export const POST = registrationRequiredRoute(
       );
     }
   },
+  rateLimiters.payment,
 );

@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { publicRoute } from "~/auth/route-handlers";
 import { getAllEvents } from "~/db/data/events";
 
-export async function GET(req: NextRequest) {
+export const GET = publicRoute(async (req: NextRequest) => {
   const url = new URL(req.url);
   const action = url.pathname.split("/").pop() || "";
   try {
@@ -24,4 +25,4 @@ export async function GET(req: NextRequest) {
       },
     );
   }
-}
+});

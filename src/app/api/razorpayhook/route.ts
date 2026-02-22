@@ -1,8 +1,11 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { publicRoute } from "~/auth/route-handlers";
 import { webhookCapture } from "~/db/services/payment-services";
 import { env } from "~/env";
+import { rateLimiters } from "~/lib/rate-limit";
 import { verifyRazorpaySignature } from "~/lib/razorpay/verify";
 
-export const POST = async (req: Request) => {
+export const POST = publicRoute(async (req: NextRequest) => {
   const rawBody = await req.text();
   const signature = req.headers.get("x-razorpay-signature");
 
@@ -10,12 +13,9 @@ export const POST = async (req: Request) => {
 
   if (!secret) {
     console.error("RAZORPAY_WEBHOOK_SECRET is not defined");
-    return new Response(
-      JSON.stringify({ success: false, error: "Server configuration error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+    return NextResponse.json(
+      { success: false, error: "Server configuration error" },
+      { status: 500 },
     );
   }
 
@@ -23,12 +23,9 @@ export const POST = async (req: Request) => {
 
   if (!isAuthentic) {
     console.error("Invalid signature for Razorpay webhook");
-    return new Response(
-      JSON.stringify({ success: false, error: "Invalid signature" }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
+    return NextResponse.json(
+      { success: false, error: "Invalid signature" },
+      { status: 400 },
     );
   }
 
@@ -62,23 +59,15 @@ export const POST = async (req: Request) => {
       console.log("Payment captured successfully:", paymentId);
     } catch (error) {
       console.error("Error capturing payment:", error);
-      return new Response(
-        JSON.stringify({ success: false, error: "Failed to capture payment" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        },
+      return NextResponse.json(
+        { success: false, error: "Failed to capture payment" },
+        { status: 500 },
       );
     }
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Payment captured successfully",
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return NextResponse.json({
+      success: true,
+      message: "Payment captured successfully",
+    });
   }
-};
+  return NextResponse.json({ success: true, message: "Event ignored" });
+}, rateLimiters.payment);

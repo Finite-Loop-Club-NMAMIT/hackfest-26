@@ -19,6 +19,7 @@ const server = z.object({
   SMTP_SECURE: z.string().optional(),
   SMTP_USER: z.string().min(1),
   SMTP_PASS: z.string().min(1),
+  REDIS_URL: z.string().min(1),
 });
 
 const client = z.object({
@@ -53,6 +54,7 @@ const processEnv = {
   SMTP_SECURE: process.env.SMTP_SECURE,
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+  REDIS_URL: process.env.REDIS_URL,
 };
 
 function validateEnv() {
@@ -123,6 +125,7 @@ function validateEnv() {
       SMTP_SECURE: "",
       SMTP_USER: "",
       SMTP_PASS: "",
+      REDIS_URL: "",
       ...clientParsed.data,
     };
   }

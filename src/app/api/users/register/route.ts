@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { protectedRoute } from "~/auth/route-handlers";
 import * as userData from "~/db/data/participant";
 import { AppError } from "~/lib/errors/app-error";
+import { rateLimiters } from "~/lib/rate-limit";
 import { successResponse } from "~/lib/response/success";
 import { parseBody } from "~/lib/validation/parse";
 import { registerParticipantSchema } from "~/lib/validation/participant";
@@ -50,4 +51,5 @@ export const POST = protectedRoute(
       },
     );
   },
+  rateLimiters.auth,
 );

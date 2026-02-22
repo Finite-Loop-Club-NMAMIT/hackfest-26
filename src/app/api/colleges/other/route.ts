@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { publicRoute } from "~/auth/route-handlers";
+import { rateLimiters } from "~/lib/rate-limit";
 
-export async function POST(req: NextRequest) {
+export const POST = publicRoute(async (req: NextRequest) => {
   const SMTP_HOST = process.env.SMTP_HOST;
-  const SMTP_PORT = Number(process.env.SMTP_PORT);
+  const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
   const SMTP_USER = process.env.SMTP_USER;
   const SMTP_PASS = process.env.SMTP_PASS;
   try {
@@ -35,13 +37,13 @@ export async function POST(req: NextRequest) {
       html: `
         <h2>New College Addition Request</h2>
         <p>A participant has requested to add a new college that was not in the list.</p>
-        
+
         <h3>Requested College</h3>
         <p><strong>Name:</strong> ${customCollegeName}</p>
-        
+
         <h3>Participant Information (So Far)</h3>
         <pre>${JSON.stringify(participantData, null, 2)}</pre>
-        
+
         <hr />
         <p>Please add this college to the database if valid, and contact the participant to continue their registration.</p>
       `,
@@ -67,4 +69,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+}, rateLimiters.email);

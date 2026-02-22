@@ -222,6 +222,15 @@ export async function deleteTeam(userId: string, teamId: string) {
     });
   }
 
+  // just a check, useful in case someone clicks delete from dashboard
+  if (team.paymentStatus === "Paid") {
+    throw new AppError("TEAM_HAS_PAYMENT", 403, {
+      title: "Cannot delete team",
+      description:
+        "This team has completed payment and cannot be deleted. Please contact support if you need assistance.",
+    });
+  }
+
   return db.transaction(async (tx) => {
     await tx
       .update(participants)

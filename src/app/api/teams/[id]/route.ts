@@ -5,13 +5,10 @@ import * as teamData from "~/db/data/teams";
 import { AppError } from "~/lib/errors/app-error";
 import { successResponse } from "~/lib/response/success";
 
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
-  return registrationRequiredRoute(async (_req, ctx, user) => {
+export const GET = registrationRequiredRoute(
+  async (_req: NextRequest, ctx, user) => {
     const params = await ctx.params;
-    const { id } = params;
+    const { id } = params as { id: string };
     const team = await teamData.findById(id);
 
     if (!team) {
@@ -32,5 +29,5 @@ export async function GET(
     const members = await teamData.listMembers(id);
 
     return successResponse({ team, members });
-  })(request, context);
-}
+  },
+);

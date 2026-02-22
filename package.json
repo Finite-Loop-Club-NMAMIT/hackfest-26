@@ -20,7 +20,8 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
-    "setup:env": "cp .env.example .env && echo AUTH_SECRET=$(openssl rand -base64 32) && echo 'Setup complete'"
+    "setup:env": "cp .env.example .env && echo AUTH_SECRET=$(openssl rand -base64 32) && echo 'Setup complete'",
+    "test:rate-limit": "tsx scripts/test-rate-limiting.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.3",
@@ -48,6 +49,7 @@
     "drizzle-orm": "^0.44.7",
     "framer-motion": "^12.33.0",
     "gsap": "^3.14.2",
+    "ioredis": "^5.9.3",
     "lenis": "^1.3.17",
     "lucide-react": "^0.555.0",
     "mixpanel": "^0.20.0",
@@ -57,6 +59,7 @@
     "nodemailer": "^8.0.1",
     "pg": "^8.16.3",
     "radix-ui": "^1.4.3",
+    "rate-limiter-flexible": "^9.1.1",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-day-picker": "^9.13.2",

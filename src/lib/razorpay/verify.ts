@@ -9,12 +9,17 @@ export const verifyRazorpaySignature = (
     console.error("No signature provided for Razorpay webhook");
     return false;
   }
-  console.log("Given signature: ", signature);
+  // never log such thinghs in prod pls, if you want for dev add this if wrapper
+  if (process.env.NODE_ENV === "development") {
+    console.log("Given signature: ", signature);
+  }
   const expectedSignature = crypto
     .createHmac("sha256", secret)
     .update(body)
     .digest("hex");
-  console.log("Expected Signature:", expectedSignature);
+  if (process.env.NODE_ENV === "development") {
+    console.log("Expected Signature:", expectedSignature);
+  }
 
   return expectedSignature === signature;
 };
