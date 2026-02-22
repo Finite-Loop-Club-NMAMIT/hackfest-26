@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Crimson_Text, Pirata_One, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
-import { ReactScan } from "~/components/providers/react-scan";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import { DayNightProvider } from "~/components/providers/useDayNight";
 import { GlobalLoader } from "~/components/ui/global-loader";
@@ -42,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${pirata.variable} ${crimson.variable} antialiased dark select-none`}
       >
-        <ReactScan />
+        {/* <ReactScan /> */}
         <SessionProvider>
           <DayNightProvider>
             <GlobalLoader />

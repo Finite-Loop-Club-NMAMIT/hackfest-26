@@ -58,7 +58,7 @@ export function TeamForm() {
     try {
       try {
         const checkRes = await fetch(
-          process.env.NEXT_PUBLIC_TEAM_NAME_CHECK_API_URL!,
+          process.env.NEXT_PUBLIC_TEAM_NAME_CHECK_API_URL || "",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

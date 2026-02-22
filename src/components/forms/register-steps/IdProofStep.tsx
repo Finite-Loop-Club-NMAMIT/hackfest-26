@@ -44,6 +44,7 @@ export function IdProofStep({ form, onNext }: IdProofStepProps) {
                 {field.value ? (
                   /* IMAGE PREVIEW */
                   <div className="relative group w-full h-64 rounded-xl border border-white/10 bg-white/90 overflow-hidden shadow-lg transition-all duration-200">
+                    {/* biome-ignore lint/performance/noImgElement: <hm nothing to add> */}
                     <img
                       src={field.value}
                       alt="ID Proof"

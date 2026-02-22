@@ -440,13 +440,13 @@ export default async function TeamDetailsPage({
                   Status
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider shadow-sm ${
+                  className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${
                     team.isCompleted
                       ? "bg-green-100 text-green-700 border border-green-200"
                       : "bg-blue-100 text-blue-700 border border-blue-200"
                   }`}
                 >
-                  {team.isCompleted ? "Completed" : "Active"}
+                  {team.isCompleted ? "Completed" : "Incomplete"}
                 </span>
               </div>
               {resultsOut &&
