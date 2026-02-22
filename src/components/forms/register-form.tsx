@@ -182,7 +182,7 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       (!data.alias || data.alias.length > 15)
     ) {
       form.setError("alias", {
-        type: "manual                      ",
+        type: "manual",
         message: "Alias is required as your name is longer than 15 characters",
       });
       return;
@@ -193,6 +193,12 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
         message: "Alias must be 15 characters or less",
       });
       return;
+    }
+    if (data.name.trim().length < 15) {
+      data.alias = ""
+    }
+    if (data.alias?.trim() === "") {
+      form.setValue("alias", data.name.trim());
     }
     await apiFetch("/api/users/register", {
       method: "POST",
@@ -271,12 +277,11 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                   <div
                     className={`
                       absolute -left-[33px] w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center
-                      ${
-                        isCurrent
-                          ? "bg-white border-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-                          : isPast
-                            ? "bg-white/90 border-white/90"
-                            : "bg-black/40 border-white/30 group-hover:bg-white/20"
+                      ${isCurrent
+                        ? "bg-white border-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                        : isPast
+                          ? "bg-white/90 border-white/90"
+                          : "bg-black/40 border-white/30 group-hover:bg-white/20"
                       }
                     `}
                   >
@@ -285,12 +290,11 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
                   <span
                     className={`
                       ml-2 transition-all duration-300 font-medium
-                      ${
-                        isCurrent
-                          ? "text-white text-lg tracking-widest font-pirate translate-x-2"
-                          : isPast
-                            ? "text-white/80 text-sm tracking-widest font-pirate"
-                            : "text-white/50 text-sm tracking-widest font-pirate group-hover:text-white/70"
+                      ${isCurrent
+                        ? "text-white text-lg tracking-widest font-pirate translate-x-2"
+                        : isPast
+                          ? "text-white/80 text-sm tracking-widest font-pirate"
+                          : "text-white/60 text-sm tracking-widest font-pirate group-hover:text-white/70"
                       }
                     `}
                   >

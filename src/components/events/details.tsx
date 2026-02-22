@@ -46,7 +46,7 @@ export default function EventDetails({
                 {event.image && (
                   <Image
                     // TODO: Update to dynamic image path when available
-                    src={"/images/tracks/FinTech.png"}
+                    src={"/images/tracks/Fintech.webp"}
                     alt={event.title}
                     width={250}
                     height={250}

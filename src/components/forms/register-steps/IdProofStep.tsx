@@ -34,7 +34,7 @@ export function IdProofStep({ form, onNext }: IdProofStepProps) {
               <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight block tracking-wide">
                 Upload your ID Proof
               </FormLabel>
-              <p className="text-white/60 text-lg">
+              <p className="text-white/60 text-lg font-crimson">
                 College ID or Government ID (Max 1MB)
               </p>
             </div>

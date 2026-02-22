@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -23,6 +24,12 @@ export function NameStep({ form, onNext }: NameStepProps) {
   const currentName = form.watch("name") || "";
   const needsAlias = currentName.length > 15;
 
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => form.setFocus("name"), 50);
+    }
+  }, [form]);
+
   return (
     <div className="w-full flex md:pt-12 flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-700">
       <FormField
@@ -39,6 +46,10 @@ export function NameStep({ form, onNext }: NameStepProps) {
               {/* Minimalist Underline Input */}
               <Input
                 {...field}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[0-9]/g, "");
+                  field.onChange(val);
+                }}
                 className="
                   block w-full 
                   bg-transparent 
@@ -51,7 +62,7 @@ export function NameStep({ form, onNext }: NameStepProps) {
                   h-auto py-4 
                   transition-all duration-300
                   shadow-none
-                  font-pirate
+                  font-crimson
                 "
                 placeholder="Type your name here..."
                 autoComplete="off"
@@ -69,7 +80,7 @@ export function NameStep({ form, onNext }: NameStepProps) {
       />
 
       <div
-        className={`w-full transition-all duration-500 overflow-hidden ${currentName.length > 0 ? "max-h-96 pb-6 opacity-100 mt-12" : "max-h-0 opacity-0 mt-0"}`}
+        className={`w-full transition-all duration-500 overflow-hidden ${needsAlias ? "max-h-96 pb-6 opacity-100 mt-12" : "max-h-0 opacity-0 mt-0"}`}
       >
         <FormField
           control={form.control}
@@ -78,12 +89,11 @@ export function NameStep({ form, onNext }: NameStepProps) {
             <FormItem className="w-full space-y-4">
               <FormLabel className="text-xl md:text-2xl font-pirate font-bold text-white/80 drop-shadow-sm leading-tight tracking-wide flex flex-col items-center text-center">
                 <span>Short Name for ID Card</span>
-                <span className="text-sm font-normal text-white/60 mt-2 max-w-sm">
-                  Your full name will be printed on the ID. If you prefer a
-                  shorter name, or if your name is too long, enter it here.
+                <span className="text-sm font-crimson text-white/60 mt-2 max-w-sm">
+                  Enter your nickname or short name to be printed on the ID Card
                 </span>
                 <span
-                  className={`text-lg font-normal mt-2 ${needsAlias ? "text-[#e54d2e]" : "text-white/50"}`}
+                  className={`text-lg font-crimson mt-2 ${needsAlias ? "text-[#e54d2e]" : "text-white/50"}`}
                 >
                   {needsAlias
                     ? "(Required - Must be 15 chars or less)"
@@ -95,6 +105,10 @@ export function NameStep({ form, onNext }: NameStepProps) {
                 <Input
                   {...field}
                   value={field.value || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[0-9]/g, "");
+                    field.onChange(val);
+                  }}
                   className="
                     block w-full max-w-md mx-auto
                     bg-white/10 backdrop-blur-sm
@@ -107,10 +121,10 @@ export function NameStep({ form, onNext }: NameStepProps) {
                     h-auto py-3 
                     transition-all duration-300
                     shadow-md
-                    font-pirate
+                    font-crimson
                     text-3xl!
                   "
-                  placeholder="Alias"
+                  placeholder="Short Name"
                   autoComplete="off"
                   maxLength={15}
                   onKeyDown={(e) => {

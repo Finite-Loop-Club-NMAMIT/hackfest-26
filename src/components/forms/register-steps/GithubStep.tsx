@@ -38,43 +38,48 @@ export function GithubStep({ form, initialGithubUsername }: GithubStepProps) {
               <FormLabel className="text-3xl md:text-5xl font-pirate font-bold text-white drop-shadow-sm leading-tight block tracking-wide">
                 GitHub Username
               </FormLabel>
-              <p className="text-white/80 text-pirate text-lg">
+              <p className="text-white/80 font-crimson text-lg">
                 This account is linked to your registration
               </p>
             </div>
 
             <FormControl>
-              <div className="relative w-full max-w-lg mx-auto">
-                {/* Custom Div replacing the Input field */}
-                <div
-                  title={field.value ?? initialGithubUsername ?? ""}
-                  className="
-                    w-full
-                    h-16
-                    flex items-center justify-center
-                    rounded-xl
-                    border border-white/20
-                    bg-white
-                    shadow-sm
+              <div className="flex flex-col gap-2 relative w-full max-w-lg mx-auto">
+                <div className="relative w-full">
+                  {/* Custom Div replacing the Input field */}
+                  <div
+                    title={field.value ?? initialGithubUsername ?? ""}
+                    className="
+                      w-full
+                      h-16
+                      flex items-center justify-center
+                      rounded-xl
+                      border border-white/20
+                      bg-white
+                      shadow-sm
 
-                    px-4
-                    text-xl font-pirate font-medium font-mono text-[#10569c]
-                    cursor-default
-                  "
-                >
-                  {field.value ?? initialGithubUsername ?? ""}
+                      px-4
+                      text-xl font-crimson font-bold font-mono text-[#10569c]
+                      cursor-default
+                    "
+                  >
+                    {field.value ?? initialGithubUsername ?? ""}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await signOut({ redirect: false });
+                      await signIn("github");
+                    }}
+                    className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-4 border-l-2 border-slate-200 hover:bg-black/5 cursor-pointer rounded-r-xl transition-colors group"
+                    title="Switch GitHub Account"
+                  >
+                    <RepeatIcon className="h-5 w-5 text-[#10569c] group-hover:text-[#0c4075] transition-colors" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await signOut({ redirect: false });
-                    await signIn("github");
-                  }}
-                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-4 border-l-2 border-slate-200 hover:bg-black/5 cursor-pointer rounded-r-xl transition-colors group"
-                  title="Switch GitHub Account"
-                >
-                  <RepeatIcon className="h-5 w-5 text-[#10569c] group-hover:text-[#0c4075] transition-colors" />
-                </button>
+                <p className="text-white/60 text-sm font-crimson text-right">
+                  Click the icon to switch accounts
+                </p>
               </div>
             </FormControl>
           </FormItem>

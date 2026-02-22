@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -18,6 +19,12 @@ interface PhoneStepProps {
 }
 
 export function PhoneStep({ form, onNext }: PhoneStepProps) {
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      setTimeout(() => form.setFocus("phone"), 50);
+    }
+  }, [form]);
+
   return (
     <div className="w-full flex flex-col items-center animate-in font-pirate fade-in slide-in-from-bottom-8 duration-700">
       <FormField
@@ -35,6 +42,7 @@ export function PhoneStep({ form, onNext }: PhoneStepProps) {
               <Input
                 type="tel" // Triggers numeric keyboard on mobile
                 placeholder="e.g. 9876543210"
+                maxLength={10}
                 className="
                   block w-full 
                   bg-transparent 
@@ -47,14 +55,18 @@ export function PhoneStep({ form, onNext }: PhoneStepProps) {
                   h-auto py-6 
                   transition-all duration-300
                   shadow-none
-                  font-pirate
+                  font-crimson
                 "
                 {...field}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  field.onChange(val);
+                }}
                 onKeyDown={(e) => e.key === "Enter" && onNext()}
               />
             </FormControl>
 
-            <FormMessage className="text-[#e54d2e] text-2xl" />
+            <FormMessage className="text-[#e54d2e] text-2xl font-crimson" />
 
             {/* "Press Enter" Hint */}
             <div className="flex items-center font-pirate text-xl justify-center gap-2 text-white/80 mt-4 animate-pulse">
