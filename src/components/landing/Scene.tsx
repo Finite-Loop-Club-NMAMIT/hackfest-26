@@ -193,7 +193,7 @@ function FixedHero({
               <img
                 src="/logos/nmamit.png"
                 alt="NMAMIT Logo"
-                className={`w-59 md:w-64 h-auto drop-shadow-md mb-1 ${isNight ? "brightness-0 invert" : ""}`}
+                className={`w-59 md:w-60 xl:w-64 h-auto drop-shadow-md mb-1 ${isNight ? "brightness-0 invert" : ""}`}
               />
               <span className="text-white/80 font-inter tracking-[0.2em] font-semibold uppercase text-xs">
                 Presents
@@ -203,7 +203,7 @@ function FixedHero({
             <img
               src="/logo11.webp"
               alt="HF Logo"
-              className="w-84 md:w-140 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
+              className="w-84 xl:w-140 h-auto drop-shadow-2xl mb-6 hover:scale-105 transition-transform duration-500"
             />
           </div>
 
@@ -235,7 +235,7 @@ function FixedHero({
 
               <div className="relative z-10">
                 <p
-                  className="text-xl md:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90"
+                  className="text-xl xl:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90"
                   style={{ transform: "rotate(1deg)" }}
                 >
                   Embark on a Voyage of Innovation
@@ -251,7 +251,7 @@ function FixedHero({
             <p className="text-xs font-crimson tracking-[0.3em] uppercase text-white/70">
               Dive Deeper
             </p>
-            <div className="text-xl md:text-3xl font-bold text-white/70">
+            <div className="text-xl xl:text-3xl font-bold text-white/70">
               Scroll Down
             </div>
             <svg

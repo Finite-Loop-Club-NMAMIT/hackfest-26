@@ -80,7 +80,14 @@ export const stateEnum = pgEnum("state", [
   "Lakshadweep Islands",
 ]);
 
-export const courseEnum = pgEnum("course", ["BTech", "BE", "BCA", "BSc"]);
+export const courseEnum = pgEnum("course", [
+  "BTech",
+  "BE",
+  "BCA",
+  "BSc",
+  "MCA",
+  "MTech",
+]);
 
 export const genderEnum = pgEnum("gender", [
   "Male",

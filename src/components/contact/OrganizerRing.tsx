@@ -10,11 +10,6 @@ const organizers = [
     role: "Organizer",
   },
   {
-    name: "Omkar G Prabhu",
-    phone: "+91 94488 46524",
-    role: "Organizer",
-  },
-  {
     name: "Paripoorna Bhat",
     phone: "+91 73386 52017",
     role: "Organizer",
@@ -22,6 +17,18 @@ const organizers = [
   {
     name: "Rahul N Bangera",
     phone: "+91 80503 38576",
+    role: "Organizer",
+  },
+  {
+    name: "Omkar G Prabhu",
+    phone: "",
+    email: "nnm22is022@nmamit.in",
+    role: "Organizer",
+  },
+  {
+    name: "Nandan R Pai",
+    phone: "",
+    email: "nnm22am033@nmamit.in",
     role: "Organizer",
   },
 ];
@@ -114,9 +121,14 @@ export default function OrganizerRing() {
         Student Organizers
       </motion.h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-4">
+      <div className="flex flex-wrap justify-center gap-6 w-full px-4">
         {organizers.map((org, i) => (
-          <OrganizerCard key={org.name} organizer={org} index={i} />
+          <div
+            key={org.name}
+            className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
+          >
+            <OrganizerCard organizer={org} index={i} />
+          </div>
         ))}
       </div>
     </div>
@@ -127,7 +139,7 @@ function OrganizerCard({
   organizer,
   index,
 }: {
-  organizer: { name: string; phone?: string; role?: string };
+  organizer: { name: string; phone?: string; role?: string; email?: string };
   index: number;
 }) {
   return (
@@ -145,15 +157,31 @@ function OrganizerCard({
           {organizer.role}
         </p>
 
-        {organizer.phone && (
-          <a
-            href={`tel:${organizer.phone}`}
-            className="inline-flex items-center gap-2 px-4 py-2 mt-4 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-200 hover:text-white hover:bg-cyan-900/60 hover:border-cyan-400 transition-all group-hover:scale-105"
-          >
-            <Phone className="w-4 h-4" />
-            <span className="font-crimson text-lg">{organizer.phone}</span>
-          </a>
-        )}
+        <div className="flex flex-col gap-2 items-center mt-4">
+          {organizer.phone && (
+            <a
+              href={`tel:${organizer.phone}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-200 hover:text-white hover:bg-cyan-900/60 hover:border-cyan-400 transition-all group-hover:scale-105"
+            >
+              <Phone className="w-4 h-4 shrink-0" />
+              <span className="font-crimson text-lg truncate max-w-[200px]">
+                {organizer.phone}
+              </span>
+            </a>
+          )}
+
+          {organizer.email && (
+            <a
+              href={`mailto:${organizer.email}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-200 hover:text-white hover:bg-cyan-900/60 hover:border-cyan-400 transition-all group-hover:scale-105"
+            >
+              <Mail className="w-4 h-4 shrink-0" />
+              <span className="font-crimson text-lg truncate max-w-[200px]">
+                {organizer.email}
+              </span>
+            </a>
+          )}
+        </div>
       </div>
 
       <div className="absolute inset-0 bg-linear-to-t from-cyan-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

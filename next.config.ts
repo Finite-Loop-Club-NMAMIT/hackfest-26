@@ -3,6 +3,15 @@ import "./src/env";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/brochure.pdf",
+        destination: "/brochure",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

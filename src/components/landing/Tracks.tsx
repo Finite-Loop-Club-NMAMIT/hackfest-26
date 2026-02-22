@@ -19,26 +19,31 @@ const tracks = [
     id: "fintech",
     title: "FinTech",
     image: "/images/tracks/Fintech.webp",
+    desc: "Pioneering the future of finance by enhancing security, ensuring transparency, and fostering trust through cutting-edge decentralized technologies.",
   },
   {
     id: "healthcare",
     title: "Healthcare",
     image: "/images/tracks/Healthcare.webp",
+    desc: "Transforming healthcare through groundbreaking technologies that enhance patient care, streamline operations, and redefine the future of medical innovation. Unlock the potential of innovation to shape the next era of healthcare.",
   },
   {
     id: "logistics",
     title: "Logistics",
     image: "/images/tracks/Logistics.webp",
+    desc: "Reimagining the movement of goods and services with smart, efficient, and tech-driven solutions to optimize supply chains and elevate global connectivity.",
   },
   {
     id: "open-innovation",
     title: "Open Innovation",
     image: "/images/tracks/OpenInnovation.webp",
+    desc: "Empowering bold ideas and creative solutions across diverse domains, breaking barriers to solve real-world challenges and shape a smarter tomorrow.",
   },
   {
     id: "sustainable-dev",
     title: "Sustainable Dev",
     image: "/images/tracks/SustainableDev.webp",
+    desc: "Driving sustainable change with innovative technologies that combat environmental challenges, promote renewable energy, and build a cleaner, greener future. Harness the power of innovation to pave the way for a sustainable tomorrow.",
   },
 ];
 
@@ -281,6 +286,9 @@ function MobileTrackStack() {
         <h3 className="text-2xl font-bold font-crimson text-cyan-400 mb-3 tracking-wide drop-shadow-md">
           {activeTrack.title}
         </h3>
+        <p className="text-lg font-crimson font-bold text-cyan-200/70 mb-4 px-4 leading-snug">
+          {activeTrack.desc}
+        </p>
         <div className="flex gap-2 justify-center mt-2">
           {tracks.map((track, i) => (
             <div
@@ -331,14 +339,14 @@ export default function TracksSection() {
         {isMobile ? (
           <MobileTrackStack />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center h-[600px]">
+          <div className="flex flex-row gap-2 lg:gap-8 items-center h-[400px] lg:h-[600px] w-full justify-between">
             {/* Left Side: Fixed List with Animated Selection */}
             <div
-              className="md:col-span-5 flex flex-col items-start justify-center relative h-full"
+              className="w-[30%] lg:w-[28%] shrink-0 flex flex-col items-start justify-center relative h-[320px] lg:h-[460px]"
               style={{ perspective: "1000px" }}
             >
               <div
-                className="relative flex flex-col items-start gap-2 w-full"
+                className="relative flex flex-col items-start gap-1 lg:gap-2 w-full h-full justify-center"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 {tracks.map((track, index) => {
@@ -348,7 +356,7 @@ export default function TracksSection() {
                     <motion.button
                       key={track.id}
                       onClick={() => setActiveTab(index)}
-                      className="relative group text-left px-6 py-3 rounded-xl w-full"
+                      className="relative group text-left px-3 py-2 lg:px-6 lg:py-3 rounded-xl w-full md:w-[90%]"
                       style={{
                         transformStyle: "preserve-3d",
                       }}
@@ -394,7 +402,7 @@ export default function TracksSection() {
 
                       {/* Track title */}
                       <motion.span
-                        className="relative z-10 text-xl md:text-4xl font-crimson font-bold tracking-wide whitespace-nowrap pl-4"
+                        className="relative z-10 text-base md:text-[1.1rem] lg:text-3xl font-crimson font-bold tracking-wide lg:tracking-wider whitespace-nowrap pl-2 lg:pl-4"
                         animate={{
                           color: isActive ? "#67e8f9" : "#9ca3af",
                           textShadow: isActive
@@ -411,16 +419,35 @@ export default function TracksSection() {
               </div>
             </div>
 
-            {/* Right Side: 3D Display used to have AnimatePresence, now manages state internally */}
-            <div className="md:col-span-7 flex justify-center items-center perspective-1000">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full flex justify-center"
-              >
-                <TrackCard3D activeIndex={activeTab} />
-              </motion.div>
+            {/* Combined Image and Desc Background */}
+            <div className="flex-1 flex flex-row items-center justify-between gap-4 lg:gap-8 bg-black/20 backdrop-blur-md rounded-xl p-4 lg:p-6 border border-blue-900/50 shadow-lg h-[350px] lg:h-[460px]">
+              {/* the 3d thing */}
+              <div className="flex-1 flex justify-center items-center perspective-1000 z-20">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-[85%] max-w-[320px] lg:max-w-[600px] lg:w-full flex justify-center"
+                >
+                  <TrackCard3D activeIndex={activeTab} />
+                </motion.div>
+              </div>
+
+              {/* description */}
+              <div className="w-[45%] lg:w-[42%] shrink-0 flex flex-col justify-center items-start text-left h-full">
+                {/* CHANGE HERE FOR BIGGER DESCRIPTION: remove `h-[320px] lg:h-[500px]` and rely on inner padding or use `h-auto` if the text needs more vertical space */}
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full relative z-10 h-full flex flex-col justify-center"
+                >
+                  <p className="text-lg md:text-xl lg:text-2xl font-crimson font-bold text-cyan-200/70 leading-snug lg:leading-[1.4] tracking-wide">
+                    {tracks[activeTab].desc}
+                  </p>
+                </motion.div>
+              </div>
             </div>
           </div>
         )}
