@@ -27,12 +27,24 @@ async function seed() {
   const existingColleges = await db.select().from(colleges).limit(1);
   if (existingColleges.length === 0) {
     const collegeData = [
-      ...andhraPradeshColleges.map((name) => ({ name, state: StateEnum.AndhraPradesh })),
+      ...andhraPradeshColleges.map((name) => ({
+        name,
+        state: StateEnum.AndhraPradesh,
+      })),
       ...goaColleges.map((name) => ({ name, state: StateEnum.Goa })),
-      ...karnatakaColleges.map((name) => ({ name, state: StateEnum.Karnataka })),
+      ...karnatakaColleges.map((name) => ({
+        name,
+        state: StateEnum.Karnataka,
+      })),
       ...keralaColleges.map((name) => ({ name, state: StateEnum.Kerala })),
-      ...maharashtraColleges.map((name) => ({ name, state: StateEnum.Maharashtra })),
-      ...tamilNaduColleges.map((name) => ({ name, state: StateEnum.TamilNadu })),
+      ...maharashtraColleges.map((name) => ({
+        name,
+        state: StateEnum.Maharashtra,
+      })),
+      ...tamilNaduColleges.map((name) => ({
+        name,
+        state: StateEnum.TamilNadu,
+      })),
     ];
 
     try {
@@ -331,7 +343,7 @@ async function seed() {
         teamSize: i % 3 === 0 ? 1 : 4,
         status:
           eventStatusEnum.enumValues[
-          Math.floor(i % eventStatusEnum.enumValues.length)
+            Math.floor(i % eventStatusEnum.enumValues.length)
           ],
       })),
     );
