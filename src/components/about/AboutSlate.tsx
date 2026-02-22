@@ -186,12 +186,13 @@ export default function AboutSlate() {
                     Total Prizes Worth
                   </span>
                   <span className="text-5xl font-pirate text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
-                    ₹ 4,50,000+
+                    ₹4,00,000+
                   </span>
                 </div>
 
                 <a
-                  href="/"
+                  href="/images/brochure/brochure9.pdf"
+                  download
                   className="group flex items-center gap-3 px-8 py-4 rounded-lg bg-cyan-900/40 border border-cyan-500/30 hover:bg-cyan-800/40 hover:border-cyan-400/50 transition-all shrink-0"
                 >
                   <span className="font-pirate text-cyan-100 text-lg group-hover:text-cyan-300">
