@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { and, count, eq } from "drizzle-orm";
 import { hashPassword } from "~/lib/auth/password";
-import { eventStatusEnum } from "./enum";
+import { eventStatusEnum, StateEnum } from "./enum";
 import db from "./index";
 import {
   colleges,
@@ -12,6 +12,12 @@ import {
   rolePermissions,
   roles,
 } from "./schema";
+import { colleges as andhraPradeshColleges } from "./seedData/AndhraPradesh";
+import { colleges as goaColleges } from "./seedData/Goa";
+import { colleges as karnatakaColleges } from "./seedData/Karnataka";
+import { colleges as keralaColleges } from "./seedData/Kerala";
+import { colleges as maharashtraColleges } from "./seedData/Maharashtra";
+import { colleges as tamilNaduColleges } from "./seedData/TamilNadu";
 
 async function seed() {
   console.log("Seeding database...");
@@ -20,10 +26,26 @@ async function seed() {
   console.log("Seeding colleges...");
   const existingColleges = await db.select().from(colleges).limit(1);
   if (existingColleges.length === 0) {
-    const collegeData = Array.from({ length: 20 }, (_, i) => ({
-      name: `College ${i + 1}`,
-      state: null,
-    }));
+    const collegeData = [
+      ...andhraPradeshColleges.map((name) => ({
+        name,
+        state: StateEnum.AndhraPradesh,
+      })),
+      ...goaColleges.map((name) => ({ name, state: StateEnum.Goa })),
+      ...karnatakaColleges.map((name) => ({
+        name,
+        state: StateEnum.Karnataka,
+      })),
+      ...keralaColleges.map((name) => ({ name, state: StateEnum.Kerala })),
+      ...maharashtraColleges.map((name) => ({
+        name,
+        state: StateEnum.Maharashtra,
+      })),
+      ...tamilNaduColleges.map((name) => ({
+        name,
+        state: StateEnum.TamilNadu,
+      })),
+    ];
 
     try {
       await db.insert(colleges).values(collegeData);

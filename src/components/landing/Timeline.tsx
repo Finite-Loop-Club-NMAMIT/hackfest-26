@@ -5,7 +5,7 @@ import { useRef } from "react";
 
 const timelineEvents = [
   {
-    day: "16",
+    day: "23",
     month: "FEB",
     year: "2026",
     title: "The Voyage Begins",
@@ -15,7 +15,7 @@ const timelineEvents = [
     accentRgb: "250,204,21",
   },
   {
-    day: "16",
+    day: "23",
     month: "MAR",
     year: "2026",
     title: "Port Closed",
@@ -25,8 +25,8 @@ const timelineEvents = [
     accentRgb: "248,113,113",
   },
   {
-    day: "26",
-    month: "MAR",
+    day: "01",
+    month: "APR",
     year: "2026",
     title: "The Captain's Call",
     description: "Shortlist Announced - Only the worthiest ships proceed.",

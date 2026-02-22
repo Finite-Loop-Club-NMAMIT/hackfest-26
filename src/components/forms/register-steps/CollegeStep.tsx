@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Search } from "lucide-react";
+import { Check, Loader2, Phone, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
@@ -53,7 +53,7 @@ export function CollegeStep({
     setIsSubmittingOther(true);
 
     try {
-      const response = await fetch("/api/colleges/other", {
+      fetch("/api/colleges/other", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,15 +62,11 @@ export function CollegeStep({
           customCollegeName: otherCollegeName,
           participantData: formValues,
         }),
-      });
+      }).catch((error) =>
+        console.error("Error background submitting other college:", error),
+      );
 
-      if (response.ok) {
-        setOtherSuccess(true);
-      } else {
-        console.error("Failed to submit other college");
-      }
-    } catch (error) {
-      console.error("Error submitting other college:", error);
+      setOtherSuccess(true);
     } finally {
       setIsSubmittingOther(false);
     }
@@ -222,18 +218,38 @@ export function CollegeStep({
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-md bg-[#10569c] border border-white/20 rounded-2xl shadow-2xl p-8 animate-in zoom-in-95 duration-200">
             {otherSuccess ? (
-              <div className="flex flex-col items-center text-center space-y-6">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                  <Check className="w-8 h-8 text-[#10569c]" />
-                </div>
-                <h3 className="text-3xl font-pirate text-white">
-                  Request Sent!
+              <div className="flex flex-col items-center text-center space-y-4">
+                <h3 className="text-3xl mt-4 font-pirate text-white">
+                  Almost There!
                 </h3>
-                <p className="text-white/80 text-lg">
-                  Our crew has been contacted. Please check out tomorrow.
+                <p className="text-white/90 text-sm font-crimson">
+                  To get your college added to the list immediately, please
+                  contact:
                 </p>
-                <div className="italic text-white/50 text-sm mt-4">
-                  (You may close this tab)
+                <div className="flex flex-col gap-3 w-full mt-2">
+                  <a
+                    href="tel:+919901394465"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-crimson text-lg transition-all"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Anush: +91 99013 94465
+                  </a>
+                  {/* <a
+                    href="tel:+918050338576"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-crimson text-lg transition-all"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Rahul: +91 80503 38576
+                  </a> */}
+                </div>
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    onClick={() => setIsOtherModalOpen(false)}
+                    className="w-full bg-white text-[#10569c] hover:bg-white/90 text-lg font-pirate h-10 rounded-xl"
+                  >
+                    Okay
+                  </Button>
                 </div>
               </div>
             ) : (
