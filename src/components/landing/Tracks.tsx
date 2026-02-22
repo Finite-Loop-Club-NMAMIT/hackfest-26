@@ -2,17 +2,12 @@
 
 import { useTexture } from "@react-three/drei";
 import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Image from "next/image";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import type * as THREE from "three";
+import { cn } from "~/lib/utils";
 import { WaveTransitionMaterial } from "./shader/WaveTransitionMaterial";
 
 // Register the custom shader material
@@ -235,43 +230,47 @@ function MobileTrackStack() {
   const activeTrack = tracks[activeIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center pt-8 w-full gap-6 relative">
-      <div className="flex flex-row items-center justify-center w-full gap-4 relative">
+    <div className="flex flex-col items-center justify-center pt-8 w-full gap-6 relative px-4">
+      <div className="relative w-full max-w-sm aspect-square">
         <button
           type="button"
           onClick={goPrev}
-          className="z-20 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
           aria-label="Previous Track"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
 
-        <div className="relative w-full max-w-[280px] aspect-square">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              className="absolute inset-0 w-full h-full border border-cyan-500/30 rounded-2xl overflow-hidden flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Image
-                src={activeTrack.image}
-                alt={activeTrack.title}
-                fill
-                className="object-cover"
-                draggable={false}
-                priority
-              />
-            </motion.div>
-          </AnimatePresence>
+        <div className="absolute inset-0 w-full h-full">
+          {tracks.map((track, i) => {
+            const isActive = i === activeIndex;
+            return (
+              <div
+                key={track.id}
+                className={cn(
+                  "absolute inset-0 w-full h-full border border-cyan-500/30 rounded-2xl overflow-hidden flex items-center justify-center shadow-lg transition-all duration-300",
+                  isActive
+                    ? "opacity-100 scale-100 z-10"
+                    : "opacity-0 scale-95 pointer-events-none z-0",
+                )}
+              >
+                <Image
+                  src={track.image}
+                  alt={track.title}
+                  fill
+                  className="object-cover"
+                  draggable={false}
+                  priority={i === 0}
+                />
+              </div>
+            );
+          })}
         </div>
 
         <button
           type="button"
           onClick={goNext}
-          className="z-20 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-2 lg:p-3 bg-black/80 md:bg-black/40 hover:bg-black/90 md:hover:bg-black/70 md:backdrop-blur-md rounded-full border border-cyan-500/30 text-cyan-400 transition-all hover:scale-110 active:scale-95 shrink-0"
           aria-label="Next Track"
         >
           <ChevronRight className="w-6 h-6" />

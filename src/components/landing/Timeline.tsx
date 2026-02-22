@@ -15,7 +15,7 @@ const timelineEvents = [
     accentRgb: "250,204,21",
   },
   {
-    day: "23",
+    day: "15",
     month: "MAR",
     year: "2026",
     title: "Port Closed",
@@ -25,7 +25,7 @@ const timelineEvents = [
     accentRgb: "248,113,113",
   },
   {
-    day: "01",
+    day: "08",
     month: "APR",
     year: "2026",
     title: "The Captain's Call",
