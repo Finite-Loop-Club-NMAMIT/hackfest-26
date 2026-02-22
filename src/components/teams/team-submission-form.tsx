@@ -8,6 +8,7 @@ import {
   uploadFileToCloudinary,
   validatePdfFile,
 } from "~/components/cloudinary-upload";
+import { useRouter } from "next/navigation";
 
 const PdfPreview = dynamic(() => import("~/components/pdf"), {
   ssr: false,
@@ -92,6 +93,7 @@ export function TeamSubmissionForm({
   teamId,
   submission,
 }: TeamSubmissionFormProps) {
+  const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,6 +168,7 @@ export function TeamSubmissionForm({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      router.refresh();
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("Failed to submit. Please try again.");
@@ -204,12 +207,12 @@ export function TeamSubmissionForm({
 
   if (submission) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Submitted Idea</CardTitle>
-          <CardDescription>
+      <Card className="border-[#10569c]/20 bg-[#0a3d6e] backdrop-blur-md shadow-xl rounded-xl">
+        <CardHeader className="pb-3 border-b border-white/10">
+          <CardTitle className="text-white font-pirate text-2xl tracking-wide">Submitted Idea</CardTitle>
+          <CardDescription className="text-white/80 text-base font-crimson font-medium">
             Your team has submitted an idea for the{" "}
-            <span className="font-semibold text-primary">
+            <span className="font-bold text-white">
               {submission.trackName}
             </span>{" "}
             track.
@@ -217,21 +220,21 @@ export function TeamSubmissionForm({
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-6">
           <div className="group relative inline-block w-full max-w-sm">
-            <div className="relative rounded-xl bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 shadow-xl border border-slate-700/50">
-              <div className="absolute inset-0 rounded-xl bg-linear-to-t from-black/20 to-transparent pointer-events-none" />
+            <div className="relative rounded-xl bg-white/20 p-4 shadow-md border border-white/20">
+              <div className="absolute inset-0 rounded-xl bg-linear-to-t from-black/10 to-transparent pointer-events-none" />
               <PdfPreview
                 file={submission.pdfUrl}
                 pages={[1]}
                 height={isMobile ? 150 : 200}
                 width={isMobile ? 200 : 300}
-                className="mx-auto w-fit rounded-lg overflow-hidden shadow-lg"
+                className="mx-auto w-fit rounded-lg overflow-hidden shadow-lg border border-white/10"
               />
-              <p className="mt-4 text-xs text-slate-400 text-center w-full">
+              <p className="mt-4 text-sm text-white/90 font-medium font-crimson text-center w-full">
                 <a
                   href={submission.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors underline"
+                  className="hover:text-white transition-colors underline font-bold"
                 >
                   View Full PDF
                 </a>
@@ -244,18 +247,18 @@ export function TeamSubmissionForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Submit Idea</CardTitle>
-        <CardDescription>
+    <Card className="border-[#10569c]/20 bg-[#0a3d6e] backdrop-blur-md shadow-xl rounded-xl">
+      <CardHeader className="pb-3 border-b border-white/10">
+        <CardTitle className="text-white font-pirate text-2xl tracking-wide">Submit Idea</CardTitle>
+        <CardDescription className="text-white/80 text-base font-crimson font-medium">
           Upload your presentation and select a track to submit your idea.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div className="space-y-2">
           <label
             htmlFor="file-upload"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm font-bold text-white/90 uppercase tracking-wider leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Upload Presentation (PDF only)
           </label>
@@ -271,26 +274,26 @@ export function TeamSubmissionForm({
             {!selectedFile ? (
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
-                className="gap-2"
+                className="gap-2 bg-white/20 hover:bg-white/30 text-white border-white/30 font-bold rounded-lg transition-all"
               >
                 <Upload className="h-4 w-4" />
                 Select PDF
               </Button>
             ) : (
               <div className="group relative inline-block w-full">
-                <div className="relative rounded-xl bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 shadow-xl border border-slate-700/50">
-                  <div className="absolute inset-0 rounded-xl bg-linear-to-t from-black/20 to-transparent pointer-events-none" />
+                <div className="relative rounded-xl bg-white/20 p-4 shadow-md border border-white/20">
+                  <div className="absolute inset-0 rounded-xl bg-linear-to-t from-black/10 to-transparent pointer-events-none" />
                   <PdfPreview
                     file={selectedFile}
                     pages={[1]}
                     height={isMobile ? 150 : 200}
                     width={isMobile ? 200 : 300}
-                    className="mx-auto w-fit rounded-lg overflow-hidden shadow-lg"
+                    className="mx-auto w-fit rounded-lg overflow-hidden shadow-lg border border-white/10"
                   />
-                  <p className="mt-2 text-xs text-slate-400 text-center truncate w-full">
+                  <p className="mt-2 text-sm text-white/90 font-medium font-crimson text-center truncate w-full">
                     {selectedFile.name}
                   </p>
                 </div>
@@ -307,7 +310,7 @@ export function TeamSubmissionForm({
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs font-medium font-crimson text-white/70">
             Max file size: 10MB. Format: PDF only.
           </p>
         </div>
@@ -315,7 +318,7 @@ export function TeamSubmissionForm({
         <div className="space-y-2">
           <label
             htmlFor="track-select"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm font-bold text-white/90 uppercase tracking-wider leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Select Track
           </label>
@@ -324,12 +327,12 @@ export function TeamSubmissionForm({
             onValueChange={setSelectedTrack}
             disabled={isSubmitting}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/20 border-white/20 text-white focus:ring-white/50 rounded-lg shadow-sm placeholder:text-white/70">
               <SelectValue placeholder="Select a track for your idea" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-[#0a3d6e] border-white/20 shadow-xl rounded-xl">
               {tracks.map((track) => (
-                <SelectItem key={track.id} value={track.id}>
+                <SelectItem key={track.id} value={track.id} className="text-white hover:bg-white/20 focus:bg-white/20 rounded-md cursor-pointer font-medium font-crimson text-base">
                   {track.name}
                 </SelectItem>
               ))}
@@ -337,30 +340,30 @@ export function TeamSubmissionForm({
           </Select>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="bg-white/5 border-t border-white/10 px-6 py-4 rounded-b-xl">
         <Button
           onClick={handleSubmit}
           disabled={!selectedFile || !selectedTrack || isSubmitting}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto bg-white text-[#10569c] hover:bg-white/90 font-bold border-none shadow-md h-11 rounded-xl tracking-wide transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:hover:scale-100"
         >
           {getButtonContent()}
         </Button>
       </CardFooter>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0a3d6e] border-white/20 text-white rounded-xl shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove PDF?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-pirate text-2xl tracking-wide text-white">Remove PDF?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80 font-crimson text-base font-medium">
               Are you sure you want to remove this PDF? You will need to upload
               it again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/30 text-white bg-transparent hover:bg-white/10 font-bold rounded-xl transition-colors">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveFile}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600 font-bold rounded-xl text-white border-none shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Delete
             </AlertDialogAction>
