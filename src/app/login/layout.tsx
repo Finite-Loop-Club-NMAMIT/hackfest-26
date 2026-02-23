@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Login",
-    description: "Sign in to your Hackfest'26 Account.",
+  title: "Login",
+  description: "Sign in to your Hackfest'26 Account.",
 };
 
 export default function LoginLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return children;
+  return children;
 }

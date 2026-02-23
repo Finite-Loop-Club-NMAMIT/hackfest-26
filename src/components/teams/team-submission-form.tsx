@@ -2,13 +2,13 @@
 
 import { Loader2, Send, Trash2, Upload } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   uploadFileToCloudinary,
   validatePdfFile,
 } from "~/components/cloudinary-upload";
-import { useRouter } from "next/navigation";
 
 const PdfPreview = dynamic(() => import("~/components/pdf"), {
   ssr: false,
@@ -209,12 +209,12 @@ export function TeamSubmissionForm({
     return (
       <Card className="border-[#10569c]/20 bg-[#0a3d6e] backdrop-blur-md shadow-xl rounded-xl">
         <CardHeader className="pb-3 border-b border-white/10">
-          <CardTitle className="text-white font-pirate text-2xl tracking-wide">Submitted Idea</CardTitle>
+          <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+            Submitted Idea
+          </CardTitle>
           <CardDescription className="text-white/80 text-base font-crimson font-medium">
             Your team has submitted an idea for the{" "}
-            <span className="font-bold text-white">
-              {submission.trackName}
-            </span>{" "}
+            <span className="font-bold text-white">{submission.trackName}</span>{" "}
             track.
           </CardDescription>
         </CardHeader>
@@ -249,7 +249,9 @@ export function TeamSubmissionForm({
   return (
     <Card className="border-[#10569c]/20 bg-[#0a3d6e] backdrop-blur-md shadow-xl rounded-xl">
       <CardHeader className="pb-3 border-b border-white/10">
-        <CardTitle className="text-white font-pirate text-2xl tracking-wide">Submit Idea</CardTitle>
+        <CardTitle className="text-white font-pirate text-2xl tracking-wide">
+          Submit Idea
+        </CardTitle>
         <CardDescription className="text-white/80 text-base font-crimson font-medium">
           Upload your presentation and select a track to submit your idea.
         </CardDescription>
@@ -332,7 +334,11 @@ export function TeamSubmissionForm({
             </SelectTrigger>
             <SelectContent className="bg-[#0a3d6e] border-white/20 shadow-xl rounded-xl">
               {tracks.map((track) => (
-                <SelectItem key={track.id} value={track.id} className="text-white hover:bg-white/20 focus:bg-white/20 rounded-md cursor-pointer font-medium font-crimson text-base">
+                <SelectItem
+                  key={track.id}
+                  value={track.id}
+                  className="text-white hover:bg-white/20 focus:bg-white/20 rounded-md cursor-pointer font-medium font-crimson text-base"
+                >
                   {track.name}
                 </SelectItem>
               ))}
@@ -353,14 +359,18 @@ export function TeamSubmissionForm({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-[#0a3d6e] border-white/20 text-white rounded-xl shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-pirate text-2xl tracking-wide text-white">Remove PDF?</AlertDialogTitle>
+            <AlertDialogTitle className="font-pirate text-2xl tracking-wide text-white">
+              Remove PDF?
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-white/80 font-crimson text-base font-medium">
               Are you sure you want to remove this PDF? You will need to upload
               it again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/30 text-white bg-transparent hover:bg-white/10 font-bold rounded-xl transition-colors">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/30 text-white bg-transparent hover:bg-white/10 font-bold rounded-xl transition-colors">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveFile}
               className="bg-red-500 hover:bg-red-600 font-bold rounded-xl text-white border-none shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"

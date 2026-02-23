@@ -34,7 +34,15 @@ export const metadata: Metadata = {
   },
   description:
     "Hackfest is a 36-hour National Level Hackathon organised by Finite Loop Club, NMAMIT, Nitte",
-  keywords: ["Hackfest", "Hackfest 26", "Karnataka Hackathons", "Hackathon", "Finite Loop Club", "NMAMIT", "Nitte"],
+  keywords: [
+    "Hackfest",
+    "Hackfest 26",
+    "Karnataka Hackathons",
+    "Hackathon",
+    "Finite Loop Club",
+    "NMAMIT",
+    "Nitte",
+  ],
   authors: [{ name: "Finite Loop Club" }],
   openGraph: {
     type: "website",
@@ -52,6 +60,17 @@ export const metadata: Metadata = {
     description:
       "Hackfest is a 36-hour National Level Hackathon organised by Finite Loop Club, NMAMIT, Nitte",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

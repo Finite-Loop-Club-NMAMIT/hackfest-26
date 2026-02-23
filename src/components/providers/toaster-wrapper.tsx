@@ -11,6 +11,5 @@ const ToasterProvider = dynamic(
 );
 
 export function ToasterWrapper() {
-
   return <ToasterProvider />;
 }

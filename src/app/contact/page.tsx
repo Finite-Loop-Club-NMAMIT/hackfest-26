@@ -1,9 +1,9 @@
+import type { Metadata } from "next";
 import { auth } from "~/auth/config";
 import ContactScene from "~/components/contact/ContactScene";
 import OrganizerRing from "~/components/contact/OrganizerRing";
 import Footer from "~/components/landing/Footer";
 import { Navbar } from "~/components/landing/Navbar";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact Us",

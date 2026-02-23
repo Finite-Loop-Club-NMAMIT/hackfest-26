@@ -272,8 +272,8 @@ export default async function TeamDetailsPage({
                 <div className="space-y-4">
                   <p className="text-sm md:text-base text-[#10569c]/80 font-medium">
                     As the team leader, you can confirm the team once you have
-                    <span className="font-bold"> 3-4 members</span>. After confirmation, members will not be able to
-                    leave the team.
+                    <span className="font-bold"> 3-4 members</span>. After
+                    confirmation, members will not be able to leave the team.
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {/* Confirm Button uses primary solid blue */}
@@ -440,10 +440,11 @@ export default async function TeamDetailsPage({
                   Status
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${team.isCompleted
-                    ? "bg-green-100 text-green-700 border border-green-200"
-                    : "bg-blue-100 text-blue-700 border border-blue-200"
-                    }`}
+                  className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${
+                    team.isCompleted
+                      ? "bg-green-100 text-green-700 border border-green-200"
+                      : "bg-blue-100 text-blue-700 border border-blue-200"
+                  }`}
                 >
                   {team.isCompleted ? "Completed" : "Incomplete"}
                 </span>

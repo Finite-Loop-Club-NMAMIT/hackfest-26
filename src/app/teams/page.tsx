@@ -1,4 +1,5 @@
 import { Home } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
@@ -7,11 +8,11 @@ import { TeamPageLayout } from "~/components/teams/TeamPageLayout";
 import { TeamForm } from "~/components/teams/team-form";
 import { Button } from "~/components/ui/button";
 import * as userData from "~/db/data/participant";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Teams",
-  description: "Manage your team for Hackfest. Create a new team or join an existing one.",
+  description:
+    "Manage your team for Hackfest. Create a new team or join an existing one.",
 };
 
 export default async function TeamsPage() {
