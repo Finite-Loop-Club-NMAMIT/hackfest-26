@@ -45,6 +45,7 @@ export function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonProps) {
       setOpen(false);
       router.push("/teams");
       router.refresh();
+    } catch {
     } finally {
       setLoading(false);
     }

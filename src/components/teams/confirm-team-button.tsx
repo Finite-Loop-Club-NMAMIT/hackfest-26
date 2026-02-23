@@ -17,6 +17,7 @@ export function ConfirmTeamButton({ teamId }: { teamId: string }) {
         method: "POST",
       });
       router.refresh();
+    } catch {
     } finally {
       setLoading(false);
     }

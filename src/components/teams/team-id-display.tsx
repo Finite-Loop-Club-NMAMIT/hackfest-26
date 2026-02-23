@@ -25,7 +25,11 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
   }
 
   return (
-    <div className="bg-white/90 border border-[#10569c]/20 rounded-xl p-3 shadow-md backdrop-blur-md transition-all hover:bg-white flex flex-col items-start gap-2 min-w-[280px]">
+    <div
+      onClick={copyToClipboard}
+      className="bg-white/90 border border-[#10569c]/20 rounded-xl p-3 shadow-md backdrop-blur-md cursor-pointer flex flex-col items-start gap-2 min-w-[280px]"
+      title="Click to copy Team ID"
+    >
       <div className="flex items-center justify-between w-full gap-3">
         <div className="flex flex-col">
           <p className="text-[10px] text-[#10569c]/60 uppercase tracking-widest font-bold">
@@ -36,13 +40,11 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
           </code>
         </div>
 
-        <Button
-          onClick={copyToClipboard}
-          size="sm"
-          variant="ghost"
+        <div
           className="
-            h-8 px-2 rounded-lg
-            text-[#10569c]/70 hover:text-[#10569c] hover:bg-[#10569c]/10
+            flex items-center justify-center
+            h-8 w-8 rounded-lg
+            text-[#10569c]/70 hover:text-[#10569c] bg-[#10569c]/5
             transition-all
           "
         >
@@ -51,7 +53,7 @@ export function TeamIdDisplay({ teamId }: { teamId: string }) {
           ) : (
             <Copy className="h-4 w-4" />
           )}
-        </Button>
+        </div>
       </div>
     </div>
   );

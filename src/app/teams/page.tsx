@@ -58,11 +58,18 @@ export default async function TeamsPage() {
 
           {/* Text Content */}
           <div className="space-y-2 text-center md:flex-1 md:text-left md:pt-1">
-            <h1 className="text-3xl font-pirate font-bold drop-shadow-sm md:text-4xl tracking-wide drop-shadow-black/50">
+            <h1 className="text-3xl font-pirate font-bold drop-shadow-sm md:text-4xl tracking-wide">
               Team Management
             </h1>
-            <p className="text-white font-crimson text-base drop-shadow-black/50 md:text-xl leading-relaxed font-medium">
+            <p className="font-crimson text-base md:text-xl leading-relaxed font-medium opacity-90">
               Create a new team or join an existing one.
+              <br />
+              <span className="text-amber-600 dark:text-amber-400 text-sm md:text-lg font-semibold block mt-1">
+                Note: All members in a team must belong to the same college.
+              </span>
+              <span className="text-amber-600 dark:text-amber-400 text-sm md:text-lg font-semibold block mt-1">
+                Team Size: 3-4 members
+              </span>
             </p>
           </div>
 

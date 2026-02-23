@@ -31,6 +31,7 @@ export function LeaveTeamButton() {
       setOpen(false);
       router.push("/teams");
       router.refresh();
+    } catch {
     } finally {
       setLoading(false);
     }
