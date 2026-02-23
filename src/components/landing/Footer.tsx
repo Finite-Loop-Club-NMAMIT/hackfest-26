@@ -23,9 +23,7 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
 
   return (
     <footer className="relative z-20 w-full flex flex-col">
-      <div
-        className="relative h-45 w-full overflow-hidden pointer-events-none"
-      >
+      <div className="relative h-45 w-full overflow-hidden pointer-events-none">
         <div
           className="absolute inset-0 z-10 bg-transparent bg-[url('/images/corals_cropped.png')] bg-repeat-x bg-size-[auto_100%] bg-top-left pointer-events-none transition-all duration-1000"
           style={{
@@ -43,7 +41,7 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
         }`}
       >
         <div // [RAHUL]: Have put noisy overlay here, in case it gives any issues have to remove
-          className={`hidden md:block absolute inset-0 pointer-events-none z-0 mix-blend-overlay transition-opacity duration-1000`}
+          className={`${overlayNeeded ? "hidden md:block" : "hidden"} absolute inset-0 pointer-events-none z-0 mix-blend-overlay transition-opacity duration-1000`}
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
@@ -147,7 +145,11 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
                   src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15538.662520521424!2d74.93399100000002!3d13.18347!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbb56415ad85e5b%3A0x10b77ac6f6afc7fa!2sNitte%20Mahalinga%20Adyantaya%20Memorial%20Institute%20of%20Technology%20-%20NMAMIT!5e0!3m2!1sen!2sin!4v1771872967031!5m2!1sen!2sin"
                   width="250"
                   height="180"
-                  style={{ border: 0, touchAction: "auto", pointerEvents: "auto" }}
+                  style={{
+                    border: 0,
+                    touchAction: "auto",
+                    pointerEvents: "auto",
+                  }}
                   className={`relative z-30 filter transition-all duration-1000 ${isNight ? "sepia-0 grayscale opacity-80 hover:opacity-100 hover:grayscale-50" : "sepia-[0.3] hue-rotate-15 saturate-[0.9] hover:sepia-0 hover:saturate-100"}`}
                   aria-hidden="false"
                   loading="lazy"

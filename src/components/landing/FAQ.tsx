@@ -108,12 +108,10 @@ export default function FAQSection() {
         <div className="max-w-3xl mx-auto space-y-4">
           {faqs.map((faq, index) => (
             <FAQItemCard
-              key={index}
+              key={faq.question}
               faq={faq}
               isOpen={openIndex === index}
-              onToggle={() =>
-                setOpenIndex(openIndex === index ? null : index)
-              }
+              onToggle={() => setOpenIndex(openIndex === index ? null : index)}
             />
           ))}
         </div>
