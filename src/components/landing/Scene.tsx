@@ -238,7 +238,7 @@ function FixedHero({
                   className="text-xl xl:text-3xl font-crimson font-bold italic text-[#d7ccc8] tracking-widest drop-shadow-md opacity-90"
                   style={{ transform: "rotate(1deg)" }}
                 >
-                  Embark on a Voyage of Innovation
+                  Codequest: The Grand Voyage
                 </p>
               </div>
             </div>
