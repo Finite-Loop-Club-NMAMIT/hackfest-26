@@ -22,7 +22,7 @@ const organizers = [
   {
     name: "Omkar G Prabhu",
     phone: "",
-    email: "nnm22is022@nmamit.in",
+    email: "nnm22is002@nmamit.in",
     role: "Organizer",
   },
   {
