@@ -418,7 +418,7 @@ function LandingContent({
 
               {/* The number */}
               <span className="text-sm md:text-lg font-crimson font-bold tracking-[0.5em] text-yellow-400/60 uppercase mb-2">
-                Total Prize Pool
+                Worth
               </span>
               <span
                 className="text-7xl md:text-[12rem] font-black font-pirata leading-none tracking-tight"

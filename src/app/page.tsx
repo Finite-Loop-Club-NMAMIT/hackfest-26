@@ -1,5 +1,11 @@
 import { auth } from "~/auth/config";
 import Scene from "~/components/landing/Scene";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Join Hackfest, a 36-hour National Level Hackathon by Finite Loop Club, NMAMIT.",
+};
 
 export default async function Home() {
   const session = await auth();

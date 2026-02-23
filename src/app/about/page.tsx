@@ -3,6 +3,12 @@ import AboutScene from "~/components/about/AboutScene";
 import AboutSlate from "~/components/about/AboutSlate";
 import Footer from "~/components/landing/Footer";
 import { Navbar } from "~/components/landing/Navbar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: "Learn more about Hackfest.",
+};
 
 export default async function AboutPage() {
   const session = await auth();
