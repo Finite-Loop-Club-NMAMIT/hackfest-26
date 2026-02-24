@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, UserPlus, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, Download, FileText, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -123,7 +123,64 @@ export function TeamForm() {
   }
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-6 w-full mt-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-white/20 bg-linear-to-br from-[#10569c] to-[#0a3d6e] p-5 shadow-xl transition-all hover:-translate-y-1 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-white/10 pointer-events-none"></div>
+          <div className="flex items-center gap-3 mb-3 relative z-10">
+            <div className="p-2 bg-white/10 rounded-xl ring-1 ring-white/20 shadow-sm">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-xl font-pirate font-bold text-white tracking-wide drop-shadow-md">
+              Team Size
+            </h3>
+          </div>
+          <p className="text-white/90 text-sm md:text-base font-semibold font-crimson leading-relaxed relative z-10">
+            Each team can have a maximum of <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">3 to 4</span> members.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/20 bg-linear-to-br from-[#10569c] to-[#0a3d6e] p-5 shadow-xl transition-all flex flex-col justify-between hover:-translate-y-1 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-white/10 pointer-events-none"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-white/10 rounded-xl ring-1 ring-white/20 shadow-sm">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-pirate font-bold text-white tracking-wide drop-shadow-md">
+                PPT Template
+              </h3>
+            </div>
+            <p className="text-white/90 text-sm md:text-base font-semibold font-crimson mb-4 leading-relaxed">
+              Download the official template to prepare your idea submission.
+            </p>
+          </div>
+          <a
+            href="/pptTemplate/Hackfest26-ppt-template.pptx"
+            download
+            className="mt-auto relative z-10 flex items-center justify-center gap-2 bg-white text-[#10569c] px-4 py-2.5 rounded-xl font-bold transition-all shadow-lg hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] text-sm tracking-wide"
+          >
+            <Download className="h-4 w-4" />
+            Download Template
+          </a>
+        </div>
+
+        <div className="rounded-2xl border border-white/20 bg-linear-to-br from-[#0a3d6e] to-[#10569c] p-5 shadow-xl transition-all hover:-translate-y-1 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all group-hover:bg-white/10 pointer-events-none"></div>
+          <div className="flex items-center gap-3 mb-3 relative z-10">
+            <div className="p-2 bg-white/10 rounded-xl ring-1 ring-white/20 shadow-sm">
+              <CalendarDays className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-xl font-pirate font-bold text-white tracking-wide drop-shadow-md">
+              Shortlisting
+            </h3>
+          </div>
+          <p className="text-white/90 text-sm md:text-base font-semibold font-crimson leading-relaxed relative z-10">
+            Based on your PPT and idea, we will judge and shortlist <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">60 teams</span>. Registration ends on <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">15th March</span>.
+          </p>
+        </div>
+      </div>
+
       {/* --- CREATE TEAM CARD --- */}
       <div className="w-full rounded-2xl border border-white/50 bg-white/90 backdrop-blur-md p-5 shadow-xl transition-all">
         <div className="mb-4 space-y-1">
