@@ -23,9 +23,7 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
 
   return (
     <footer className="relative z-20 w-full flex flex-col">
-      <div
-        className={`relative h-45 ${overlayNeeded ? "bg-black/50" : ""} w-full overflow-hidden`}
-      >
+      <div className="relative h-45 w-full overflow-hidden pointer-events-none">
         <div
           className="absolute inset-0 z-10 bg-transparent bg-[url('/images/corals_cropped.png')] bg-repeat-x bg-size-[auto_100%] bg-top-left pointer-events-none transition-all duration-1000"
           style={{
@@ -43,7 +41,7 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
         }`}
       >
         <div // [RAHUL]: Have put noisy overlay here, in case it gives any issues have to remove
-          className={`hidden md:block absolute inset-0 pointer-events-none z-0 mix-blend-overlay transition-opacity duration-1000`}
+          className={`${overlayNeeded ? "hidden md:block" : "hidden"} absolute inset-0 pointer-events-none z-0 mix-blend-overlay transition-opacity duration-1000`}
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
@@ -134,16 +132,28 @@ const Footer = ({ overlayNeeded = false }: { overlayNeeded?: boolean }) => {
           <div className="flex flex-col items-center gap-8 z-10">
             <div className="flex flex-col items-center justify-center gap-10 md:flex-row">
               <div
-                className={`overflow-hidden rounded-lg border transition-colors duration-1000 ${isNight ? "border-sky-800/40 shadow-[0_0_15px_rgba(2,132,199,0.15)]" : "border-amber-600/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]"}`}
+                data-lenis-prevent
+                className={`overflow-hidden rounded-lg border transition-colors duration-1000 relative z-30 ${isNight ? "border-sky-800/40 shadow-[0_0_15px_rgba(2,132,199,0.15)]" : "border-amber-600/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]"}`}
+                style={{ touchAction: "auto", overscrollBehavior: "contain" }}
+                onWheel={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               >
                 <iframe
                   title="Maps"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3884.6730533394866!2d74.93141407492217!3d13.183002587152156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbb56415ad85e5b%3A0x10b77ac6f6afc7fa!2sN.M.A.M.%20Institute%20of%20Technology!5e0!3m2!1sen!2sin!4v1705002903689!5m2!1sen!2sin"
+                  src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15538.662520521424!2d74.93399100000002!3d13.18347!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbb56415ad85e5b%3A0x10b77ac6f6afc7fa!2sNitte%20Mahalinga%20Adyantaya%20Memorial%20Institute%20of%20Technology%20-%20NMAMIT!5e0!3m2!1sen!2sin!4v1771872967031!5m2!1sen!2sin"
                   width="250"
                   height="180"
-                  style={{ border: 0 }}
-                  className={`filter transition-all duration-1000 ${isNight ? "sepia-0 grayscale opacity-80 hover:opacity-100 hover:grayscale-50" : "sepia-[0.3] hue-rotate-15 saturate-[0.9] hover:sepia-0 hover:saturate-100"}`}
+                  style={{
+                    border: 0,
+                    touchAction: "auto",
+                    pointerEvents: "auto",
+                  }}
+                  className={`relative z-30 filter transition-all duration-1000 ${isNight ? "sepia-0 grayscale opacity-80 hover:opacity-100 hover:grayscale-50" : "sepia-[0.3] hue-rotate-15 saturate-[0.9] hover:sepia-0 hover:saturate-100"}`}
                   aria-hidden="false"
+                  loading="lazy"
+                  allowFullScreen
                 ></iframe>
               </div>
               <div className="flex flex-col gap-2 text-center">
