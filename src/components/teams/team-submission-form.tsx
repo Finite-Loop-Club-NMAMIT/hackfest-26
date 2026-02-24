@@ -257,7 +257,7 @@ export function TeamSubmissionForm({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <label
             htmlFor="file-upload"
             className="text-sm font-bold text-white/90 uppercase tracking-wider leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -344,9 +344,15 @@ export function TeamSubmissionForm({
               ))}
             </SelectContent>
           </Select>
+        </div> */}
+        <div className="flex w-full justify-center items-center">
+
+          <p className="text-white/80 font-crimson text-base font-medium">
+            Idea Submission is going to start by tonight. Stay tuned!
+          </p>
         </div>
       </CardContent>
-      <CardFooter className="bg-white/5 border-t border-white/10 px-6 py-4 rounded-b-xl">
+      {/* <CardFooter className="bg-white/5 border-t border-white/10 px-6 py-4 rounded-b-xl">
         <Button
           onClick={handleSubmit}
           disabled={!selectedFile || !selectedTrack || isSubmitting}
@@ -354,7 +360,7 @@ export function TeamSubmissionForm({
         >
           {getButtonContent()}
         </Button>
-      </CardFooter>
+      </CardFooter> */}
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-[#0a3d6e] border-white/20 text-white rounded-xl shadow-2xl">
