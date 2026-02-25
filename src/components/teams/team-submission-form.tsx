@@ -259,8 +259,12 @@ export function TeamSubmissionForm({
       <CardContent className="space-y-6 pt-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/10 p-4 rounded-xl border border-white/20 gap-4">
           <div>
-            <h3 className="text-white font-bold text-lg font-pirate tracking-wide">Presentation Template</h3>
-            <p className="text-white/80 text-sm font-crimson font-medium">Download the official template to prepare your idea submission.</p>
+            <h3 className="text-white font-bold text-lg font-pirate tracking-wide">
+              Presentation Template
+            </h3>
+            <p className="text-white/80 text-sm font-crimson font-medium">
+              Download the official template to prepare your idea submission.
+            </p>
           </div>
           <a
             href="/pptTemplate/Hackfest26-ppt-template.pptx"

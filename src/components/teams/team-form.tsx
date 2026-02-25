@@ -1,7 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, CalendarDays, Download, FileText, UserPlus, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Download,
+  FileText,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -136,7 +143,11 @@ export function TeamForm() {
             </h3>
           </div>
           <p className="text-white/90 text-sm md:text-base font-semibold font-crimson leading-relaxed relative z-10">
-            Each team can have a maximum of <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">3 to 4</span> members.
+            Each team can have a maximum of{" "}
+            <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">
+              3 to 4
+            </span>{" "}
+            members.
           </p>
         </div>
 
@@ -176,7 +187,15 @@ export function TeamForm() {
             </h3>
           </div>
           <p className="text-white/90 text-sm md:text-base font-semibold font-crimson leading-relaxed relative z-10">
-            Based on your PPT and idea, we will judge and shortlist <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">60 teams</span>. Registration ends on <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">15th March</span>.
+            Based on your PPT and idea, we will judge and shortlist{" "}
+            <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">
+              60 teams
+            </span>
+            . Registration ends on{" "}
+            <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">
+              15th March
+            </span>
+            .
           </p>
         </div>
       </div>

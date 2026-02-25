@@ -151,7 +151,6 @@ export function QuickboardTab() {
           description="Participants that have confirmed participation"
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
-
       </div>
 
       <StatCard
