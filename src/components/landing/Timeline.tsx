@@ -78,13 +78,13 @@ export default function Timeline() {
         </div>
 
         <div className="relative max-w-5xl mx-auto">
-          {/* Central rope — Desktop */}
+          {/* Central rope  Desktop */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
             <div className="w-full h-full bg-linear-to-b from-transparent via-cyan-500/40 to-transparent" />
             <div className="absolute inset-0 w-full bg-linear-to-b from-transparent via-cyan-400/20 to-transparent md:animate-pulse" />
           </div>
 
-          {/* Left rope — Mobile */}
+          {/* Left rope Mobile */}
           <div className="md:hidden absolute left-6 top-0 bottom-0 w-px">
             <div className="w-full h-full bg-linear-to-b from-transparent via-cyan-500/40 to-transparent" />
           </div>
