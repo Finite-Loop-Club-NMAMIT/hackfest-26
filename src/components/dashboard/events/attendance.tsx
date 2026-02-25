@@ -336,7 +336,7 @@ function TeamDetailsDialog({
   };
 
   if (teamId === null) {
-    return <></>;
+    return null;
   }
 
   if (loading) {
@@ -358,7 +358,7 @@ function TeamDetailsDialog({
   }
 
   if (teamDetails === null) {
-    return <></>;
+    return null;
   }
 
   return (

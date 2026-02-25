@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
-import { protectedEventRoute } from "~/auth/route-handlers";
-import { eventRegistrationOpen, findByEventId } from "~/db/data/event";
+import { registrationOpenEventRoute } from "~/auth/route-handlers";
 import { findByEvent } from "~/db/data/event-users";
 import {
   confirmEventTeam,
@@ -12,32 +11,13 @@ import {
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 
-export const POST = protectedEventRoute(
+export const POST = registrationOpenEventRoute(
   async (req: NextRequest, context, user) => {
-    const registrationsOpen = await eventRegistrationOpen();
-    if (!registrationsOpen) {
-      return errorResponse(
-        new AppError("Registrations closed", 403, {
-          title: "Registrations Closed",
-          description: "Event registrations are currently closed.",
-        }),
-      );
-    }
-
     const { id: eventId, action } = await context.params;
-    const event = await findByEventId(eventId);
-    if (event?.status === "Draft") {
-      return errorResponse(
-        new AppError("Event not found", 404, {
-          title: "Event Not Found",
-          description: "The specified event does not exist.",
-        }),
-      );
-    }
 
     const eventUser = await findByEvent(eventId, user.id);
 
-    if (!eventUser && action !== "create") {
+    if (!eventUser && ["leave", "confirm", "delete"].includes(action)) {
       return errorResponse(
         new AppError("Unauthorized", 401, {
           title: "Unauthorized",
@@ -96,7 +76,7 @@ export const POST = protectedEventRoute(
         }
         case "delete": {
           if (!eventUser) return notRegisteredError;
-          return await deleteEventTeam(eventUser.teamId);
+          return await deleteEventTeam(eventId, eventUser.teamId, user.id);
         }
         default:
           return errorResponse(

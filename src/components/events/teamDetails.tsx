@@ -67,18 +67,18 @@ export function TeamDetailsDialog({
 
   const handleConfirm = async () => {
     setConfirming(true);
-    try {
-      await apiFetch(`/api/events/teams/${team.id}/confirm`, {
+    const res = await apiFetch<{ team: EventTeam }>(
+      `/api/events/teams/${team.id}/confirm`,
+      {
         method: "POST",
-      });
+      },
+    );
+
+    if (res?.team) {
       await fetchEvents();
-      toast.success("Team confirmed successfully!");
       onOpenChange(false);
-    } catch {
-      toast.error("Failed to confirm team. Please try again.");
-    } finally {
-      setConfirming(false);
     }
+    setConfirming(false);
   };
 
   const handleDelete = async () => {
@@ -151,28 +151,31 @@ export function TeamDetailsDialog({
           </div>
 
           {/* Team ID */}
-          <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-[#133c55]/40 border border-[#39577c]/60">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
-                Team ID
-              </span>
-              <span className="text-sm font-mono text-white/70 tracking-wider">
-                {maskedId}
-              </span>
+
+          {isLeader && (
+            <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-[#133c55]/40 border border-[#39577c]/60">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
+                  Team ID
+                </span>
+                <span className="text-sm font-mono text-white/70 tracking-wider">
+                  {maskedId}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="shrink-0 p-2 rounded-lg text-white/30 hover:text-[#f4d35e] hover:bg-[#f4d35e]/10 border border-transparent hover:border-[#f4d35e]/20 transition-all duration-150"
+                title="Copy Team ID"
+              >
+                {copied ? (
+                  <Check size={15} className="text-emerald-400" />
+                ) : (
+                  <Copy size={15} />
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="shrink-0 p-2 rounded-lg text-white/30 hover:text-[#f4d35e] hover:bg-[#f4d35e]/10 border border-transparent hover:border-[#f4d35e]/20 transition-all duration-150"
-              title="Copy Team ID"
-            >
-              {copied ? (
-                <Check size={15} className="text-emerald-400" />
-              ) : (
-                <Copy size={15} />
-              )}
-            </button>
-          </div>
+          )}
 
           {/* Members list */}
           <div className="flex flex-col gap-2">

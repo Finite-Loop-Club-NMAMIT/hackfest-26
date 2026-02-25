@@ -31,12 +31,8 @@ export default function RegisterButton({
     "w-full py-6 text-xl text-[#0b2545] cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center hover:brightness-110 transition-all duration-300 bg-linear-to-r from-[#cfb536] to-[#c2a341]";
 
   const onRegister = async () => {
-    try {
-      await apiFetch(`/api/events/${event.id}/register`, { method: "POST" });
-      await fetchEvents();
-    } catch (error) {
-      console.error("Registration error:", error);
-    }
+    await apiFetch(`/api/events/${event.id}/register`, { method: "POST" });
+    await fetchEvents();
   };
 
   const onCancel = async () => {
@@ -79,6 +75,7 @@ export default function RegisterButton({
         fetchEvents={fetchEvents}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        setTeamDialogOpen={setTeamDialogOpen}
       />
       {event.team && (
         <TeamDetailsDialog

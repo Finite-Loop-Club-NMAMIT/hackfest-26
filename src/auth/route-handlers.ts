@@ -1,6 +1,7 @@
 import type { NextRequest, NextResponse } from "next/server";
 import type { Session } from "next-auth";
 import type { RateLimiterRedis } from "rate-limiter-flexible";
+import { eventRegistrationOpen, findByEventId } from "~/db/data/event";
 import { AppError } from "~/lib/errors/app-error";
 import { getIdentifier, rateLimiters, withRateLimit } from "~/lib/rate-limit";
 import { errorResponse } from "~/lib/response/error";
@@ -25,6 +26,11 @@ type GlobalRouteHandler = (
   request: NextRequest,
   context: { params: Promise<Record<string, string>> },
   user: User | EventUser,
+) => Promise<NextResponse>;
+
+type PublicRouteHandler = (
+  request: NextRequest,
+  context: { params: Promise<Record<string, string>> },
 ) => Promise<NextResponse>;
 
 export function protectedRoute(
@@ -118,6 +124,49 @@ export function protectedEventRoute(
   };
 }
 
+export function registrationOpenEventRoute(handler: EventRouteHandler) {
+  return protectedEventRoute(async (request, context, user) => {
+    try {
+      const registrationsOpen = await eventRegistrationOpen();
+
+      if (!registrationsOpen) {
+        return errorResponse(
+          new AppError("REGISTRATION_CLOSED", 403, {
+            title: "Registration closed",
+            description: "Event registration is currently closed.",
+          }),
+        );
+      }
+
+      if (!user.collegeId) {
+        return errorResponse(
+          new AppError("COLLEGE_NOT_SET", 400, {
+            title: "College not set",
+            description:
+              "You cannot register for events until you set your college in your user profile.",
+          }),
+        );
+      }
+
+      const { id: eventId } = await context.params;
+      const event = await findByEventId(eventId);
+
+      if (!event || event.status === "Draft") {
+        return errorResponse(
+          new AppError("EVENT_NOT_FOUND", 404, {
+            title: "Event not found",
+            description: "The specified event does not exist.",
+          }),
+        );
+      }
+
+      return await handler(request, context, user);
+    } catch (err) {
+      return errorResponse(err);
+    }
+  });
+}
+
 export function protectedGlobalRoute(
   handler: GlobalRouteHandler,
   customRateLimiter?: RateLimiterRedis,
@@ -155,10 +204,7 @@ export function protectedGlobalRoute(
 }
 
 export function publicRoute(
-  handler: (
-    request: NextRequest,
-    context: { params: Promise<Record<string, string>> },
-  ) => Promise<NextResponse>,
+  handler: PublicRouteHandler,
   customRateLimiter?: RateLimiterRedis,
 ) {
   return async (

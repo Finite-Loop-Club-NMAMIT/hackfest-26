@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { UpdateSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -48,11 +47,7 @@ interface College {
 
 type FormValues = UpdateEventUserInput;
 
-export function UserDetailsForm({
-  sessionUpdate,
-}: {
-  sessionUpdate: UpdateSession;
-}) {
+export function UserDetailsForm() {
   const router = useRouter();
 
   const [colleges, setColleges] = useState<College[]>([]);
@@ -97,7 +92,6 @@ export function UserDetailsForm({
         method: "POST",
         body: JSON.stringify(data),
       });
-      await sessionUpdate();
       router.refresh();
     } catch {
       toast.error("Failed to update details. Please try again.");

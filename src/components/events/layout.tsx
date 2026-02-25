@@ -3,7 +3,7 @@
 import { TriangleAlert } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { use, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "~/lib/fetcher";
@@ -21,6 +21,13 @@ export type EventTeam = {
   attended: boolean;
   isComplete: boolean;
   paymentStatus: "Pending" | "Paid" | "Refunded";
+};
+
+export type EventOrganizer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
 };
 
 export type EventMember = {
@@ -51,6 +58,7 @@ export type Event = {
   team?: EventTeam;
   isLeader?: boolean;
   isComplete?: boolean;
+  organizers?: EventOrganizer[];
   teamMembers?: EventMember[];
 };
 
@@ -58,8 +66,10 @@ const GRID_CLASSES =
   "w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 md:gap-10 gap-6 items-start";
 
 const Events = ({
+  session,
   searchParams,
 }: {
+  session: Session | null;
   searchParams: Promise<{ error?: string }>;
 }) => {
   const { isNight } = useDayNight();
@@ -74,9 +84,11 @@ const Events = ({
 
   const router = useRouter();
   const error = use(searchParams).error;
-  const { data: session, update } = useSession();
+  // const { data: session, update } = useSession();
 
-  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
+  const selectedEvent = Array.isArray(events)
+    ? (events.find((e) => e.id === selectedEventId) ?? null)
+    : null;
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -85,7 +97,7 @@ const Events = ({
         registrationsOpen: boolean;
       }>("/api/events/getAll", { method: "GET" });
 
-      setRegistration(response?.registrationsOpen ?? false);
+      setRegistration(response.registrationsOpen ?? false);
       if (response) setEvents(response.events);
     } catch {
       toast.error("Failed to load events. Please refresh.");
@@ -124,8 +136,8 @@ const Events = ({
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
-      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+    <div className="relative w-full min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed">
+      <div className="fixed inset-0 w-full max-h-screen z-0 pointer-events-none">
         <Image
           src={
             isNight
@@ -134,16 +146,17 @@ const Events = ({
           }
           alt="Shipwreck background"
           fill
-          className="object-cover object-bottom"
+          className="object-cover object-center"
           priority
         />
       </div>
 
       {session?.eventUser && !session.eventUser.collegeId && (
-        <UserDetailsForm sessionUpdate={update} />
+        <UserDetailsForm />
       )}
 
       <EventDrawer
+        session={session}
         event={selectedEvent}
         drawerOpen={drawerOpen}
         fetchEvents={fetchEvents}
@@ -176,8 +189,12 @@ const Events = ({
               </Card>
             ))}
           </div>
-        ) : events.length > 0 ? (
-          <EventDetails events={events} handleCardClick={handleCardClick} />
+        ) : events?.length > 0 ? (
+          <EventDetails
+            events={events}
+            registration={registration}
+            handleCardClick={handleCardClick}
+          />
         ) : (
           <div className="flex justify-center items-center py-20">
             <div className="flex flex-col gap-4 items-center text-center text-white">
