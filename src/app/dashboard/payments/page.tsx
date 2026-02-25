@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/dashboard-config";
-import { PaymentsTable } from "~/components/dashboard/payments-table";
+import { PaymentsTable } from "~/components/dashboard/tables/payments-table";
 import { getPayments } from "~/db/services/payment-services";
 import { isAdmin } from "~/lib/auth/check-access";
 

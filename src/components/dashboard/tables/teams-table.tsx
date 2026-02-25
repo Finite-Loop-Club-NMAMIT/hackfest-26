@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { TeamDetailDialog } from "./team-detail-dialog";
+import { TeamDetailDialog } from "~/components/dashboard/other/team-detail-dialog";
 
 type Team = {
   id: string;

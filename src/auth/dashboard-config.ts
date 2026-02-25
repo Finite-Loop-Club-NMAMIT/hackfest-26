@@ -197,4 +197,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/dashboard/login",
   },
 });
-

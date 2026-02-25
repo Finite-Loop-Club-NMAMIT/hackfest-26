@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/dashboard-config";
-import { TeamsTable } from "~/components/dashboard/teams-table";
+import { TeamsTable } from "~/components/dashboard/tables/teams-table";
 import { fetchTeams } from "~/db/services/team-services";
 import { hasPermission, isAdmin } from "~/lib/auth/check-access";
 

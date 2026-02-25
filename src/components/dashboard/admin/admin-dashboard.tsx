@@ -13,7 +13,7 @@ import {
   TeamsTab,
 } from "~/components/tabs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { QuickboardTab } from "./quickboard-tab";
+import { QuickboardTab } from "../tabs/QuickBoard";
 
 export type SubTabConfig = {
   id: string;
@@ -74,7 +74,7 @@ const SUB_TABS: SubTabConfig[] = [
   },
 ];
 
-export function OrganiserDashboard() {
+export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("quickboard");
   const [isClient, setIsClient] = useState(false);
 

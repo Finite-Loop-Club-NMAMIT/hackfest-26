@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "~/auth/dashboard-config";
 import { DashboardContent } from "~/components/dashboard/dashboard-content";
-import { LiveClock } from "~/components/dashboard/live-clock";
+import { LiveClock } from "~/components/dashboard/other/live-clock";
 import { Button } from "~/components/ui/button";
 import {
   Card,
