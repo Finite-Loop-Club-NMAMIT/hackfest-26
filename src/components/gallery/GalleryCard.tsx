@@ -10,12 +10,6 @@ type GalleryCardProps = {
   index: number;
 };
 
-const aspectClasses: Record<GalleryImage["aspect"], string> = {
-  tall: "",
-  wide: "",
-  square: "",
-};
-
 const rowSpanClasses: Record<GalleryImage["aspect"], string> = {
   tall: "row-span-2",
   wide: "row-span-1",
