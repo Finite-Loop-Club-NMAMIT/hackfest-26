@@ -69,64 +69,27 @@ export function Navbar({
         scrolled && !isMobileMenuOpen ? "top-2 scale-[0.98]" : "top-6",
       )}
     >
-      {/* BACKGROUND CONTAINER - Wrapped in motion.div to stretch with content */}
+      {/* LEATHER BACKGROUND */}
       <motion.div
         layoutId="nav-bg"
         className="absolute inset-0 w-full h-full shadow-2xl drop-shadow-xl rounded-lg overflow-hidden -z-10 bg-black/10"
       >
-        {/* === THEME 1: SURFACE (LEATHER) - YOUR EXACT CODE === */}
+        <Image
+          src="/teal-leather.webp"
+          alt="Leather Background"
+          fill
+          className="object-cover scale-[1.3]"
+          priority
+        />
         <div
           className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-in-out",
-            isUnderwater ? "opacity-0" : "opacity-100",
+            "absolute inset-0 transition-all duration-700 ease-in-out pointer-events-none",
+            isUnderwater ? "bg-black/40" : "bg-black/10",
           )}
-        >
-          <Image
-            src="/teal-leather.webp"
-            alt="Leather Background"
-            fill
-            className="object-cover scale-[1.3]"
-            priority
-          />
-          <div
-            className={cn(
-              "absolute inset-0 transition-all duration-700 ease-in-out pointer-events-none bg-black/50 backdrop-brightness-75",
-              isUnderwater
-                ? "bg-black/50 backdrop-brightness-0"
-                : "bg-transparent",
-            )}
-          />
-          <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-          <div className="absolute inset-1.5 border-2 border-dashed border-amber-100/30 rounded-md pointer-events-none" />
-          <div className="absolute inset-0.5 border border-white/10 rounded-lg pointer-events-none" />
-        </div>
-
-        {/* === THEME 2: UNDERWATER (WET GLASS) - YOUR EXACT CODE === */}
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-in-out",
-            isUnderwater ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <Image
-            src="/teal-leather.webp"
-            alt="Leather Background"
-            fill
-            className="object-cover scale-[1.3]"
-            priority
-          />
-          <div
-            className={cn(
-              "absolute inset-0 transition-all duration-700 ease-in-out pointer-events-none bg-black/50 backdrop-brightness-75",
-              isUnderwater
-                ? "bg-black/50 backdrop-brightness-95"
-                : "bg-transparent",
-            )}
-          />
-          <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-          <div className="absolute inset-1.5 border-2 border-dashed border-amber-100/30 rounded-md pointer-events-none" />
-          <div className="absolute inset-0.5 border border-white/10 rounded-lg pointer-events-none" />
-        </div>
+        />
+        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+        <div className="absolute inset-1.5 border-2 border-dashed border-amber-100/30 rounded-md pointer-events-none" />
+        <div className="absolute inset-0.5 border border-white/10 rounded-lg pointer-events-none" />
       </motion.div>
 
       {/* NAVBAR CONTENT */}
@@ -140,7 +103,7 @@ export function Navbar({
           <div className="absolute inset-0 -z-10 flex items-center justify-center overflow">
             <div
               className={cn(
-                "w-16 h-16 md:w-16 md:h-16 xl:w-20 xl:h-5 rounded-full blur-2xl opacity-100 transition-colors duration-500",
+                "w-16 h-16 md:w-16 md:h-16 xl:w-20 xl:h-5 rounded-full blur-3xl opacity-100 transition-colors duration-700",
                 isUnderwater
                   ? "bg-linear-to-r from-cyan-400 via-blue-300 to-cyan-500"
                   : "bg-linear-to-r from-amber-400 via-yellow-300 to-amber-500",
@@ -153,7 +116,7 @@ export function Navbar({
               src="/logos/logowithglow.webp"
               alt="Hackfest Logo"
               fill
-              className="object-contain drop-shadow-[0_0_12px_rgba(255,191,0,0.6)]"
+              className="object-contain drop-shadow-[0_0_12px_rgba(255,191,0,0.7)]"
             />
           </div>
         </Link>

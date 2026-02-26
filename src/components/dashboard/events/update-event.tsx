@@ -265,6 +265,8 @@ export default function UpdateEventTab({
               {formData.image && (
                 <div className="relative mt-2 flex justify-center rounded-md border overflow-hidden">
                   <Image
+                    height={192}
+                    width={384}
                     src={formData.image}
                     alt="Event preview"
                     className="w-auto h-48 object-cover"

@@ -35,7 +35,7 @@ export const POST = registrationOpenEventRoute(
             );
           }
 
-          return await deleteEventTeam(eventId, eventUser.teamId, user.id);
+          return await deleteEventTeam(eventUser.teamId, user.id);
         }
         default:
           return errorResponse(

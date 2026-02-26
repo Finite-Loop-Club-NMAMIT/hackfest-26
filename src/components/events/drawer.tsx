@@ -42,8 +42,9 @@ export default function EventDrawer({
           <VisuallyHidden>Event Details</VisuallyHidden>
         </DrawerTitle>
         <div
-          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 ${drawerDirection === "bottom" ? "pt-2" : "pt-6"
-            }`}
+          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 no-scrollbar ${
+            drawerDirection === "bottom" ? "pt-2" : "pt-6"
+          }`}
         >
           <h2 className="text-4xl lg:text-5xl font-bold text-[#f4d35e] wrap-break-word text-center">
             {event?.title}
@@ -199,7 +200,7 @@ export default function EventDrawer({
                     </p>
                   </div>
                   <Button
-                    onClick={() => redirect("/api/auth/events/login")}
+                    onClick={() => redirect("/events/login")}
                     className="w-full py-6 text-xl text-[#0b2545] cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 transition-all duration-300"
                   >
                     Log in to Register

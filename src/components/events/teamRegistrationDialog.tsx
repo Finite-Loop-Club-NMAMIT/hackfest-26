@@ -48,41 +48,61 @@ export default function TeamRegistrationDialog({
     if (!teamName.trim()) return;
     setLoading(true);
     setError(null);
-    const res = await apiFetch<{ team: EventTeam | null }>(
-      `/api/events/${eventId}/teams/create`,
-      {
-        method: "POST",
-        body: JSON.stringify({ teamName: teamName.trim() }),
-      },
-    );
 
-    if (res?.team) {
-      await fetchEvents();
-      onOpenChange(false);
-      resetState();
-      setTeamDialogOpen(true);
+    try {
+      const res = await apiFetch<{ team: EventTeam | null }>(
+        `/api/events/${eventId}/teams/create`,
+        {
+          method: "POST",
+          body: JSON.stringify({ teamName: teamName.trim() }),
+        },
+      );
+
+      if (res?.team) {
+        await fetchEvents();
+        onOpenChange(false);
+        resetState();
+        setTeamDialogOpen(true);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create team. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleJoin = async () => {
     if (!joinCode.trim()) return;
     setLoading(true);
     setError(null);
-    const res = await apiFetch<{ team: EventTeam | null }>(
-      `/api/events/${eventId}/teams/join`,
-      {
-        method: "POST",
-        body: JSON.stringify({ teamId: joinCode.trim() }),
-      },
-    );
-    if (res?.team) {
-      await fetchEvents();
-      onOpenChange(false);
-      resetState();
-      setTeamDialogOpen(true);
+
+    try {
+      const res = await apiFetch<{ team: EventTeam | null }>(
+        `/api/events/${eventId}/teams/join`,
+        {
+          method: "POST",
+          body: JSON.stringify({ teamId: joinCode.trim() }),
+        },
+      );
+      if (res?.team) {
+        await fetchEvents();
+        onOpenChange(false);
+        resetState();
+        setTeamDialogOpen(true);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to join team. Please check the code and try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const resetState = () => {

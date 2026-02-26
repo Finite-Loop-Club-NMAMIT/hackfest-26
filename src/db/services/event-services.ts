@@ -1,11 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import db from "~/db";
-import { query } from "~/db/data";
 import {
   findByEvent,
   findById,
   findLeaderByTeam,
-  findMembersByTeam,
   findParticipantsByTeamIds,
   findUserParticipations,
   updateById,
@@ -70,7 +68,6 @@ type Event = {
   organizers: Organizer[];
   team: Team | null;
   isLeader: boolean;
-  isComplete: boolean;
   teamMembers: Participant[];
 };
 
@@ -102,7 +99,6 @@ export async function getAllEvents(userId?: string) {
         organizers: [],
         team: null,
         isLeader: false,
-        isComplete: false,
         teamMembers: [],
       });
     }
@@ -187,7 +183,6 @@ export async function getAllEvents(userId?: string) {
 
     event.team = team ?? null;
     event.isLeader = p.isLeader;
-    event.isComplete = team?.isComplete ?? false;
     event.teamMembers = participantsGrouped.get(p.teamId) ?? [];
   }
 
@@ -245,19 +240,17 @@ export async function updateUserDetails(
 export async function eventRegistrationChecker(
   eventId: string,
   userId: string,
-  action: "create" | "leave" | "join" | "kick" | "confirm" | "delete",
+  action: string,
 ) {
   const eventUser = await findByEvent(eventId, userId);
   switch (action) {
     case "create":
     case "join":
       if (eventUser) {
-        return errorResponse(
-          new AppError("ALREADY_REGISTERED", 400, {
-            title: "Already registered",
-            description: "You are already registered for this event.",
-          }),
-        );
+        return new AppError("ALREADY_REGISTERED", 400, {
+          title: "Already registered",
+          description: "You are already registered for this event.",
+        });
       }
       break;
     case "leave":
@@ -265,17 +258,20 @@ export async function eventRegistrationChecker(
     case "confirm":
     case "delete":
       if (!eventUser) {
-        return errorResponse(
-          new AppError("NOT_REGISTERED", 400, {
-            title: "Not registered",
-            description: "You are not registered for this event.",
-          }),
-        );
+        return new AppError("NOT_REGISTERED", 400, {
+          title: "Not registered",
+          description: "You are not registered for this event.",
+        });
       }
       break;
     default:
-      return null;
+      return new AppError("Unknown action", 400, {
+        title: "Unknown Action",
+        description: "The specified action is not recognized.",
+      });
   }
+
+  return eventUser;
 }
 
 export async function createEventTeam(
@@ -407,8 +403,8 @@ export async function joinEventTeam(
       }),
     );
 
-  const members = await findMembersByTeam(teamId);
-  const leader = members.find((m) => m.isLeader);
+  const event = await findByEventId(eventId);
+  const leader = await findLeaderByTeam(teamId);
   const leaderCollegeId = (await findById(leader?.userId ?? ""))?.collegeId;
 
   if (leaderCollegeId !== collegeId)
@@ -416,6 +412,25 @@ export async function joinEventTeam(
       new AppError("COLLEGE_MISMATCH", 400, {
         title: "College mismatch",
         description: "You can only join teams from your own college.",
+      }),
+    );
+
+  const members = await memberCount(eventId, teamId);
+
+  if (event && members === event.maxTeamSize)
+    return errorResponse(
+      new AppError("TEAM_FULL", 400, {
+        title: "Team full",
+        description:
+          "This team has already reached the maximum number of members.",
+      }),
+    );
+
+  if (team.isComplete)
+    return errorResponse(
+      new AppError("TEAM_ALREADY_CONFIRMED", 400, {
+        title: "Team already confirmed",
+        description: "You cannot join a team that has already been confirmed.",
       }),
     );
 
@@ -455,9 +470,7 @@ export async function kickMemberFromTeam(
   userId: string,
   memberId: string,
 ) {
-  const team = await findByIdandEvent(eventId, teamId);
-
-  if (!team)
+  if (!teamId)
     return errorResponse(
       new AppError("TEAM_NOT_FOUND", 404, {
         title: "Team not found",
@@ -472,6 +485,27 @@ export async function kickMemberFromTeam(
       new AppError("NOT_TEAM_LEADER", 403, {
         title: "Not team leader",
         description: "Only the team leader can kick members from the team.",
+      }),
+    );
+
+  const member = findByEvent(eventId, memberId);
+
+  if (!member)
+    return errorResponse(
+      new AppError("MEMBER_NOT_FOUND", 404, {
+        title: "Member not found",
+        description: "The member you are trying to kick does not exist.",
+      }),
+    );
+
+  const team = await findByIdandEvent(eventId, teamId);
+
+  if (team?.isComplete)
+    return errorResponse(
+      new AppError("TEAM_ALREADY_CONFIRMED", 400, {
+        title: "Team already confirmed",
+        description:
+          "You cannot kick members from a team that has already been confirmed.",
       }),
     );
 
@@ -505,7 +539,19 @@ export async function kickMemberFromTeam(
   );
 }
 
-export async function confirmEventTeam(eventId: string, teamId: string) {
+export async function confirmEventTeam(
+  eventId: string,
+  teamId: string,
+  userId: string,
+) {
+  if (!teamId)
+    return errorResponse(
+      new AppError("TEAM_NOT_FOUND", 404, {
+        title: "Team not found",
+        description: "The team you are trying to confirm does not exist.",
+      }),
+    );
+
   const event = await findByEventId(eventId);
   const members = await memberCount(eventId, teamId);
 
@@ -517,9 +563,19 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
       }),
     );
 
+  const leader = await findLeaderByTeam(teamId);
+
+  if (leader?.userId !== userId)
+    return errorResponse(
+      new AppError("NOT_TEAM_LEADER", 403, {
+        title: "Not team leader",
+        description: "Only the team leader can confirm the team.",
+      }),
+    );
+
   const teams = await teamCount(eventId);
 
-  if (event && teams > event.maxTeams)
+  if (event && teams >= event.maxTeams)
     return errorResponse(
       new AppError("MAX_TEAMS_REACHED", 400, {
         title: "Max teams reached",
@@ -528,8 +584,16 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
       }),
     );
 
+  const [updatedTeam] = await db.transaction(async (tx) => {
+    return await tx
+      .update(eventTeams)
+      .set({ isComplete: true })
+      .where(eq(eventTeams.id, teamId))
+      .returning();
+  });
+
   return successResponse(
-    { team: await query.eventTeams.update(teamId, { isComplete: true }) },
+    { team: updatedTeam },
     {
       title: "Team Confirmed",
       description: "Your team has been confirmed successfully.",
@@ -537,14 +601,8 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
   );
 }
 
-export async function deleteEventTeam(
-  eventId: string,
-  teamId: string,
-  userId: string,
-) {
-  const team = await findByIdandEvent(eventId, teamId);
-
-  if (!team)
+export async function deleteEventTeam(teamId: string, userId: string) {
+  if (!teamId)
     return errorResponse(
       new AppError("TEAM_NOT_FOUND", 404, {
         title: "Team not found",

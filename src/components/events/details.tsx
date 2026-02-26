@@ -89,7 +89,7 @@ export default function EventDetails({
             {registration
               ? event.status === "Published"
                 ? "Embark now!"
-                : "Departed"
+                : "Sailed away..."
               : "Docking soon..."}
           </Button>
         </div>

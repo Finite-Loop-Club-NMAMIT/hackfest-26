@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { registrationOpenEventRoute } from "~/auth/route-handlers";
-import { findByEvent } from "~/db/data/event-users";
 import {
   confirmEventTeam,
   createEventTeam,
   deleteEventTeam,
+  eventRegistrationChecker,
   joinEventTeam,
+  kickMemberFromTeam,
   leaveEventTeam,
 } from "~/db/services/event-services";
 import { AppError } from "~/lib/errors/app-error";
@@ -15,41 +16,8 @@ export const POST = registrationOpenEventRoute(
   async (req: NextRequest, context, user) => {
     const { id: eventId, action } = await context.params;
 
-    const eventUser = await findByEvent(eventId, user.id);
-
-    if (!eventUser && ["leave", "confirm", "delete"].includes(action)) {
-      return errorResponse(
-        new AppError("Unauthorized", 401, {
-          title: "Unauthorized",
-          description: "You are not registered for this event.",
-        }),
-      );
-    } else if (eventUser) {
-      if (action === "create") {
-        return errorResponse(
-          new AppError("Already Registered", 400, {
-            title: "Already Registered",
-            description: "You are already registered for this event.",
-          }),
-        );
-      }
-
-      if (["confirm", "delete"].includes(action) && !eventUser.isLeader) {
-        return errorResponse(
-          new AppError("Forbidden", 403, {
-            title: "Forbidden",
-            description: "Only team leaders can perform this action.",
-          }),
-        );
-      }
-    }
-
-    const notRegisteredError = errorResponse(
-      new AppError("Unauthorized", 401, {
-        title: "Unauthorized",
-        description: "You are not registered for this event.",
-      }),
-    );
+    const eventUser = await eventRegistrationChecker(eventId, user.id, action);
+    if (eventUser instanceof AppError) return errorResponse(eventUser);
 
     try {
       switch (action) {
@@ -58,8 +26,11 @@ export const POST = registrationOpenEventRoute(
           return await createEventTeam(eventId, user.id, teamName);
         }
         case "leave": {
-          if (!eventUser) return notRegisteredError;
-          return await leaveEventTeam(eventId, user.id, eventUser.teamId);
+          return await leaveEventTeam(
+            eventId,
+            eventUser?.teamId ?? "",
+            user.id,
+          );
         }
         case "join": {
           const { teamId } = await req.json();
@@ -70,13 +41,21 @@ export const POST = registrationOpenEventRoute(
             teamId,
           );
         }
-        case "confirm": {
-          if (!eventUser) return notRegisteredError;
-          return await confirmEventTeam(eventId, eventUser.teamId);
+        case "kick": {
+          const { memberId } = await req.json();
+          return await kickMemberFromTeam(
+            eventId,
+            eventUser?.teamId ?? "",
+            user.id,
+            memberId,
+          );
         }
-        case "delete": {
-          if (!eventUser) return notRegisteredError;
-          return await deleteEventTeam(eventId, eventUser.teamId, user.id);
+        case "confirm": {
+          return await confirmEventTeam(
+            eventId,
+            eventUser?.teamId ?? "",
+            user.id,
+          );
         }
         default:
           return errorResponse(
@@ -95,5 +74,39 @@ export const POST = registrationOpenEventRoute(
         }),
       );
     }
+  },
+);
+
+export const DELETE = registrationOpenEventRoute(
+  async (_req: NextRequest, context, user) => {
+    const { id: eventId, action } = await context.params;
+
+    if (action === "delete") {
+      const eventUser = await eventRegistrationChecker(
+        eventId,
+        user.id,
+        "delete",
+      );
+      if (eventUser instanceof AppError) return errorResponse(eventUser);
+
+      try {
+        return await deleteEventTeam(eventUser?.teamId ?? "", user.id);
+      } catch (err) {
+        return errorResponse(
+          new AppError("Delete failed", 500, {
+            title: "Delete Failed",
+            description:
+              err instanceof Error ? err.message : "An unknown error occurred.",
+          }),
+        );
+      }
+    }
+
+    return errorResponse(
+      new AppError("Unknown action", 400, {
+        title: "Unknown Action",
+        description: "The specified action is not recognized.",
+      }),
+    );
   },
 );
