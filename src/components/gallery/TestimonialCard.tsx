@@ -93,7 +93,7 @@ export default function TestimonialCard({
           {/* Avatar + identity */}
           <div className="flex items-center gap-3.5 mb-4">
             <div className="relative shrink-0">
-              <div className="w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-600/30 group-hover:border-amber-500/50 transition-colors duration-500">
+              {/* <div className="w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-600/30 group-hover:border-amber-500/50 transition-colors duration-500">
                 <Image
                   src={`https://picsum.photos/seed/${testimonial.avatarSeed}/96/96`}
                   alt={testimonial.name}
@@ -101,7 +101,7 @@ export default function TestimonialCard({
                   height={48}
                   className="object-cover w-full h-full"
                 />
-              </div>
+              </div> */}
               <div className="absolute -inset-0.5 rounded-full border border-amber-400/10 group-hover:border-amber-400/20 transition-colors duration-500" />
             </div>
 
@@ -110,14 +110,14 @@ export default function TestimonialCard({
                 {testimonial.name}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span
+                {/* <span
                   className={cn(
                     "text-xs font-crimson font-semibold uppercase tracking-wider",
                     roleColor,
                   )}
                 >
                   {pirateTitle}
-                </span>
+                </span> */}
                 <span className="text-white/15">&middot;</span>
                 <span className="text-xs font-crimson text-white/30">
                   {testimonial.role}
