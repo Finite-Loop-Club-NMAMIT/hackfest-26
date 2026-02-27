@@ -283,10 +283,10 @@ function MobileTrackStack() {
       </div>
 
       <div className="text-center w-full z-20">
-        <h3 className="text-2xl font-bold font-crimson text-cyan-400 mb-3 tracking-wide drop-shadow-md">
+        <h3 className="text-2xl font-bold font-pirata text-cyan-400 mb-3 tracking-wide drop-shadow-md">
           {activeTrack.title}
         </h3>
-        <p className="text-lg font-crimson font-bold text-cyan-200/70 mb-4 px-4 leading-snug">
+        <p className="text-lg font-crimson text-cyan-200/70 mb-4 px-4 leading-snug">
           {activeTrack.desc}
         </p>
         <div className="flex gap-2 justify-center mt-2">
@@ -402,7 +402,7 @@ export default function TracksSection() {
 
                       {/* Track title */}
                       <motion.span
-                        className="relative z-10 text-base md:text-[1.1rem] lg:text-3xl font-crimson font-bold tracking-wide lg:tracking-wider whitespace-nowrap pl-2 lg:pl-4"
+                        className="relative z-10 text-base md:text-[1.1rem] lg:text-3xl font-pirata font-bold tracking-wide lg:tracking-wider whitespace-nowrap pl-2 lg:pl-4"
                         animate={{
                           color: isActive ? "#67e8f9" : "#9ca3af",
                           textShadow: isActive
@@ -443,7 +443,7 @@ export default function TracksSection() {
                   transition={{ duration: 0.5 }}
                   className="w-full relative z-10 h-full flex flex-col justify-center"
                 >
-                  <p className="text-lg md:text-xl lg:text-2xl font-crimson font-bold text-cyan-200/70 leading-snug lg:leading-[1.4] tracking-wide">
+                  <p className="text-lg md:text-xl lg:text-2xl font-crimson text-cyan-200/70 leading-snug lg:leading-[1.4] tracking-wide">
                     {tracks[activeTab].desc}
                   </p>
                 </motion.div>
