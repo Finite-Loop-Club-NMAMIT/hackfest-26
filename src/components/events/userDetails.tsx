@@ -4,10 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { UpdateSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import {
@@ -48,11 +46,7 @@ interface College {
 
 type FormValues = UpdateEventUserInput;
 
-export function UserDetailsForm({
-  sessionUpdate,
-}: {
-  sessionUpdate: UpdateSession;
-}) {
+export function UserDetailsForm() {
   const router = useRouter();
 
   const [colleges, setColleges] = useState<College[]>([]);
@@ -82,7 +76,7 @@ export function UserDetailsForm({
         );
         setColleges(result?.colleges ?? []);
       } catch {
-        toast.error("Failed to load colleges");
+        console.error("Failed to load colleges");
       } finally {
         setLoadingColleges(false);
       }
@@ -97,10 +91,9 @@ export function UserDetailsForm({
         method: "POST",
         body: JSON.stringify(data),
       });
-      await sessionUpdate();
       router.refresh();
     } catch {
-      toast.error("Failed to update details. Please try again.");
+      console.error("Failed to update details. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +107,10 @@ export function UserDetailsForm({
 
   return (
     <Dialog open={true}>
-      <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-md w-full rounded-2xl">
+      <DialogContent
+        className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-md w-full rounded-2xl"
+        showCloseButton={false}
+      >
         <VisuallyHidden>
           <DialogTitle>Complete Your Registration Details</DialogTitle>
         </VisuallyHidden>

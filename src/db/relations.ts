@@ -164,6 +164,14 @@ export const dashboardUserRoleRelations = relations(
   }),
 );
 
+export const eventOrganizerRelations = relations(
+  eventOrganizers,
+  ({ many }) => ({
+    user: many(dashboardUsers),
+    event: many(events),
+  }),
+);
+
 export const eventTeamRelations = relations(eventTeams, ({ many, one }) => ({
   event: one(events, {
     fields: [eventTeams.eventId],

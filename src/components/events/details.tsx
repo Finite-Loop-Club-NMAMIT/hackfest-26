@@ -6,9 +6,11 @@ import { getEventAttributes } from "./utils";
 
 export default function EventDetails({
   events,
+  registration,
   handleCardClick,
 }: {
   events: Event[];
+  registration: boolean;
   handleCardClick: (id: string) => void;
 }) {
   return (
@@ -18,21 +20,24 @@ export default function EventDetails({
       className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 md:gap-10 gap-6 justify-center items-start"
     >
       {events.map((event) => (
+        // biome-ignore lint/a11y/noStaticElementInteractions: clickable card
+        // biome-ignore lint/a11y/useKeyWithClickEvents: clickable card
         <div
           key={event.id}
-          className="relative hover:shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-all duration-300 ease-out bg-[#0f1823] border border-[#39577c] rounded-2xl flex flex-col gap-3 w-full mx-auto p-3 overflow-hidden"
+          onClick={() => handleCardClick(event.id)}
+          className="relative cursor-pointer hover:shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-all duration-300 ease-out bg-[#0f1823] border border-[#39577c] rounded-2xl flex flex-col gap-3 w-full mx-auto p-3 overflow-hidden"
         >
           {/* Card header — logo + type badge */}
           <div>
             <div className="bg-[#133c55] rounded-tr-xl relative flex items-center justify-end px-3 pt-3">
               {/* Logo notch */}
-              <div className="absolute -left-6 top-0 -skew-x-37 bg-[#0f1823] rounded-bl-3xl rounded-br-xl px-10 pb-1">
+              <div className="absolute -left-6 -top-1 -skew-x-37 bg-[#0f1823] rounded-bl-3xl rounded-br-xl px-10 pb-2">
                 <Image
-                  src="/logos/glowingLogo.webp"
+                  src="/logos/Logotext@3x-8.png"
                   alt="Hackfest Logo"
                   width={550}
                   height={550}
-                  className="h-8 w-8 skew-x-37 scale-[1.2] drop-shadow-[0_0_12px_rgba(255,191,0,0.8)]"
+                  className="h-8 w-20 skew-x-37 scale-[1.1]"
                 />
               </div>
               {/* Type badge */}
@@ -45,7 +50,7 @@ export default function EventDetails({
             {event.image && (
               <div className="bg-[#133c55] px-3 py-3 rounded-b-xl rounded-tl-xl">
                 <Image
-                  src="/images/tracks/FinTech.png"
+                  src={event.image}
                   alt={event.title}
                   width={250}
                   height={250}
@@ -79,12 +84,13 @@ export default function EventDetails({
           </div>
 
           {/* CTA */}
-          <Button
-            onClick={() => handleCardClick(event.id)}
-            className="cursor-pointer tracking-wider text-lg text-[#0b2545] capitalize w-full py-2 flex gap-2 items-center justify-center rounded-full bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 hover:scale-[1.02] transition-all duration-300"
-          >
+          <Button className="cursor-pointer tracking-wider text-lg text-[#0b2545] capitalize w-full py-2 flex gap-2 items-center justify-center rounded-full bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 hover:scale-[1.02] transition-all duration-300">
             <Compass size={20} />
-            Set Sail
+            {registration
+              ? event.status === "Published"
+                ? "Embark now!"
+                : "Sailed away..."
+              : "Docking soon..."}
           </Button>
         </div>
       ))}

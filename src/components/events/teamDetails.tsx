@@ -9,7 +9,6 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { apiFetch } from "~/lib/fetcher";
@@ -53,13 +52,16 @@ export function TeamDetailsDialog({
   const handleKick = async (memberId: string) => {
     setKickingId(memberId);
     try {
-      await apiFetch(`/api/events/teams/${team.id}/kick`, {
-        method: "POST",
-        body: JSON.stringify({ memberId }),
-      });
-      await fetchEvents();
-    } catch {
-      console.error("Failed to kick member. Please try again.");
+      const res = await apiFetch<{ team: EventTeam }>(
+        `/api/events/${team.eventId}/teams/kick`,
+        {
+          method: "POST",
+          body: JSON.stringify({ memberId }),
+        },
+      );
+      if (res?.team) await fetchEvents();
+    } catch (err) {
+      console.error(err);
     } finally {
       setKickingId(null);
     }
@@ -68,14 +70,19 @@ export function TeamDetailsDialog({
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      await apiFetch(`/api/events/teams/${team.id}/confirm`, {
-        method: "POST",
-      });
-      await fetchEvents();
-      toast.success("Team confirmed successfully!");
-      onOpenChange(false);
-    } catch {
-      toast.error("Failed to confirm team. Please try again.");
+      const res = await apiFetch<{ team: EventTeam }>(
+        `/api/events/${team.eventId}/teams/confirm`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (res?.team) {
+        await fetchEvents();
+        onOpenChange(false);
+      }
+    } catch (err) {
+      console.error(err);
     } finally {
       setConfirming(false);
     }
@@ -84,14 +91,18 @@ export function TeamDetailsDialog({
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await apiFetch(`/api/events/teams/${team.id}/delete`, {
-        method: "DELETE",
-      });
-      await fetchEvents();
-      toast.success("Team deleted.");
-      onOpenChange(false);
-    } catch {
-      toast.error("Failed to delete team. Please try again.");
+      const res = await apiFetch<{ team: EventTeam }>(
+        `/api/events/${team.eventId}/teams/delete`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (res?.team) {
+        await fetchEvents();
+        onOpenChange(false);
+      }
+    } catch (err) {
+      console.error(err);
     } finally {
       setDeleting(false);
     }
@@ -100,14 +111,13 @@ export function TeamDetailsDialog({
   const handleLeave = async () => {
     setLeaving(true);
     try {
-      await apiFetch(`/api/events/teams/${team.id}/leave`, {
+      await apiFetch(`/api/events/${team.eventId}/teams/leave`, {
         method: "POST",
       });
       await fetchEvents();
-      toast.success("You have left the team.");
       onOpenChange(false);
-    } catch {
-      toast.error("Failed to leave team. Please try again.");
+    } catch (err) {
+      console.error(err);
     } finally {
       setLeaving(false);
     }
@@ -120,7 +130,10 @@ export function TeamDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-md w-full rounded-2xl">
+      <DialogContent
+        className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-md w-full rounded-2xl"
+        showCloseButton={false}
+      >
         <VisuallyHidden>
           <DialogTitle>Team Details</DialogTitle>
         </VisuallyHidden>
@@ -151,28 +164,31 @@ export function TeamDetailsDialog({
           </div>
 
           {/* Team ID */}
-          <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-[#133c55]/40 border border-[#39577c]/60">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
-                Team ID
-              </span>
-              <span className="text-sm font-mono text-white/70 tracking-wider">
-                {maskedId}
-              </span>
+
+          {isLeader && (
+            <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-[#133c55]/40 border border-[#39577c]/60">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-semibold uppercase tracking-widest text-[#f4d35e]/60">
+                  Team ID
+                </span>
+                <span className="text-sm font-mono text-white/70 tracking-wider">
+                  {maskedId}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="shrink-0 p-2 rounded-lg text-white/30 hover:text-[#f4d35e] hover:bg-[#f4d35e]/10 border border-transparent hover:border-[#f4d35e]/20 transition-all duration-150"
+                title="Copy Team ID"
+              >
+                {copied ? (
+                  <Check size={15} className="text-emerald-400" />
+                ) : (
+                  <Copy size={15} />
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="shrink-0 p-2 rounded-lg text-white/30 hover:text-[#f4d35e] hover:bg-[#f4d35e]/10 border border-transparent hover:border-[#f4d35e]/20 transition-all duration-150"
-              title="Copy Team ID"
-            >
-              {copied ? (
-                <Check size={15} className="text-emerald-400" />
-              ) : (
-                <Copy size={15} />
-              )}
-            </button>
-          </div>
+          )}
 
           {/* Members list */}
           <div className="flex flex-col gap-2">

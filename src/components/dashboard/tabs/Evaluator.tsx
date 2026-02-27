@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 import { Card, CardDescription, CardTitle } from "~/components/ui/card";
 
+// biome-ignore lint/correctness/noUnusedVariables: kept for future use
 type DashboardContentProps = {
   permissions: {
     isAdmin: boolean;

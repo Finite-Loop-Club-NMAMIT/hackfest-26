@@ -1,70 +1,201 @@
+import { and, eq } from "drizzle-orm";
 import db from "~/db";
-import { query } from "~/db/data";
 import {
-  addParticipant,
-  deleteParticipant,
   findByEvent,
   findById,
-  findMembersByTeam,
+  findLeaderByTeam,
+  findParticipantsByTeamIds,
+  findUserParticipations,
   updateById,
 } from "~/db/data/event-users";
 import { eventParticipants, eventTeams } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { successResponse } from "~/lib/response/success";
-import type { UpdateEventUserInput } from "~/lib/validation/event";
-import { eventRegistrationOpen, findByEventId } from "../data/event";
-import { findByIdandEvent, memberCount, teamCount } from "../data/event-teams";
+import {
+  type UpdateEventUserInput,
+  updateEventUserSchema,
+} from "~/lib/validation/event";
+import {
+  eventRegistrationOpen,
+  findAllPublishedEvents,
+  findByEventId,
+} from "../data/event";
+import {
+  findByIdandEvent,
+  findTeamsByIds,
+  memberCount,
+  teamCount,
+} from "../data/event-teams";
+
+type Team = {
+  id: string;
+  eventId: string;
+  name: string;
+  isComplete: boolean;
+};
+
+type Organizer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+};
+
+type Participant = {
+  id: string;
+  userId: string;
+  isLeader: boolean;
+  name: string;
+  email: string;
+};
+
+type Event = {
+  id: string;
+  title: string;
+  date: Date;
+  image: string;
+  venue: string;
+  description: string;
+  type: string;
+  status: string;
+  audience: string;
+  category: string;
+  deadline: Date;
+  minTeamSize: number;
+  maxTeamSize: number;
+  maxTeams: number;
+  organizers: Organizer[];
+  team: Team | null;
+  isLeader: boolean;
+  teamMembers: Participant[];
+};
 
 export async function getAllEvents(userId?: string) {
   const registrationsOpen = await eventRegistrationOpen();
-  const events = await query.events.findMany({
-    where: (events, { eq, not }) => not(eq(events.status, "Draft")),
-    orderBy: (events, { desc }) => desc(events.date),
-  });
+  const rows = await findAllPublishedEvents();
 
-  if (!userId)
-    return successResponse({ events, registrationsOpen }, { toast: false });
+  const eventMap = new Map<string, Event>();
 
-  const participants = await query.eventParticipants.findMany({});
-  const teams = await query.eventTeams.findMany({});
-  const users = await query.eventUsers.findMany({});
-  const usersMap = new Map(
-    users.map((u) => [u.id, { name: u.name, email: u.email }]),
-  );
+  for (const row of rows) {
+    const e = row.event;
 
-  const res = events.map(async (e) => {
-    const participant = participants.find(
-      (p) => p.eventId === e.id && p.userId === userId,
-    );
-
-    if (!participant)
-      return {
-        ...e,
+    if (!eventMap.has(e.id)) {
+      eventMap.set(e.id, {
+        id: e.id,
+        title: e.title,
+        date: e.date,
+        image: e.image,
+        venue: e.venue,
+        description: e.description,
+        type: e.type,
+        status: e.status,
+        audience: e.audience,
+        category: e.category,
+        deadline: e.deadline,
+        minTeamSize: e.minTeamSize,
+        maxTeamSize: e.maxTeamSize,
+        maxTeams: e.maxTeams,
+        organizers: [],
         team: null,
-        isComplete: false,
         isLeader: false,
         teamMembers: [],
-      };
-    const team = teams.find((t) => t.id === participant.teamId);
-    const members = participants.filter((p) => p.teamId === team?.id);
+      });
+    }
 
-    return {
-      ...e,
-      team: team,
-      isComplete: team?.isComplete,
-      isLeader: participant.isLeader,
-      teamMembers: members.map((em) => ({
-        ...em,
-        name: usersMap.get(em.userId)?.name ?? "Unknown User",
-        email: usersMap.get(em.userId)?.email ?? "Unknown Email",
-      })),
-    };
-  });
+    if (row.organizerId && row.organizerUser) {
+      const event = eventMap.get(e.id);
+
+      const alreadyExists = event?.organizers.some(
+        (o: Organizer) => o.id === row.organizerId,
+      );
+
+      if (!alreadyExists) {
+        event?.organizers.push({
+          id: row.organizerId,
+          name: row.organizerUser.name,
+          email: row.organizerUser.email ?? "",
+          phone: row.organizerUser.phone ?? "",
+        });
+      }
+    }
+  }
+
+  if (!userId)
+    return successResponse(
+      {
+        events: Array.from(eventMap.values()),
+        registrationsOpen,
+      },
+      {
+        toast: false,
+        title: "Events fetched",
+        description: "All published events have been fetched successfully.",
+      },
+    );
+
+  const participations = await findUserParticipations(userId);
+
+  if (!participations.length) {
+    return successResponse(
+      {
+        events: Array.from(eventMap.values()),
+        registrationsOpen,
+      },
+      {
+        toast: false,
+        title: "Events fetched",
+        description: "All published events have been fetched successfully.",
+      },
+    );
+  }
+
+  const teamIds = [...new Set(participations.map((p) => p.teamId))];
+
+  const teams = await findTeamsByIds(teamIds);
+  const teamMap = new Map(teams.map((t) => [t.id, t]));
+
+  const teamParticipants = await findParticipantsByTeamIds(teamIds);
+
+  const participantsGrouped = new Map<string, Participant[]>();
+
+  for (const row of teamParticipants) {
+    const teamId = row.participant.teamId;
+
+    if (!participantsGrouped.has(teamId)) {
+      participantsGrouped.set(teamId, []);
+    }
+
+    participantsGrouped.get(teamId)?.push({
+      id: row.participant.id,
+      userId: row.participant.userId,
+      isLeader: row.participant.isLeader,
+      name: row.user?.name ?? "Unknown User",
+      email: row.user?.email ?? "Unknown Email",
+    });
+  }
+
+  for (const p of participations) {
+    const event = eventMap.get(p.eventId);
+    if (!event) continue;
+
+    const team = teamMap.get(p.teamId);
+
+    event.team = team ?? null;
+    event.isLeader = p.isLeader;
+    event.teamMembers = participantsGrouped.get(p.teamId) ?? [];
+  }
 
   return successResponse(
-    { events: await Promise.all(res), registrationsOpen },
-    { toast: false },
+    {
+      events: Array.from(eventMap.values()),
+      registrationsOpen,
+    },
+    {
+      toast: false,
+      title: "Events fetched",
+      description: "All published events have been fetched successfully.",
+    },
   );
 }
 
@@ -72,6 +203,7 @@ export async function updateUserDetails(
   userId: string,
   data: UpdateEventUserInput,
 ) {
+  const payload = updateEventUserSchema.parse(data);
   const user = await findById(userId);
 
   if (user?.gender || user?.state || user?.collegeId) {
@@ -84,7 +216,7 @@ export async function updateUserDetails(
     );
   }
 
-  const updatedUser = await updateById(userId, data);
+  const updatedUser = await updateById(userId, payload);
 
   if (!updatedUser) {
     return errorResponse(
@@ -103,6 +235,43 @@ export async function updateUserDetails(
       description: "Your user details have been updated successfully.",
     },
   );
+}
+
+export async function eventRegistrationChecker(
+  eventId: string,
+  userId: string,
+  action: string,
+) {
+  const eventUser = await findByEvent(eventId, userId);
+  switch (action) {
+    case "create":
+    case "join":
+      if (eventUser) {
+        return new AppError("ALREADY_REGISTERED", 400, {
+          title: "Already registered",
+          description: "You are already registered for this event.",
+        });
+      }
+      break;
+    case "leave":
+    case "kick":
+    case "confirm":
+    case "delete":
+      if (!eventUser) {
+        return new AppError("NOT_REGISTERED", 400, {
+          title: "Not registered",
+          description: "You are not registered for this event.",
+        });
+      }
+      break;
+    default:
+      return new AppError("Unknown action", 400, {
+        title: "Unknown Action",
+        description: "The specified action is not recognized.",
+      });
+  }
+
+  return eventUser;
 }
 
 export async function createEventTeam(
@@ -153,7 +322,6 @@ export async function createEventTeam(
       }),
     );
   }
-  console.log("Created team:", eventTeam);
 
   return successResponse(
     { team: eventTeam },
@@ -189,8 +357,29 @@ export async function leaveEventTeam(
       }),
     );
 
+  const leftTeam = await db.transaction(async (tx) => {
+    return await tx
+      .delete(eventParticipants)
+      .where(
+        and(
+          eq(eventParticipants.id, participant.id),
+          eq(eventParticipants.teamId, teamId),
+        ),
+      )
+      .returning();
+  });
+
+  if (!leftTeam)
+    return errorResponse(
+      new AppError("LEAVE_TEAM_FAILED", 500, {
+        title: "Leave team failed",
+        description:
+          "An error occurred while leaving the team. Please try again.",
+      }),
+    );
+
   return successResponse(
-    { team: await deleteParticipant(participant.id) },
+    { team: leftTeam[0] },
     {
       title: "Left Team",
       description: "You have left the team successfully.",
@@ -204,14 +393,6 @@ export async function joinEventTeam(
   collegeId: string,
   teamId: string,
 ) {
-  if (!collegeId)
-    return errorResponse(
-      new AppError("COLLEGE_ID_REQUIRED", 400, {
-        title: "College ID required",
-        description: "You must have a college ID to join a team.",
-      }),
-    );
-
   const team = await findByIdandEvent(eventId, teamId);
 
   if (!team)
@@ -222,8 +403,8 @@ export async function joinEventTeam(
       }),
     );
 
-  const members = await findMembersByTeam(teamId);
-  const leader = members.find((m) => m.isLeader);
+  const event = await findByEventId(eventId);
+  const leader = await findLeaderByTeam(teamId);
   const leaderCollegeId = (await findById(leader?.userId ?? ""))?.collegeId;
 
   if (leaderCollegeId !== collegeId)
@@ -234,7 +415,36 @@ export async function joinEventTeam(
       }),
     );
 
-  const participant = await addParticipant(eventId, teamId, userId, false);
+  const members = await memberCount(eventId, teamId);
+
+  if (event && members === event.maxTeamSize)
+    return errorResponse(
+      new AppError("TEAM_FULL", 400, {
+        title: "Team full",
+        description:
+          "This team has already reached the maximum number of members.",
+      }),
+    );
+
+  if (team.isComplete)
+    return errorResponse(
+      new AppError("TEAM_ALREADY_CONFIRMED", 400, {
+        title: "Team already confirmed",
+        description: "You cannot join a team that has already been confirmed.",
+      }),
+    );
+
+  const participant = await db.transaction(async (tx) => {
+    return await tx
+      .insert(eventParticipants)
+      .values({
+        eventId: eventId,
+        teamId: teamId,
+        userId: userId,
+        isLeader: false,
+      })
+      .returning();
+  });
 
   if (!participant)
     return errorResponse(
@@ -254,7 +464,94 @@ export async function joinEventTeam(
   );
 }
 
-export async function confirmEventTeam(eventId: string, teamId: string) {
+export async function kickMemberFromTeam(
+  eventId: string,
+  teamId: string,
+  userId: string,
+  memberId: string,
+) {
+  if (!teamId)
+    return errorResponse(
+      new AppError("TEAM_NOT_FOUND", 404, {
+        title: "Team not found",
+        description: "The team you are trying to kick from does not exist.",
+      }),
+    );
+
+  const leader = await findLeaderByTeam(teamId);
+
+  if (leader?.userId !== userId)
+    return errorResponse(
+      new AppError("NOT_TEAM_LEADER", 403, {
+        title: "Not team leader",
+        description: "Only the team leader can kick members from the team.",
+      }),
+    );
+
+  const member = findByEvent(eventId, memberId);
+
+  if (!member)
+    return errorResponse(
+      new AppError("MEMBER_NOT_FOUND", 404, {
+        title: "Member not found",
+        description: "The member you are trying to kick does not exist.",
+      }),
+    );
+
+  const team = await findByIdandEvent(eventId, teamId);
+
+  if (team?.isComplete)
+    return errorResponse(
+      new AppError("TEAM_ALREADY_CONFIRMED", 400, {
+        title: "Team already confirmed",
+        description:
+          "You cannot kick members from a team that has already been confirmed.",
+      }),
+    );
+
+  const kickedMember = await db.transaction(async (tx) => {
+    return await tx
+      .delete(eventParticipants)
+      .where(
+        and(
+          eq(eventParticipants.id, memberId),
+          eq(eventParticipants.teamId, teamId),
+        ),
+      )
+      .returning();
+  });
+
+  if (!kickedMember)
+    return errorResponse(
+      new AppError("KICK_MEMBER_FAILED", 500, {
+        title: "Kick member failed",
+        description:
+          "An error occurred while kicking the member from the team. Please try again.",
+      }),
+    );
+
+  return successResponse(
+    { team: kickedMember[0] },
+    {
+      title: "Member Kicked",
+      description: "The member has been kicked from the team successfully.",
+    },
+  );
+}
+
+export async function confirmEventTeam(
+  eventId: string,
+  teamId: string,
+  userId: string,
+) {
+  if (!teamId)
+    return errorResponse(
+      new AppError("TEAM_NOT_FOUND", 404, {
+        title: "Team not found",
+        description: "The team you are trying to confirm does not exist.",
+      }),
+    );
+
   const event = await findByEventId(eventId);
   const members = await memberCount(eventId, teamId);
 
@@ -266,9 +563,19 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
       }),
     );
 
+  const leader = await findLeaderByTeam(teamId);
+
+  if (leader?.userId !== userId)
+    return errorResponse(
+      new AppError("NOT_TEAM_LEADER", 403, {
+        title: "Not team leader",
+        description: "Only the team leader can confirm the team.",
+      }),
+    );
+
   const teams = await teamCount(eventId);
 
-  if (event && teams > event.maxTeams)
+  if (event && teams >= event.maxTeams)
     return errorResponse(
       new AppError("MAX_TEAMS_REACHED", 400, {
         title: "Max teams reached",
@@ -277,8 +584,16 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
       }),
     );
 
+  const [updatedTeam] = await db.transaction(async (tx) => {
+    return await tx
+      .update(eventTeams)
+      .set({ isComplete: true })
+      .where(eq(eventTeams.id, teamId))
+      .returning();
+  });
+
   return successResponse(
-    { team: await query.eventTeams.update(teamId, { isComplete: true }) },
+    { team: updatedTeam },
     {
       title: "Team Confirmed",
       description: "Your team has been confirmed successfully.",
@@ -286,9 +601,43 @@ export async function confirmEventTeam(eventId: string, teamId: string) {
   );
 }
 
-export async function deleteEventTeam(teamId: string) {
+export async function deleteEventTeam(teamId: string, userId: string) {
+  if (!teamId)
+    return errorResponse(
+      new AppError("TEAM_NOT_FOUND", 404, {
+        title: "Team not found",
+        description: "The team you are trying to delete does not exist.",
+      }),
+    );
+
+  const participant = await findLeaderByTeam(teamId);
+
+  if (participant?.userId !== userId)
+    return errorResponse(
+      new AppError("NOT_TEAM_LEADER", 403, {
+        title: "Not team leader",
+        description: "Only the team leader can delete the team.",
+      }),
+    );
+
+  const deletedTeam = await db.transaction(async (tx) => {
+    return await tx
+      .delete(eventTeams)
+      .where(eq(eventTeams.id, teamId))
+      .returning();
+  });
+
+  if (!deletedTeam)
+    return errorResponse(
+      new AppError("DELETE_TEAM_FAILED", 500, {
+        title: "Delete team failed",
+        description:
+          "An error occurred while deleting the team. Please try again.",
+      }),
+    );
+
   return successResponse(
-    { team: await query.eventTeams.delete(teamId) },
+    { team: deletedTeam[0] },
     {
       title: "Team Deleted",
       description: "Your team has been deleted successfully.",

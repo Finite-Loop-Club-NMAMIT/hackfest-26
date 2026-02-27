@@ -3,7 +3,9 @@ import type { Event } from "./layout";
 
 export const getTeamSize = (minSize: number, maxSize: number) => {
   if (minSize === maxSize) {
-    return minSize === 1 ? "1" : `${minSize} members per team`;
+    return minSize === 1
+      ? "1"
+      : `${minSize} member${minSize === 1 ? "" : "s"} per team`;
   }
   return `${minSize} - ${maxSize} members per team`;
 };
@@ -13,9 +15,6 @@ export const getDate = (date: string) => {
     month: "short",
     day: "numeric",
   })}, ${new Date(date).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })} - ${new Date(date).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   })}`;

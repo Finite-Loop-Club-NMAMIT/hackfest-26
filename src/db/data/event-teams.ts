@@ -6,6 +6,14 @@ export async function findByTeamId(id: string) {
   });
 }
 
+export async function findTeamsByIds(teamIds: string[]) {
+  if (!teamIds.length) return [];
+
+  return query.eventTeams.findMany({
+    where: (t, { inArray }) => inArray(t.id, teamIds),
+  });
+}
+
 export async function findByIdandEvent(eventId: string, teamId: string) {
   return query.eventTeams.findOne({
     where: (t, { and, eq }) => and(eq(t.id, teamId), eq(t.eventId, eventId)),

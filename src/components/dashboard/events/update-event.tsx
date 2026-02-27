@@ -2,11 +2,11 @@
 import { format } from "date-fns";
 import { AlertCircle, CalendarIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -40,12 +40,11 @@ import { getEventById, updateEvent } from "./request";
 
 export default function UpdateEventTab({
   setTab,
+  eventId,
 }: {
   setTab: (tab: string) => void;
+  eventId: string | null;
 }) {
-  const params = useSearchParams();
-  const eventId = params.get("id");
-
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState<z.infer<typeof eventSchema>>({
@@ -88,12 +87,12 @@ export default function UpdateEventTab({
           });
         } else {
           toast.error("Event not found");
-          setTab("eventList");
+          setTab("all");
         }
       } catch (error) {
         console.error("Error fetching event:", error);
         toast.error("Failed to load event");
-        setTab("eventList");
+        setTab("all");
       } finally {
         setFetching(false);
       }
@@ -147,7 +146,7 @@ export default function UpdateEventTab({
       const response = await updateEvent(eventId, data.data);
 
       if (response) {
-        setTab("eventList");
+        setTab("all");
       }
     } catch (error) {
       console.error("Error updating event:", error);
@@ -251,20 +250,32 @@ export default function UpdateEventTab({
 
             <div className="space-y-2">
               <Label htmlFor="image">
-                Image URL <span className="text-destructive">*</span>
+                Event Image <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="image"
-                name="image"
-                type="url"
-                placeholder="Enter image URL"
-                value={formData.image}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="flex items-center gap-3">
+                <CloudinaryUpload
+                  onUpload={(url) =>
+                    setFormData((prev) => ({ ...prev, image: url }))
+                  }
+                  folder="events"
+                  label="Upload Image"
+                />
+                <span className="text-sm text-muted-foreground">or</span>
+                <Input
+                  id="image"
+                  name="image"
+                  type="url"
+                  placeholder="Paste image URL"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                  className="flex-1"
+                />
+              </div>
               {formData.image && (
                 <div className="relative mt-2 flex justify-center rounded-md border overflow-hidden">
                   <Image
+                    height={192}
+                    width={384}
                     src={formData.image}
                     alt="Event preview"
                     className="w-auto h-48 object-cover"
@@ -461,7 +472,7 @@ export default function UpdateEventTab({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => setTab("eventList")}
+            onClick={() => setTab("all")}
             disabled={loading}
           >
             Cancel

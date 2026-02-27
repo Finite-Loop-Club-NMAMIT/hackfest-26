@@ -1,18 +1,20 @@
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Mail, Phone, User } from "lucide-react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Button } from "../ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "../ui/drawer";
-import type { Event } from "./layout";
+import type { Event, EventOrganizer } from "./layout";
 import RegisterButton from "./registerButton";
 import { getDate, getTeamSize } from "./utils";
 
 export default function EventDrawer({
   event,
+  session,
   drawerOpen,
   setDrawerOpen,
   fetchEvents,
@@ -20,14 +22,13 @@ export default function EventDrawer({
   drawerDirection,
 }: {
   event: Event | null;
+  session: Session | null;
   drawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
   fetchEvents: () => Promise<void>;
   registrationOpen: boolean;
   drawerDirection: "right" | "bottom";
 }) {
-  const { data: session } = useSession();
-
   if (!event) return null;
 
   return (
@@ -41,7 +42,7 @@ export default function EventDrawer({
           <VisuallyHidden>Event Details</VisuallyHidden>
         </DrawerTitle>
         <div
-          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 ${
+          className={`flex flex-col gap-6 px-4 pb-8 overflow-y-auto flex-1 no-scrollbar ${
             drawerDirection === "bottom" ? "pt-2" : "pt-6"
           }`}
         >
@@ -51,8 +52,7 @@ export default function EventDrawer({
           {event?.image && (
             <div className="flex justify-center relative">
               <Image
-                // TODO: Update to dynamic image path when available
-                src="/images/tracks/Fintech.webp"
+                src={event.image}
                 alt={event.title}
                 width={500}
                 height={500}
@@ -60,7 +60,7 @@ export default function EventDrawer({
               />
             </div>
           )}
-          <div className="text-white prose prose-headings:text-white prose-li:text-white min-w-full">
+          <div className="text-white prose prose-headings:text-white prose-li:text-white prose-strong:text-white min-w-full">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
@@ -89,7 +89,7 @@ export default function EventDrawer({
                 },
                 {
                   label: "Entry Fee",
-                  value: "Free",
+                  value: "To be announced",
                 },
                 {
                   label: "Date",
@@ -132,6 +132,58 @@ export default function EventDrawer({
               ))}
             </div>
           </div>
+          {event?.organizers && event.organizers.length > 0 && (
+            <div className="mt-2">
+              <h3 className="lg:text-2xl md:text-xl text-[#f4d35e] lg:mb-2 mb-1">
+                Organizers
+              </h3>
+
+              <div className="grid sm:grid-cols-2 lg:gap-4 gap-4">
+                {event.organizers.map((organizer: EventOrganizer) => (
+                  <div
+                    key={organizer.id}
+                    className="rounded-2xl lg:p-4 p-2 bg-linear-to-br from-[#133c55] to-[#0f1823] border border-[#f4d35e]/30 shadow-[0_0_20px_rgba(244,211,94,0.12)]"
+                  >
+                    <div className="flex flex-col lg:gap-2 gap-1 text-purple-100">
+                      {/* Name */}
+                      <div className="flex items-center lg:gap-3 gap-2">
+                        <User className="w-5 h-5 text-[#f4d35e]" />
+                        <span className="font-semibold lg:text-lg text-md">
+                          {organizer.name ?? "TBA"}
+                        </span>
+                      </div>
+
+                      {/* Email */}
+                      {organizer.email && (
+                        <div className="flex items-center lg:gap-3 gap-2">
+                          <Mail className="w-5 h-5 text-[#f4d35e]" />
+                          <a
+                            href={`mailto:${organizer.email}`}
+                            className="hover:underline break-all"
+                          >
+                            {organizer.email}
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Phone */}
+                      {organizer.phone && (
+                        <div className="flex items-center lg:gap-3 gap-2">
+                          <Phone className="w-5 h-5 text-[#f4d35e]" />
+                          <a
+                            href={`tel:${organizer.phone}`}
+                            className="hover:underline"
+                          >
+                            {organizer.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             {registrationOpen &&
               (session ? (
@@ -148,7 +200,7 @@ export default function EventDrawer({
                     </p>
                   </div>
                   <Button
-                    onClick={() => redirect("/api/auth/event/signin")}
+                    onClick={() => redirect("/events/login")}
                     className="w-full py-6 text-xl text-[#0b2545] cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 transition-all duration-300"
                   >
                     Log in to Register

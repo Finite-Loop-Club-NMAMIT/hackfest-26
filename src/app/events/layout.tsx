@@ -6,13 +6,6 @@ export default function EventsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProvider basePath="/api/auth/event">
-      <div
-        className="bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{ backgroundImage: "url('/images/underwater.webp')" }}
-      >
-        {children}
-      </div>
-    </SessionProvider>
+    <SessionProvider basePath="/api/auth/event">{children}</SessionProvider>
   );
 }

@@ -36,7 +36,7 @@ export async function createEvent(
   formData: z.infer<typeof eventSchema>,
 ): Promise<boolean> {
   try {
-    const data = await apiFetch<EventData>("/api/events/create", {
+    const data = await apiFetch<EventData>("/api/dashboard/events/create", {
       method: "PUT",
       body: JSON.stringify(formData),
     });

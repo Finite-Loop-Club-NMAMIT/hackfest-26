@@ -7,7 +7,6 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Badge } from "~/components/ui/badge";
@@ -51,12 +50,11 @@ async function fetchEventTeams(
 
 export default function MarkAttendanceTab({
   setTab,
+  eventId,
 }: {
   setTab: (tab: string) => void;
+  eventId: string | null;
 }) {
-  const params = useSearchParams();
-  const eventId = params.get("id");
-
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<EventTeam[]>([]);
   const [updatingTeamId, setUpdatingTeamId] = useState<string | null>(null);
@@ -336,7 +334,7 @@ function TeamDetailsDialog({
   };
 
   if (teamId === null) {
-    return <></>;
+    return null;
   }
 
   if (loading) {
@@ -358,7 +356,7 @@ function TeamDetailsDialog({
   }
 
   if (teamDetails === null) {
-    return <></>;
+    return null;
   }
 
   return (

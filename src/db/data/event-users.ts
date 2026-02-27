@@ -1,7 +1,10 @@
+import { eq, inArray } from "drizzle-orm";
 import {
   type UpdateEventUserInput,
   updateEventUserSchema,
 } from "~/lib/validation/event";
+import db from "..";
+import { eventParticipants, eventUsers } from "../schema";
 import { query } from ".";
 
 export async function findById(id: string) {
@@ -22,6 +25,12 @@ export async function findByEvent(eventId: string, userId: string) {
   });
 }
 
+export async function findLeaderByTeam(teamId: string) {
+  return query.eventParticipants.findOne({
+    where: (p, { and, eq }) => and(eq(p.teamId, teamId), eq(p.isLeader, true)),
+  });
+}
+
 export async function findMembersByTeam(teamId: string) {
   return query.eventParticipants.findMany({
     where: (p, { eq }) => eq(p.teamId, teamId),
@@ -35,20 +44,21 @@ export async function findParticipantsByTeam(eventId: string, teamId: string) {
   });
 }
 
-export async function addParticipant(
-  eventId: string,
-  teamId: string,
-  userId: string,
-  isLeader: boolean,
-) {
-  return query.eventParticipants.insert({
-    eventId: eventId,
-    teamId: teamId,
-    userId: userId,
-    isLeader: isLeader,
+export async function findUserParticipations(userId: string) {
+  return await query.eventParticipants.findMany({
+    where: (p, { eq }) => eq(p.userId, userId),
   });
 }
 
-export async function deleteParticipant(id: string) {
-  return query.eventParticipants.delete(id);
+export async function findParticipantsByTeamIds(teamIds: string[]) {
+  if (!teamIds.length) return [];
+
+  return db
+    .select({
+      participant: eventParticipants,
+      user: eventUsers,
+    })
+    .from(eventParticipants)
+    .leftJoin(eventUsers, eq(eventParticipants.userId, eventUsers.id))
+    .where(inArray(eventParticipants.teamId, teamIds));
 }

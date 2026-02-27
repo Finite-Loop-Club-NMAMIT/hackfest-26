@@ -16,11 +16,13 @@ export default function TeamRegistrationDialog({
   fetchEvents,
   open,
   onOpenChange,
+  setTeamDialogOpen,
 }: {
   eventId: string;
   fetchEvents: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  setTeamDialogOpen: (open: boolean) => void;
 }) {
   const [view, setView] = useState<View>("choose");
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -46,6 +48,7 @@ export default function TeamRegistrationDialog({
     if (!teamName.trim()) return;
     setLoading(true);
     setError(null);
+
     try {
       const res = await apiFetch<{ team: EventTeam | null }>(
         `/api/events/${eventId}/teams/create`,
@@ -54,13 +57,19 @@ export default function TeamRegistrationDialog({
           body: JSON.stringify({ teamName: teamName.trim() }),
         },
       );
+
       if (res?.team) {
         await fetchEvents();
         onOpenChange(false);
         resetState();
+        setTeamDialogOpen(true);
       }
-    } catch (_e) {
-      setError("Failed to create team. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create team. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -70,21 +79,27 @@ export default function TeamRegistrationDialog({
     if (!joinCode.trim()) return;
     setLoading(true);
     setError(null);
+
     try {
       const res = await apiFetch<{ team: EventTeam | null }>(
         `/api/events/${eventId}/teams/join`,
         {
           method: "POST",
-          body: JSON.stringify({ code: joinCode.trim() }),
+          body: JSON.stringify({ teamId: joinCode.trim() }),
         },
       );
       if (res?.team) {
         await fetchEvents();
         onOpenChange(false);
         resetState();
+        setTeamDialogOpen(true);
       }
-    } catch (_e) {
-      setError("Invalid code or team is full. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to join team. Please check the code and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -98,7 +113,6 @@ export default function TeamRegistrationDialog({
     setAnimating(false);
   };
 
-  // Slide animation classes
   const slideClass = animating
     ? direction === "forward"
       ? "opacity-0 -translate-x-4"
