@@ -11,54 +11,50 @@ import EventListTab from "../events/event-list";
 import UpdateEventTab from "../events/update-event";
 
 export function ManageEventsTab({ session }: { session: Session }) {
-  const [activeTab, setActiveTab] = useState("eventList");
+  const [activeTab, setActiveTab] = useState("all");
   const [isClient, setIsClient] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const SUB_TABS: ({ permission: string } & SubTabConfig)[] = [
     {
       id: "all",
       label: "All Events",
       permission: "event:read_all",
-      component: (
-        <EventListTab
-          assigned={false}
-          setTab={setActiveTab}
-          session={session}
-        />
-      ),
+      component: null,
     },
     {
       id: "assigned",
       label: "Assigned",
       permission: "event:read",
-      component: (
-        <EventListTab assigned={true} setTab={setActiveTab} session={session} />
-      ),
+      component: null,
     },
     {
       id: "create",
       permission: "event:create",
       label: "Create",
-      component: <CreateEventTab setTab={setActiveTab} />,
+      component: null,
     },
     {
       id: "update",
       permission: "event:update",
       label: "Update",
-      component: <UpdateEventTab setTab={setActiveTab} />,
+      component: null,
     },
     {
       id: "attendance",
       permission: "event:attendance",
       label: "Mark Attendance",
-      component: <MarkAttendanceTab setTab={setActiveTab} />,
+      component: null,
     },
   ];
 
+  const validTabIds = SUB_TABS.map((tab) => tab.id);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
   useEffect(() => {
     setIsClient(true);
     const stored = localStorage.getItem("manageEventsActiveTab");
-    if (stored && ["manageEvents", "eventSchedule"].includes(stored)) {
+    if (stored && validTabIds.includes(stored)) {
       setActiveTab(stored);
     }
   }, []);
@@ -66,6 +62,54 @@ export function ManageEventsTab({ session }: { session: Session }) {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     localStorage.setItem("manageEventsActiveTab", value);
+  };
+
+  const handleNavigateToEdit = (eventId: string) => {
+    setSelectedEventId(eventId);
+    handleTabChange("update");
+  };
+
+  const handleNavigateToAttendance = (eventId: string) => {
+    setSelectedEventId(eventId);
+    handleTabChange("attendance");
+  };
+
+  const renderTabContent = (tabId: string) => {
+    switch (tabId) {
+      case "all":
+        return (
+          <EventListTab
+            assigned={false}
+            onEdit={handleNavigateToEdit}
+            onAttendance={handleNavigateToAttendance}
+            session={session}
+          />
+        );
+      case "assigned":
+        return (
+          <EventListTab
+            assigned={true}
+            onEdit={handleNavigateToEdit}
+            onAttendance={handleNavigateToAttendance}
+            session={session}
+          />
+        );
+      case "create":
+        return <CreateEventTab setTab={handleTabChange} />;
+      case "update":
+        return (
+          <UpdateEventTab setTab={handleTabChange} eventId={selectedEventId} />
+        );
+      case "attendance":
+        return (
+          <MarkAttendanceTab
+            setTab={handleTabChange}
+            eventId={selectedEventId}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   if (!isClient) {
@@ -89,7 +133,6 @@ export function ManageEventsTab({ session }: { session: Session }) {
         value={activeTab}
         onValueChange={handleTabChange}
         className="w-full"
-        defaultValue="eventList"
       >
         <TabsList className="w-fit justify-between h-auto flex-wrap gap-1 bg-muted/50 p-1">
           {SUB_TABS.map((tab) => {
@@ -111,7 +154,7 @@ export function ManageEventsTab({ session }: { session: Session }) {
           return (
             hasPermission(session.dashboardUser, tab.permission) && (
               <TabsContent key={tab.id} value={tab.id} className="mt-6">
-                {tab.component}
+                {activeTab === tab.id && renderTabContent(tab.id)}
               </TabsContent>
             )
           );

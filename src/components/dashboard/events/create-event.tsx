@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import z from "zod";
+import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
@@ -181,7 +182,7 @@ export default function CreateEventTab({
       }
       clearDraft();
       resetForm(setFormData);
-      setTab("eventList");
+      setTab("all");
     } catch (error) {
       console.error("Error creating event:", error);
     } finally {
@@ -259,17 +260,27 @@ export default function CreateEventTab({
 
             <div className="space-y-2">
               <Label htmlFor="image">
-                Image URL <span className="text-destructive">*</span>
+                Event Image <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="image"
-                name="image"
-                type="url"
-                placeholder="Enter image URL"
-                value={formData.image}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="flex items-center gap-3">
+                <CloudinaryUpload
+                  onUpload={(url) =>
+                    setFormData((prev) => ({ ...prev, image: url }))
+                  }
+                  folder="events"
+                  label="Upload Image"
+                />
+                <span className="text-sm text-muted-foreground">or</span>
+                <Input
+                  id="image"
+                  name="image"
+                  type="url"
+                  placeholder="Paste image URL"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                  className="flex-1"
+                />
+              </div>
               {formData.image && (
                 <div className="relative mt-2 flex justify-center rounded-md border overflow-hidden">
                   {/* biome-ignore lint/performance/noImgElement: External user-provided image */}
@@ -295,6 +306,7 @@ export default function CreateEventTab({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
@@ -330,6 +342,7 @@ export default function CreateEventTab({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
@@ -469,7 +482,7 @@ export default function CreateEventTab({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setTab("eventList")}
+              onClick={() => setTab("all")}
               disabled={loading}
             >
               Cancel

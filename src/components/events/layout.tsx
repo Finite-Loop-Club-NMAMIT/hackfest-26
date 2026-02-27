@@ -167,7 +167,7 @@ const Events = ({
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-14">
         <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-7xl font-pirate text-transparent bg-clip-text bg-linear-to-b from-[#0f1823] to-[#133c88] drop-shadow-[0_0_12px_rgba(255,191,0,0.8)] tracking-wider">
+          <h2 className="text-5xl md:text-7xl mt-20 font-pirate text-transparent bg-clip-text bg-linear-to-b from-[#0f1823] to-[#133c88] drop-shadow-[0_0_12px_rgba(255,191,0,0.8)] tracking-wider">
             Events
           </h2>
         </div>

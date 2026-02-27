@@ -299,6 +299,7 @@ export async function deleteEventById(
   }
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: data is checked by zod
 export async function createNewEvent(data: any): Promise<NextResponse> {
   try {
     const parsedData = eventSchema.safeParse({
@@ -397,6 +398,7 @@ export async function updateEventStatus(
 
 export async function updateEventById(
   id: string | null,
+  // biome-ignore lint/suspicious/noExplicitAny: data check done by zod
   data: any,
 ): Promise<NextResponse> {
   try {
@@ -436,16 +438,6 @@ export async function updateEventById(
           toast: true,
           title: "Update Failed",
           description: "The specified event does not exist",
-        }),
-      );
-    }
-    if (existingEvent.status !== "Draft") {
-      return errorResponse(
-        new AppError("Event is not in Draft status", 400, {
-          toast: true,
-          title: "Update Failed",
-          description:
-            "The event is not in Draft status and cannot be updated.",
         }),
       );
     }

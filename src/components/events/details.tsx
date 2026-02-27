@@ -20,9 +20,12 @@ export default function EventDetails({
       className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16 md:gap-10 gap-6 justify-center items-start"
     >
       {events.map((event) => (
+        // biome-ignore lint/a11y/noStaticElementInteractions: clickable card
+        // biome-ignore lint/a11y/useKeyWithClickEvents: clickable card
         <div
           key={event.id}
-          className="relative hover:shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-all duration-300 ease-out bg-[#0f1823] border border-[#39577c] rounded-2xl flex flex-col gap-3 w-full mx-auto p-3 overflow-hidden"
+          onClick={() => handleCardClick(event.id)}
+          className="relative cursor-pointer hover:shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-all duration-300 ease-out bg-[#0f1823] border border-[#39577c] rounded-2xl flex flex-col gap-3 w-full mx-auto p-3 overflow-hidden"
         >
           {/* Card header — logo + type badge */}
           <div>
@@ -81,10 +84,7 @@ export default function EventDetails({
           </div>
 
           {/* CTA */}
-          <Button
-            onClick={() => handleCardClick(event.id)}
-            className="cursor-pointer tracking-wider text-lg text-[#0b2545] capitalize w-full py-2 flex gap-2 items-center justify-center rounded-full bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 hover:scale-[1.02] transition-all duration-300"
-          >
+          <Button className="cursor-pointer tracking-wider text-lg text-[#0b2545] capitalize w-full py-2 flex gap-2 items-center justify-center rounded-full bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 hover:scale-[1.02] transition-all duration-300">
             <Compass size={20} />
             {registration
               ? event.status === "Published"

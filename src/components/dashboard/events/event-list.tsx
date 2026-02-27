@@ -1,8 +1,8 @@
 "use client";
 import { Edit2, Flag, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
@@ -49,20 +49,21 @@ async function getData(
 }
 
 export default function EventListTab({
-  setTab,
   assigned = true,
   session,
+  onEdit,
+  onAttendance,
 }: {
-  setTab: (tab: string) => void;
   assigned: boolean;
   session: Session;
+  onEdit: (eventId: string) => void;
+  onAttendance: (eventId: string) => void;
 }) {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string>("");
-  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<EventData | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -79,8 +80,7 @@ export default function EventListTab({
   }, [deleteDialogOpen]);
 
   const handleEdit = (event: EventData) => {
-    router.push(`/dashboard?id=${event.id}`);
-    setTab("updateEvent");
+    onEdit(event.id);
   };
 
   const handleStatusEdit = (event: EventData) => {
@@ -92,8 +92,7 @@ export default function EventListTab({
     setStatusDialogOpen(true);
   };
   const handleAttendance = (event: EventData) => {
-    router.push(`/dashboard?id=${event.id}`);
-    setTab("attendance");
+    onAttendance(event.id);
   };
 
   const handleDeleteEvent = async () => {
@@ -101,10 +100,12 @@ export default function EventListTab({
       const result = await deleteEvent(eventToDelete?.id ?? "");
       if (result) {
         setEvents(events.filter((e) => e.id !== eventToDelete?.id));
+        toast.success("Event deleted successfully");
       }
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting event:", error);
+      toast.error("Failed to delete event");
     }
   };
 
@@ -127,6 +128,7 @@ export default function EventListTab({
               : e,
           ),
         );
+        toast.success("Event status updated");
         setStatusDialogOpen(false);
         setSelectedEvent(null);
         setNewStatus("");
@@ -215,22 +217,13 @@ export default function EventListTab({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleStatusEdit(event);
-                        }}
-                        variant={"ghost"}
-                        asChild
+                      <Badge
+                        variant={getStatusBadgeVariant(event.status)}
+                        className="text-xs cursor-pointer"
+                        onClick={() => handleStatusEdit(event)}
                       >
-                        <Badge
-                          variant={getStatusBadgeVariant(event.status)}
-                          className="text-xs"
-                        >
-                          {event.status}
-                        </Badge>
-                      </Button>
+                        {event.status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatDate(event.date)}

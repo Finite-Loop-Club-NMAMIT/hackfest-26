@@ -60,7 +60,7 @@ export default function EventDrawer({
               />
             </div>
           )}
-          <div className="text-white prose prose-headings:text-white prose-li:text-white min-w-full">
+          <div className="text-white prose prose-headings:text-white prose-li:text-white prose-strong:text-white min-w-full">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
