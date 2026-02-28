@@ -133,3 +133,9 @@ export const teamProgressEnum = pgEnum("team_progress", [
   "TRACK",
   "PARTICIPATION",
 ]);
+
+export const collegeRequestStatusEnum = pgEnum("college_request_status", [
+  "Pending",
+  "Approved",
+  "Rejected",
+]);
