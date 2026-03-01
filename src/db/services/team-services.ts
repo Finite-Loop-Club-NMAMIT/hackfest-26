@@ -10,6 +10,7 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
 import db from "~/db";
 import * as userData from "~/db/data/participant";
 import * as teamData from "~/db/data/teams";
@@ -276,6 +277,10 @@ export async function fetchTeams({
   totalCount: number;
   confirmedCount: number;
 }> {
+  "use cache";
+  cacheLife("seconds");
+  cacheTag("teams");
+
   const conditions: SQL[] = [];
 
   if (cursor) {
@@ -347,7 +352,21 @@ export async function fetchTeams({
     ? (paginatedTeams[paginatedTeams.length - 1]?.id ?? null)
     : null;
 
-  // Get total and confirmed counts (unfiltered, for display)
+  const { totalCount, confirmedCount } = await getTeamCounts();
+
+  return {
+    teams: paginatedTeams,
+    nextCursor,
+    totalCount,
+    confirmedCount,
+  };
+}
+
+export async function getTeamCounts() {
+  "use cache";
+  cacheLife("seconds");
+  cacheTag("team-counts");
+
   const [[totalResult], [confirmedResult]] = await Promise.all([
     db.select({ count: count() }).from(teams),
     db
@@ -357,8 +376,6 @@ export async function fetchTeams({
   ]);
 
   return {
-    teams: paginatedTeams,
-    nextCursor,
     totalCount: totalResult?.count ?? 0,
     confirmedCount: confirmedResult?.count ?? 0,
   };

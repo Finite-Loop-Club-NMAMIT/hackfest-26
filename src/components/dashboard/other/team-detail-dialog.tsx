@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { UserPermissions } from "~/app/dashboard/teams/page";
+import type { UserPermissions } from "~/components/dashboard/tables/teams-table";
 import {
   AlertDialog,
   AlertDialogAction,

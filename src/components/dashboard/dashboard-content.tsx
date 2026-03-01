@@ -4,6 +4,7 @@ import type { Session } from "next-auth";
 import { Suspense } from "react";
 import { AdminDashboard } from "~/components/dashboard/admin/admin-dashboard";
 import { DashboardTabs } from "~/components/dashboard/dashboard-tabs";
+import type { UserPermissions } from "~/components/dashboard/tables/teams-table";
 import { TeamsTab } from "../tabs";
 import { EvaluatorTab } from "./tabs/Evaluator";
 import { FinalJudgeTab } from "./tabs/FinalJudge";
@@ -32,6 +33,15 @@ type DashboardContentProps = {
   session: Session;
 };
 
+function buildTeamPermissions(permissions: DashboardContentProps["permissions"]): UserPermissions {
+  return {
+    isAdmin: permissions.isAdmin,
+    canMarkAttendance: permissions.canMarkAttendance,
+    canViewTeams: permissions.canViewAllTeams,
+    canViewTeamDetails: permissions.isAdmin || permissions.canViewAllTeams,
+  };
+}
+
 export function DashboardContent({
   permissions,
   session,
@@ -48,18 +58,20 @@ export function DashboardContent({
     canManageEvents,
   } = permissions;
 
+  const teamPermissions = buildTeamPermissions(permissions);
+
   const tabs = [
     {
       id: "admin",
       label: "Admin",
       hasAccess: isAdmin,
-      content: <AdminDashboard />,
+      content: <AdminDashboard permissions={teamPermissions} />,
     },
     {
       id: "teams",
       label: "Teams",
       hasAccess: isAdmin || canViewAllTeams,
-      content: <TeamsTab />,
+      content: <TeamsTab permissions={teamPermissions} />,
     },
     {
       id: "events",

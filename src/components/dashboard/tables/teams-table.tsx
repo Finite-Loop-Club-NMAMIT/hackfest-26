@@ -16,7 +16,13 @@ import {
   useState,
   useTransition,
 } from "react";
-import type { UserPermissions } from "~/app/dashboard/teams/page";
+
+export type UserPermissions = {
+  isAdmin: boolean;
+  canMarkAttendance: boolean;
+  canViewTeams: boolean;
+  canViewTeamDetails: boolean;
+};
 import { TeamDetailDialog } from "~/components/dashboard/other/team-detail-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -380,9 +386,9 @@ export function TeamsTable({ permissions }: TeamsTableProps) {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

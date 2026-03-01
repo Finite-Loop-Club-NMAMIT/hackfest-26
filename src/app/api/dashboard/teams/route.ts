@@ -23,11 +23,18 @@ export const GET = permissionProtected(
       filter,
     });
 
-    return NextResponse.json({
-      teams,
-      nextCursor,
-      totalCount,
-      confirmedCount,
-    });
+    return NextResponse.json(
+      {
+        teams,
+        nextCursor,
+        totalCount,
+        confirmedCount,
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        },
+      },
+    );
   },
 );
