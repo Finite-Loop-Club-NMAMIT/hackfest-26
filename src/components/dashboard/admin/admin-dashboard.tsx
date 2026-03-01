@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { UserPermissions } from "~/components/dashboard/tables/teams-table";
+import { useDashboardPermissions } from "~/components/dashboard/permissions-context";
 import {
   AllocationsTab,
   AttendanceTab,
@@ -21,10 +21,15 @@ export type SubTabConfig = {
   id: string;
   label: string;
   component: React.ReactNode;
+  hasAccess?: boolean;
 };
 
-function getSubTabs(permissions: UserPermissions): SubTabConfig[] {
-  return [
+export function AdminDashboard() {
+  const permissions = useDashboardPermissions();
+  const [activeTab, setActiveTab] = useState("quickboard");
+  const [isClient, setIsClient] = useState(false);
+
+  const subTabs: SubTabConfig[] = [
     {
       id: "quickboard",
       label: "Quickboard",
@@ -33,7 +38,7 @@ function getSubTabs(permissions: UserPermissions): SubTabConfig[] {
     {
       id: "teams",
       label: "Teams",
-      component: <TeamsTab permissions={permissions} />,
+      component: <TeamsTab />,
     },
     {
       id: "payments",
@@ -73,33 +78,26 @@ function getSubTabs(permissions: UserPermissions): SubTabConfig[] {
     {
       id: "roles",
       label: "Roles",
+      hasAccess: permissions.canManageRoles,
       component: <RolesTab />,
     },
     {
       id: "settings",
       label: "Settings",
+      hasAccess: permissions.canManageSettings,
       component: <SettingsTab />,
     },
   ];
-}
 
-export function AdminDashboard({
-  permissions,
-}: {
-  permissions: UserPermissions;
-}) {
-  const [activeTab, setActiveTab] = useState("quickboard");
-  const [isClient, setIsClient] = useState(false);
-
-  const subTabs = getSubTabs(permissions);
+  const accessibleTabs = subTabs.filter((t) => t.hasAccess !== false);
 
   useEffect(() => {
     setIsClient(true);
     const stored = localStorage.getItem("adminActiveTab");
-    if (stored && subTabs.some((t) => t.id === stored)) {
+    if (stored && accessibleTabs.some((t) => t.id === stored)) {
       setActiveTab(stored);
     }
-  }, []);
+  }, [accessibleTabs.some]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -129,7 +127,7 @@ export function AdminDashboard({
         className="w-full"
       >
         <TabsList className="w-full justify-between h-auto flex-wrap gap-1 bg-muted/50 p-1">
-          {subTabs.map((tab) => (
+          {accessibleTabs.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
@@ -140,7 +138,7 @@ export function AdminDashboard({
           ))}
         </TabsList>
 
-        {subTabs.map((tab) => (
+        {accessibleTabs.map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-6">
             {tab.component}
           </TabsContent>

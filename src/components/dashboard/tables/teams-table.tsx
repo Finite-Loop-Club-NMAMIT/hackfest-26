@@ -16,13 +16,6 @@ import {
   useState,
   useTransition,
 } from "react";
-
-export type UserPermissions = {
-  isAdmin: boolean;
-  canMarkAttendance: boolean;
-  canViewTeams: boolean;
-  canViewTeamDetails: boolean;
-};
 import { TeamDetailDialog } from "~/components/dashboard/other/team-detail-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -66,10 +59,6 @@ type Filters = {
   attended: string;
 };
 
-type TeamsTableProps = {
-  permissions: UserPermissions;
-};
-
 const columnHelper = createColumnHelper<Team>();
 
 function buildUrl(search: string, filters: Filters, cursor?: string): string {
@@ -85,7 +74,7 @@ function buildUrl(search: string, filters: Filters, cursor?: string): string {
   return qs ? `/api/dashboard/teams?${qs}` : "/api/dashboard/teams";
 }
 
-export function TeamsTable({ permissions }: TeamsTableProps) {
+export function TeamsTable() {
   const [data, setData] = useState<Team[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -386,9 +375,9 @@ export function TeamsTable({ permissions }: TeamsTableProps) {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -493,7 +482,6 @@ export function TeamsTable({ permissions }: TeamsTableProps) {
           if (!open) handleDialogClose();
         }}
         onUpdate={refreshData}
-        permissions={permissions}
       />
     </>
   );

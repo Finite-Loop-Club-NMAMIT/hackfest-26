@@ -1,9 +1,8 @@
 "use client";
 
-import type { UserPermissions } from "~/components/dashboard/tables/teams-table";
 import { TeamsTable } from "~/components/dashboard/tables/teams-table";
 
-export function TeamsTab({ permissions }: { permissions: UserPermissions }) {
+export function TeamsTab() {
   return (
     <div className="space-y-4">
       <div>
@@ -12,7 +11,7 @@ export function TeamsTab({ permissions }: { permissions: UserPermissions }) {
           View and manage all hackathon teams
         </p>
       </div>
-      <TeamsTable permissions={permissions} />
+      <TeamsTable />
     </div>
   );
 }
