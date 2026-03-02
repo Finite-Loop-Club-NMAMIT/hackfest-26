@@ -38,7 +38,8 @@ export function DashboardContent({ session }: DashboardContentProps) {
 
     fetchCounts();
     window.addEventListener("invalidate-counts-cache", fetchCounts);
-    return () => window.removeEventListener("invalidate-counts-cache", fetchCounts);
+    return () =>
+      window.removeEventListener("invalidate-counts-cache", fetchCounts);
   }, [permissions.isAdmin, permissions.canViewColleges]);
 
   const {

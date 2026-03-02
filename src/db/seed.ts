@@ -423,11 +423,11 @@ async function seed() {
           ],
           status:
             eventStatusEnum.enumValues[
-            Math.floor(i % eventStatusEnum.enumValues.length)
+              Math.floor(i % eventStatusEnum.enumValues.length)
             ],
           audience:
             eventAudienceEnum.enumValues[
-            Math.floor(Math.random() * eventAudienceEnum.enumValues.length)
+              Math.floor(Math.random() * eventAudienceEnum.enumValues.length)
             ],
           category: Math.random() > 0.5 ? "Technical" : "Non-Technical",
           hfAmount: 100 + i * 100,
