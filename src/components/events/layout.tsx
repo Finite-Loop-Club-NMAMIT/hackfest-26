@@ -56,6 +56,7 @@ export type Event = {
   maxTeamSize: number;
   image?: string;
   deadline: string;
+  userStatus: "registered" | "not_registered" | "not_confirmed";
   team?: EventTeam;
   isLeader?: boolean;
   isComplete?: boolean;
@@ -85,7 +86,6 @@ const Events = ({
 
   const router = useRouter();
   const error = use(searchParams).error;
-  // const { data: session, update } = useSession();
 
   const selectedEvent = Array.isArray(events)
     ? (events.find((e) => e.id === selectedEventId) ?? null)

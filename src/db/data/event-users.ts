@@ -7,6 +7,29 @@ import db from "..";
 import { eventParticipants, eventUsers } from "../schema";
 import { query } from ".";
 
+export type UserParticipation = {
+  userId: string;
+  eventId: string;
+  collegeId: string;
+  teamId: string | null;
+  isLeader: boolean;
+  team: {
+    id: string;
+    name: string;
+    eventId: string;
+    isComplete: boolean;
+  };
+  teamMembers:
+    | {
+        id: string;
+        name: string;
+        email: string;
+        userId: string;
+        isLeader: boolean;
+      }[]
+    | [];
+};
+
 export async function findById(id: string) {
   return query.eventUsers.findOne({
     where: (u, { eq }) => eq(u.id, id),
@@ -45,9 +68,52 @@ export async function findParticipantsByTeam(eventId: string, teamId: string) {
 }
 
 export async function findUserParticipations(userId: string) {
-  return await query.eventParticipants.findMany({
+  const participations = await db.query.eventParticipants.findMany({
     where: (p, { eq }) => eq(p.userId, userId),
+    with: {
+      user: true,
+      team: {
+        with: {
+          members: {
+            with: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
   });
+
+  const participationMap: Record<string, UserParticipation> = {};
+
+  for (const participation of participations) {
+    const eventId = participation.eventId;
+    if (!participationMap[eventId]) {
+      participationMap[eventId] = {
+        userId: participation.userId,
+        eventId: participation.eventId,
+        teamId: participation.teamId,
+        isLeader: participation.isLeader,
+        collegeId: participation.user?.collegeId ?? "",
+        team: {
+          id: participation.team?.id ?? "",
+          name: participation.team?.name ?? "",
+          eventId: participation.team?.eventId ?? "",
+          isComplete: participation.team?.isComplete ?? false,
+        },
+        teamMembers:
+          participation.team?.members.map((member) => ({
+            id: member.id,
+            name: member.user.name ?? "",
+            email: member.user.email ?? "",
+            userId: member.userId,
+            isLeader: member.isLeader,
+          })) ?? [],
+      };
+    }
+  }
+
+  return participationMap;
 }
 
 export async function findParticipantsByTeamIds(teamIds: string[]) {

@@ -14,42 +14,56 @@ export default function RegisterButton({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
-  const userStatus =
-    event.type === "Solo"
-      ? event.team?.id
-        ? event.isComplete
-          ? "registered"
-          : "not_confirmed"
-        : "not_registered"
-      : event.team?.id
-        ? event.isLeader
-          ? "leader"
-          : "member"
-        : "not_registered";
 
   const baseClass =
-    "w-full py-6 text-xl text-[#0b2545] cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center hover:brightness-110 transition-all duration-300 bg-linear-to-r from-[#cfb536] to-[#c2a341]";
+    "w-full py-6 text-xl text-[#0b2545] cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center hover:brightness-110 transition-all duration-300";
 
   const onRegister = async () => {
-    await apiFetch(`/api/events/${event.id}/register`, { method: "POST" });
-    await fetchEvents();
+    try {
+      await apiFetch(`/api/events/${event.id}/solo/register`, {
+        method: "POST",
+      });
+      await fetchEvents();
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
   };
 
   const onCancel = async () => {
     try {
-      await apiFetch(`/api/events/${event.id}/cancel`, { method: "POST" });
+      await apiFetch(`/api/events/${event.id}/solo/cancel`, { method: "POST" });
       await fetchEvents();
     } catch (error) {
       console.error("Cancel error:", error);
     }
   };
 
+  const onConfirm = async () => {
+    try {
+      await apiFetch(`/api/events/${event.id}/solo/confirm`, {
+        method: "POST",
+      });
+      await fetchEvents();
+    } catch (error) {
+      console.error("Confirmation error:", error);
+    }
+  };
+
   // SOLO EVENT
   if (event.type === "Solo") {
-    return userStatus === "registered" ? (
-      <Button onClick={onCancel} className={baseClass}>
-        Cancel Registration
+    return event.userStatus === "registered" ? (
+      <Button disabled className={baseClass}>
+        Registered
       </Button>
+    ) : event.userStatus === "not_confirmed" ? (
+      <div className="flex gap-2 w-full">
+        <Button onClick={onCancel} className={baseClass}>
+          Cancel Registration
+        </Button>
+        <Button onClick={onConfirm} className={baseClass}>
+          Pay to Confirm
+        </Button>
+      </div>
     ) : (
       <Button onClick={onRegister} className={baseClass}>
         Register Now
@@ -60,7 +74,7 @@ export default function RegisterButton({
   // TEAM EVENT
   return (
     <>
-      {userStatus === "not_registered" ? (
+      {event.userStatus === "not_registered" ? (
         <Button onClick={() => setDialogOpen(true)} className={baseClass}>
           Register Now
         </Button>
@@ -79,9 +93,9 @@ export default function RegisterButton({
       />
       {event.team && (
         <TeamDetailsDialog
-          team={event.team} // pass the team object from your event data
-          members={event.teamMembers ?? []} // pass the team members from your event data
-          isLeader={event.isLeader ?? false} // pass from event.isLeader
+          team={event.team}
+          members={event.teamMembers ?? []}
+          isLeader={event.isLeader ?? false}
           open={teamDialogOpen}
           onOpenChange={setTeamDialogOpen}
           fetchEvents={fetchEvents}
