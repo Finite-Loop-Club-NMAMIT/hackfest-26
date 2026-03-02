@@ -1,6 +1,8 @@
 import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
 import db from "~/db";
 import { collegeRequests, colleges } from "../schema";
+import { stateEnum } from "../enum";
+import { AppError } from "~/lib/errors/app-error";
 
 export async function fetchCollegesPaginated({
     cursor,
@@ -147,15 +149,38 @@ export async function updateCollegeRequestStatus(
         // If approved, insert into colleges
         if (status === "Approved") {
             const finalName = updatedRequest.approved_name || updatedRequest.requested_name;
-            const state = updatedRequest.state || "Karnataka"; // Assuming a default if not present in request
+            const state = updatedRequest.state;
+
+            if (!stateEnum.enumValues.includes(state as any)) {
+                throw new AppError("BAD_REQUEST", 400, {
+                    title: "Invalid State in Request",
+                    description: `The state '${state}' is not a valid state.`,
+                });
+            }
 
             await tx.insert(colleges).values({
-                id: crypto.randomUUID(), // Or generate specific ID format
                 name: finalName,
-                state: state
+                state: state as any,
             }).onConflictDoNothing(); // prevent duplicates if already somehow inserted
         }
 
         return updatedRequest;
     });
+}
+
+export async function createCollegeRequest(customCollegeName: string, state: string) {
+    if (!stateEnum.enumValues.includes(state as any)) {
+        throw new AppError("BAD_REQUEST", 400, {
+            title: "Invalid State",
+            description: `The state '${state}' is not recognized.`,
+        });
+    }
+
+    const [newRequest] = await db.insert(collegeRequests).values({
+        requested_name: customCollegeName,
+        state: state as any,
+        status: "Pending",
+    }).returning();
+
+    return newRequest;
 }

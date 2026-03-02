@@ -3,7 +3,7 @@ import { permissionProtected, type RouteContext } from "~/auth/routes-wrapper";
 import { getCollegeRequestCounts, getCollegesCount } from "~/db/services/college-requests";
 
 export const GET = permissionProtected(
-    ["dashboard:access"],
+    ["college:view"],
     async (_request: Request, _context: RouteContext) => {
         try {
             const [counts, collegesCount] = await Promise.all([

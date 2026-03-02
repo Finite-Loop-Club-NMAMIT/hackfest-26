@@ -6,7 +6,7 @@ import {
 } from "~/db/services/college-requests";
 
 export const GET = permissionProtected(
-    ["dashboard:access"],
+    ["college:view"],
     async (request: Request, _context: RouteContext) => {
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get("cursor") || undefined;
@@ -30,7 +30,7 @@ export const GET = permissionProtected(
 );
 
 export const PATCH = permissionProtected(
-    ["dashboard:access"],
+    ["college:view"],
     async (request: Request, _context: RouteContext) => {
         try {
             const body = await request.json();

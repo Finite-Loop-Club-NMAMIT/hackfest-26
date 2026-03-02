@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { publicRoute } from "~/auth/route-handlers";
 import { rateLimiters } from "~/lib/rate-limit";
 import db from "~/db";
-import { collegeRequests } from "~/db/schema";
+import { createCollegeRequest } from "~/db/services/college-requests";
 import crypto from "crypto";
 
 export const POST = publicRoute(async (req: NextRequest) => {
@@ -63,12 +63,7 @@ export const POST = publicRoute(async (req: NextRequest) => {
 
     // Save to database
     try {
-      await db.insert(collegeRequests).values({
-        id: crypto.randomUUID(),
-        requested_name: customCollegeName,
-        state: participantData.state, // extract state from participantData
-        status: "Pending",
-      });
+      await createCollegeRequest(customCollegeName, participantData.state);
     } catch (dbError) {
       console.error("Failed to insert college request into database:", dbError);
       // We can choose to fail or succeed here. Assuming we still want to succeed if email sent, 

@@ -143,6 +143,7 @@ async function seed() {
     { key: "settings:manage", description: "Manage system settings" },
     { key: "roles:manage", description: "Manage roles" },
     { key: "users:manage_staff", description: "Manage staff users" },
+    { key: "college:view", description: "View and manage college requests" },
     // Participant / Team Visibility
     { key: "team:view_all", description: "View all teams" },
     { key: "team:view_top60", description: "View top 60 teams" },
@@ -422,11 +423,11 @@ async function seed() {
           ],
           status:
             eventStatusEnum.enumValues[
-              Math.floor(i % eventStatusEnum.enumValues.length)
+            Math.floor(i % eventStatusEnum.enumValues.length)
             ],
           audience:
             eventAudienceEnum.enumValues[
-              Math.floor(Math.random() * eventAudienceEnum.enumValues.length)
+            Math.floor(Math.random() * eventAudienceEnum.enumValues.length)
             ],
           category: Math.random() > 0.5 ? "Technical" : "Non-Technical",
           hfAmount: 100 + i * 100,

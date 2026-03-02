@@ -24,7 +24,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
 
   useEffect(() => {
     const fetchCounts = () => {
-      if (permissions.isAdmin) {
+      if (permissions.isAdmin || permissions.canViewColleges) {
         fetch("/api/dashboard/college-requests/count")
           .then((res) => res.json())
           .then((data) => {
@@ -39,7 +39,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     fetchCounts();
     window.addEventListener("invalidate-counts-cache", fetchCounts);
     return () => window.removeEventListener("invalidate-counts-cache", fetchCounts);
-  }, [permissions.isAdmin]);
+  }, [permissions.isAdmin, permissions.canViewColleges]);
 
   const {
     isAdmin,
@@ -51,6 +51,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     canViewTop60,
     canViewResults,
     canManageEvents,
+    canViewColleges,
   } = permissions;
 
   const tabs = [
@@ -78,7 +79,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
           )}
         </span>
       ),
-      hasAccess: isAdmin, // or specific permission
+      hasAccess: isAdmin || canViewColleges, // or specific permission
       content: <CollegesTab />,
     },
     {
