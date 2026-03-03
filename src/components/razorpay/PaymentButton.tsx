@@ -26,6 +26,7 @@ const PaymentButton = forwardRef<
     paymentType: "EVENT" | "PARTICIPATION";
     amountInINR: number;
     teamId: string;
+    eventId?: string | null;
   }
 >(
   (
@@ -37,6 +38,7 @@ const PaymentButton = forwardRef<
       paymentType,
       amountInINR,
       teamId,
+      eventId,
       onFailure,
       onSuccess,
       onEnd,
@@ -61,7 +63,10 @@ const PaymentButton = forwardRef<
 
     return (
       <>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+        <Script
+          className="z-50"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
 
         <Button
           name="Pay Now"
@@ -78,6 +83,7 @@ const PaymentButton = forwardRef<
                 paymentType: paymentType,
                 amountInINR: amountInINR,
                 teamId: teamId,
+                eventId: eventId,
                 sessionUserId: user.id,
               }),
             });
@@ -137,10 +143,11 @@ const PaymentButton = forwardRef<
                     }),
                   });
                   const paymentData = await payment.json();
+                  console.log("Payment saved response received", paymentData);
                   if (
                     !paymentData ||
                     !paymentData.paymentDbId ||
-                    paymentData.razorpayPaymentId
+                    !paymentData.paymentRazorpayId
                   ) {
                     console.error("Failed to save payment", paymentData);
                     throw new Error("Payment save failed");
@@ -151,13 +158,14 @@ const PaymentButton = forwardRef<
                   console.error("Error saving payment", error);
                   handleFailure();
                   return;
+                } finally {
+                  if (onEnd) {
+                    onEnd();
+                  }
                 }
               },
             });
             paymentObj.open();
-            if (onEnd) {
-              onEnd();
-            }
           }}
           {...props}
         />
