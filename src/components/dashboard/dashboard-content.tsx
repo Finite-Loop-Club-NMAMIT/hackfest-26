@@ -10,6 +10,7 @@ import {
   AttendanceTab,
   DashboardUsersTab,
   MealsTab,
+  ParticipantsTab,
   PaymentsTab,
   ResultsTab,
   RolesTab,
@@ -34,6 +35,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
   const baseTabs = [
     { id: "quickboard", content: <QuickboardTab /> },
     { id: "teams", content: <TeamsTab /> },
+    { id: "participants", content: <ParticipantsTab /> },
     { id: "colleges", content: <CollegesTab /> },
     { id: "payments", content: <PaymentsTab /> },
     { id: "submissions", content: <SubmissionsTab /> },

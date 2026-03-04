@@ -26,19 +26,33 @@ export async function getDashboardStats() {
       .where(isNotNull(participants.teamId));
     const totalParticipants = participantsResult?.count ?? 0;
 
-    const [collegesResult] = await db
+    const [collegesTotalResult] = await db
       .select({ count: countDistinct(participants.collegeId) })
       .from(participants)
       .where(isNotNull(participants.teamId));
-    const uniqueColleges = collegesResult?.count ?? 0;
+    const uniqueTotalColleges = collegesTotalResult?.count ?? 0;
 
-    const [statesResult] = await db
+    const [statesTotalResult] = await db
+      .select({ count: countDistinct(colleges.state) })
+      .from(colleges)
+      .innerJoin(participants, eq(colleges.id, participants.collegeId))
+      .innerJoin(teams, eq(participants.teamId, teams.id));
+    const uniqueTotalStates = statesTotalResult?.count ?? 0;
+
+    const [collegesConfirmedResult] = await db
+      .select({ count: countDistinct(participants.collegeId) })
+      .from(participants)
+      .innerJoin(teams, eq(participants.teamId, teams.id))
+      .where(isNotNull(participants.teamId) && eq(teams.isCompleted, true));
+    const uniqueConfirmedColleges = collegesConfirmedResult?.count ?? 0;
+
+    const [statesConfirmedResult] = await db
       .select({ count: countDistinct(colleges.state) })
       .from(colleges)
       .innerJoin(participants, eq(colleges.id, participants.collegeId))
       .innerJoin(teams, eq(participants.teamId, teams.id))
       .where(eq(teams.isCompleted, true));
-    const uniqueStates = statesResult?.count ?? 0;
+    const uniqueConfirmedStates = statesConfirmedResult?.count ?? 0;
 
     const [confirmedTeamsResult] = await db
       .select({ count: count() })
@@ -62,8 +76,10 @@ export async function getDashboardStats() {
       totalTeams,
       totalUsers,
       totalParticipants,
-      uniqueColleges,
-      uniqueStates,
+      uniqueTotalColleges,
+      uniqueTotalStates,
+      uniqueConfirmedColleges,
+      uniqueConfirmedStates,
       confirmedTeams,
       confirmedParticipants,
       ideaSubmissions,

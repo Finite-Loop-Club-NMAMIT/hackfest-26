@@ -22,8 +22,10 @@ type QuickStats = {
   totalTeams: number;
   totalUsers: number;
   totalParticipants: number;
-  uniqueColleges: number;
-  uniqueStates: number;
+  uniqueTotalColleges: number;
+  uniqueTotalStates: number;
+  uniqueConfirmedColleges: number;
+  uniqueConfirmedStates: number;
   confirmedTeams: number;
   confirmedParticipants: number;
   ideaSubmissions: number;
@@ -136,17 +138,32 @@ export function QuickboardTab() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Unique Colleges"
-          value={quickStats?.uniqueColleges ?? 0}
+          title="Unique Colleges (Total)"
+          value={quickStats?.uniqueTotalColleges ?? 0}
           description="Colleges from which teams have registered"
           icon={<Building2 className="h-4 w-4" />}
         />
         <StatCard
-          title="Unique States"
-          value={quickStats?.uniqueStates ?? 0}
+          title="Unique States (Total)"
+          value={quickStats?.uniqueTotalStates ?? 0}
           description="States from which teams have registered"
           icon={<MapPin className="h-4 w-4" />}
         />
+        <StatCard
+          title="Unique Colleges (Confirmed)"
+          value={quickStats?.uniqueConfirmedColleges ?? 0}
+          description="Colleges from which teams have registered"
+          icon={<Building2 className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Unique States (Confirmed)"
+          value={quickStats?.uniqueConfirmedStates ?? 0}
+          description="States from which teams have registered"
+          icon={<MapPin className="h-4 w-4" />}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Confirmed Teams"
           value={quickStats?.confirmedTeams ?? 0}
@@ -159,14 +176,13 @@ export function QuickboardTab() {
           description="Participants that have confirmed participation"
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
+        <StatCard
+          title="Idea Submissions"
+          value={quickStats?.ideaSubmissions ?? 0}
+          description="Teams that have submitted their ideas"
+          icon={<CheckCircle2 className="h-4 w-4" />}
+        />
       </div>
-
-      <StatCard
-        title="Idea Submissions"
-        value={quickStats?.ideaSubmissions ?? 0}
-        description="Teams that have submitted their ideas"
-        icon={<CheckCircle2 className="h-4 w-4" />}
-      />
 
       <Card>
         <CardHeader>
