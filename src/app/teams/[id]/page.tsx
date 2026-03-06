@@ -20,10 +20,6 @@ export default async function TeamDetailsPage({
   }
 
   return (
-    <TeamDetailsClient
-      id={id}
-      signOutButton={<SignOut variant="outline" />}
-    />
+    <TeamDetailsClient id={id} signOutButton={<SignOut variant="outline" />} />
   );
 }
-
