@@ -27,7 +27,7 @@ export function GlobalLoader() {
           clearInterval(interval);
           setTimeout(() => {
             setLoading(false);
-            setTimeout(() => setLoaderDone(true), 1200);
+            setTimeout(() => setLoaderDone(true), 1300);
           }, 200);
           return 100;
         }

@@ -127,7 +127,7 @@ const Events = ({
         setTimeout(() => {
           setSelectedEventId(eventIdFromParams);
           setDrawerOpen(true);
-        }, 700);
+        }, 800);
       }, 100);
     }
   }, [loading, loaderDone, eventIdFromParams, router]);
