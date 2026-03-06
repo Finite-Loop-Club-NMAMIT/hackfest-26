@@ -6,8 +6,13 @@ import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { apiFetch } from "~/lib/fetcher";
 
-export function ConfirmTeamButton({ teamId }: { teamId: string }) {
-  const router = useRouter();
+export function ConfirmTeamButton({
+  refreshTeam,
+  teamId,
+}: {
+  refreshTeam: () => void;
+  teamId: string;
+}) {
   const [loading, setLoading] = useState(false);
 
   async function handleConfirm() {
@@ -16,7 +21,7 @@ export function ConfirmTeamButton({ teamId }: { teamId: string }) {
       await apiFetch(`/api/teams/${teamId}/complete`, {
         method: "POST",
       });
-      router.refresh();
+      refreshTeam();
     } catch {
     } finally {
       setLoading(false);

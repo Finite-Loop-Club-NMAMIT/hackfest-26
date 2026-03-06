@@ -96,9 +96,10 @@ export function TeamDetailsClient({
       .finally(() => setLoading(false));
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need of deps
   useEffect(() => {
     refreshData();
-  },[]);
+  }, []);
 
   if (loading) {
     return (
@@ -331,7 +332,10 @@ export function TeamDetailsClient({
                   <div className="grid gap-4 sm:grid-cols-2">
                     {/* Confirm Button uses primary solid blue */}
                     <div className="[&_button]:w-full [&_button]:bg-[#10569c] [&_button]:text-white [&_button]:font-bold [&_button]:hover:bg-[#10569c]/90 [&_button]:shadow-md [&_button]:transition-all [&_button]:hover:scale-[1.01] [&_button]:active:scale-[0.99] [&_button]:h-12 [&_button]:rounded-xl">
-                      <ConfirmTeamButton teamId={team.id} />
+                      <ConfirmTeamButton
+                        refreshTeam={refreshData}
+                        teamId={team.id}
+                      />
                     </div>
                     {/* Delete Button uses light red */}
                     <div className="[&_button]:w-full [&_button]:bg-red-50 [&_button]:text-red-600 [&_button]:border-red-200 [&_button]:hover:bg-red-100 [&_button]:font-bold [&_button]:shadow-sm [&_button]:transition-all [&_button]:h-12 [&_button]:rounded-xl">
