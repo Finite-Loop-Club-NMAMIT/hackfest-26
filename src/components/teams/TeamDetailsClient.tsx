@@ -98,7 +98,7 @@ export function TeamDetailsClient({
 
   useEffect(() => {
     refreshData();
-  });
+  },[]);
 
   if (loading) {
     return (
