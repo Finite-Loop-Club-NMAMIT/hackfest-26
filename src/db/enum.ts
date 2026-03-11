@@ -140,3 +140,9 @@ export const collegeRequestStatusEnum = pgEnum("college_request_status", [
   "Approved",
   "Rejected",
 ]);
+
+export const roundStatus = pgEnum("round_status", [
+  "Draft",
+  "Active",
+  "Completed",
+]);

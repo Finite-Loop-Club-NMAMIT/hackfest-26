@@ -22,6 +22,12 @@ import {
   teams,
   tracks,
 } from "./schema";
+import {
+  mentorFeedback,
+  mentorRoundAssignments,
+  mentorRounds,
+  mentors,
+} from "./schema/mentor";
 import { notSelected, selected, semiSelected } from "./schema/team-progress";
 
 export const userRelations = relations(participants, ({ one, many }) => ({
@@ -65,6 +71,7 @@ export const teamRelations = relations(teams, ({ many, one }) => ({
     fields: [teams.id],
     references: [ideaSubmission.teamId],
   }),
+  mentorAssignments: many(mentorRoundAssignments),
 }));
 
 export const notSelectedRelations = relations(notSelected, ({ one }) => ({
@@ -221,3 +228,41 @@ export const eventParticipantRelations = relations(
     payments: many(payment),
   }),
 );
+
+export const mentorRelations = relations(mentors, ({ one, many }) => ({
+  dashboardUser: one(dashboardUsers, {
+    fields: [mentors.dashboardUserId],
+    references: [dashboardUsers.id],
+  }),
+  assignments: many(mentorRoundAssignments),
+}));
+
+export const mentorRoundRelations = relations(mentorRounds, ({ many }) => ({
+  assignments: many(mentorRoundAssignments),
+}));
+
+export const mentorRoundAssignmentRelations = relations(
+  mentorRoundAssignments,
+  ({ one, many }) => ({
+    mentor: one(mentors, {
+      fields: [mentorRoundAssignments.mentorId],
+      references: [mentors.id],
+    }),
+    team: one(teams, {
+      fields: [mentorRoundAssignments.teamId],
+      references: [teams.id],
+    }),
+    mentorRound: one(mentorRounds, {
+      fields: [mentorRoundAssignments.mentorRoundId],
+      references: [mentorRounds.id],
+    }),
+    feedbacks: many(mentorFeedback),
+  }),
+);
+
+export const mentorFeedbackRelations = relations(mentorFeedback, ({ one }) => ({
+  assignment: one(mentorRoundAssignments, {
+    fields: [mentorFeedback.roundAssignmentId],
+    references: [mentorRoundAssignments.id],
+  }),
+}));

@@ -1,6 +1,6 @@
 {
-  "id": "171b1444-a688-413d-b822-235aa85d2021",
-  "prevId": "ea3c2533-c41b-4662-bd31-d3829b814a61",
+  "id": "2a29217f-612a-4d74-b507-e43cbaebd0d7",
+  "prevId": "171b1444-a688-413d-b822-235aa85d2021",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2422,6 +2422,721 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.mentor_feedback": {
+      "name": "mentor_feedback",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "round_assignment_id": {
+          "name": "round_assignment_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "mentor_feedback_assignment_idx": {
+          "name": "mentor_feedback_assignment_idx",
+          "columns": [
+            {
+              "expression": "round_assignment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mentor_feedback_round_assignment_id_mentor_round_assignments_id_fk": {
+          "name": "mentor_feedback_round_assignment_id_mentor_round_assignments_id_fk",
+          "tableFrom": "mentor_feedback",
+          "tableTo": "mentor_round_assignments",
+          "columnsFrom": ["round_assignment_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mentor_round_assignments": {
+      "name": "mentor_round_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "mentor_id": {
+          "name": "mentor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mentor_round_id": {
+          "name": "mentor_round_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "mentor_assignment_round_idx": {
+          "name": "mentor_assignment_round_idx",
+          "columns": [
+            {
+              "expression": "mentor_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mentor_assignments_idx": {
+          "name": "mentor_assignments_idx",
+          "columns": [
+            {
+              "expression": "mentor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mentor_assignment_team_idx": {
+          "name": "mentor_assignment_team_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mentor_round_mentor_idx": {
+          "name": "mentor_round_mentor_idx",
+          "columns": [
+            {
+              "expression": "mentor_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "mentor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mentor_round_team_idx": {
+          "name": "mentor_round_team_idx",
+          "columns": [
+            {
+              "expression": "mentor_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mentor_round_assignments_mentor_id_mentors_id_fk": {
+          "name": "mentor_round_assignments_mentor_id_mentors_id_fk",
+          "tableFrom": "mentor_round_assignments",
+          "tableTo": "mentors",
+          "columnsFrom": ["mentor_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mentor_round_assignments_team_id_team_id_fk": {
+          "name": "mentor_round_assignments_team_id_team_id_fk",
+          "tableFrom": "mentor_round_assignments",
+          "tableTo": "team",
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mentor_round_assignments_mentor_round_id_mentor_rounds_id_fk": {
+          "name": "mentor_round_assignments_mentor_round_id_mentor_rounds_id_fk",
+          "tableFrom": "mentor_round_assignments",
+          "tableTo": "mentor_rounds",
+          "columnsFrom": ["mentor_round_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "mentor_round_team_assignment_unique": {
+          "name": "mentor_round_team_assignment_unique",
+          "nullsNotDistinct": false,
+          "columns": ["mentor_id", "team_id", "mentor_round_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mentor_rounds": {
+      "name": "mentor_rounds",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "round_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Draft'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mentors": {
+      "name": "mentors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dashboard_user_id": {
+          "name": "dashboard_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "mentor_dashboard_user_idx": {
+          "name": "mentor_dashboard_user_idx",
+          "columns": [
+            {
+              "expression": "dashboard_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mentors_dashboard_user_id_dashboard_user_id_fk": {
+          "name": "mentors_dashboard_user_id_dashboard_user_id_fk",
+          "tableFrom": "mentors",
+          "tableTo": "dashboard_user",
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.judge_criterias": {
+      "name": "judge_criterias",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "judge_round_id": {
+          "name": "judge_round_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criteria_name": {
+          "name": "criteria_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_score": {
+          "name": "max_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
+        }
+      },
+      "indexes": {
+        "judge_criteria_round_idx": {
+          "name": "judge_criteria_round_idx",
+          "columns": [
+            {
+              "expression": "judge_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "judge_criterias_judge_round_id_judge_rounds_id_fk": {
+          "name": "judge_criterias_judge_round_id_judge_rounds_id_fk",
+          "tableFrom": "judge_criterias",
+          "tableTo": "judge_rounds",
+          "columnsFrom": ["judge_round_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.judge_round_assignments": {
+      "name": "judge_round_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "judge_id": {
+          "name": "judge_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "judge_round_id": {
+          "name": "judge_round_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_total_score": {
+          "name": "raw_total_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "normalized_total_score": {
+          "name": "normalized_total_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "judge_assignment_round_idx": {
+          "name": "judge_assignment_round_idx",
+          "columns": [
+            {
+              "expression": "judge_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "judge_assignments_idx": {
+          "name": "judge_assignments_idx",
+          "columns": [
+            {
+              "expression": "judge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "judge_assignment_team_idx": {
+          "name": "judge_assignment_team_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "judge_round_judge_idx": {
+          "name": "judge_round_judge_idx",
+          "columns": [
+            {
+              "expression": "judge_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "judge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "judge_round_team_idx": {
+          "name": "judge_round_team_idx",
+          "columns": [
+            {
+              "expression": "judge_round_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "judge_round_assignments_judge_id_judges_id_fk": {
+          "name": "judge_round_assignments_judge_id_judges_id_fk",
+          "tableFrom": "judge_round_assignments",
+          "tableTo": "judges",
+          "columnsFrom": ["judge_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "judge_round_assignments_team_id_team_id_fk": {
+          "name": "judge_round_assignments_team_id_team_id_fk",
+          "tableFrom": "judge_round_assignments",
+          "tableTo": "team",
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "judge_round_assignments_judge_round_id_judge_rounds_id_fk": {
+          "name": "judge_round_assignments_judge_round_id_judge_rounds_id_fk",
+          "tableFrom": "judge_round_assignments",
+          "tableTo": "judge_rounds",
+          "columnsFrom": ["judge_round_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "judge_round_team_assignment_unique": {
+          "name": "judge_round_team_assignment_unique",
+          "nullsNotDistinct": false,
+          "columns": ["judge_id", "team_id", "judge_round_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.judge_rounds": {
+      "name": "judge_rounds",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "round_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Draft'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.judge_scores": {
+      "name": "judge_scores",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "round_assignment_id": {
+          "name": "round_assignment_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criteria_id": {
+          "name": "criteria_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_score": {
+          "name": "raw_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "judge_score_assignment_idx": {
+          "name": "judge_score_assignment_idx",
+          "columns": [
+            {
+              "expression": "round_assignment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "judge_score_criteria_idx": {
+          "name": "judge_score_criteria_idx",
+          "columns": [
+            {
+              "expression": "criteria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "judge_scores_round_assignment_id_judge_round_assignments_id_fk": {
+          "name": "judge_scores_round_assignment_id_judge_round_assignments_id_fk",
+          "tableFrom": "judge_scores",
+          "tableTo": "judge_round_assignments",
+          "columnsFrom": ["round_assignment_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "judge_scores_criteria_id_judge_criterias_id_fk": {
+          "name": "judge_scores_criteria_id_judge_criterias_id_fk",
+          "tableFrom": "judge_scores",
+          "tableTo": "judge_criterias",
+          "columnsFrom": ["criteria_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "judge_score_assignment_criteria_unique": {
+          "name": "judge_score_assignment_criteria_unique",
+          "nullsNotDistinct": false,
+          "columns": ["round_assignment_id", "criteria_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.judges": {
+      "name": "judges",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dashboard_user_id": {
+          "name": "dashboard_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "judge_dashboard_user_idx": {
+          "name": "judge_dashboard_user_idx",
+          "columns": [
+            {
+              "expression": "dashboard_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "judges_dashboard_user_id_dashboard_user_id_fk": {
+          "name": "judges_dashboard_user_id_dashboard_user_id_fk",
+          "tableFrom": "judges",
+          "tableTo": "dashboard_user",
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -2467,6 +3182,11 @@
       "name": "payment_status",
       "schema": "public",
       "values": ["Pending", "Paid", "Refunded"]
+    },
+    "public.round_status": {
+      "name": "round_status",
+      "schema": "public",
+      "values": ["Draft", "Active", "Completed"]
     },
     "public.state": {
       "name": "state",
