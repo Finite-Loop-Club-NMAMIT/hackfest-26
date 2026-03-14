@@ -163,13 +163,15 @@ export function LeaderboardPanel() {
         </div>
 
         <Select value={trackId} onValueChange={(value) => setTrackId(value)}>
-          <SelectTrigger className="w-45">
+          <SelectTrigger className="h-9 w-44 text-sm font-normal">
             <SelectValue placeholder="Track" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All tracks</SelectItem>
+          <SelectContent className="text-sm">
+            <SelectItem value="all" className="text-sm">
+              All tracks
+            </SelectItem>
             {tracks.map((track) => (
-              <SelectItem key={track.id} value={track.id}>
+              <SelectItem key={track.id} value={track.id} className="text-sm">
                 {track.name}
               </SelectItem>
             ))}
@@ -182,13 +184,19 @@ export function LeaderboardPanel() {
             setRound(value)
           }
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="h-9 w-40 text-sm font-normal">
             <SelectValue placeholder="Round" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All rounds</SelectItem>
-            <SelectItem value="ROUND_1">Round 1</SelectItem>
-            <SelectItem value="ROUND_2">Round 2</SelectItem>
+          <SelectContent className="text-sm">
+            <SelectItem value="all" className="text-sm">
+              All rounds
+            </SelectItem>
+            <SelectItem value="ROUND_1" className="text-sm">
+              Round 1
+            </SelectItem>
+            <SelectItem value="ROUND_2" className="text-sm">
+              Round 2
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -198,13 +206,19 @@ export function LeaderboardPanel() {
             setScoreType(value)
           }
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="h-9 w-44 text-sm font-normal">
             <SelectValue placeholder="Score type" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="average">Average</SelectItem>
-            <SelectItem value="sum">Sum</SelectItem>
-            <SelectItem value="normalized">Normalized (fair)</SelectItem>
+          <SelectContent className="text-sm">
+            <SelectItem value="average" className="text-sm">
+              Average
+            </SelectItem>
+            <SelectItem value="sum" className="text-sm">
+              Sum
+            </SelectItem>
+            <SelectItem value="normalized" className="text-sm">
+              Normalized (fair)
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

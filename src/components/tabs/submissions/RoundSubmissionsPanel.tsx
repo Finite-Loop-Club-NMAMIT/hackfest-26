@@ -241,13 +241,15 @@ export function RoundSubmissionsPanel({
         </div>
 
         <Select value={trackId} onValueChange={(value) => setTrackId(value)}>
-          <SelectTrigger className="w-55">
+          <SelectTrigger className="h-9 w-52 text-sm font-normal">
             <SelectValue placeholder="Filter track" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All tracks</SelectItem>
+          <SelectContent className="text-sm">
+            <SelectItem value="all" className="text-sm">
+              All tracks
+            </SelectItem>
             {tracks.map((track) => (
-              <SelectItem key={track.id} value={track.id}>
+              <SelectItem key={track.id} value={track.id} className="text-sm">
                 {track.name}
               </SelectItem>
             ))}
