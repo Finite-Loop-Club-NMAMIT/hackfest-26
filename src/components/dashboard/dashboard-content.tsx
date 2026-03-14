@@ -23,6 +23,7 @@ import {
 } from "../tabs";
 import { CollegesTab } from "./tabs/colleges/CollegesTab";
 import { ManageEventsTab } from "./tabs/ManageEvents";
+import { MentorTab } from "./tabs/Mentor";
 import { QuickboardTab } from "./tabs/quickboard/QuickBoard";
 
 type DashboardContentProps = {
@@ -33,6 +34,9 @@ export function DashboardContent({ session }: DashboardContentProps) {
   const { dashboardUser } = session;
   const userRoles = dashboardUser.roles.map((r) => r.name);
   const _isAdmin = userRoles.includes("ADMIN");
+  const isMentor = userRoles.includes("MENTOR");
+  const isJudge =
+    userRoles.includes("JUDGE") || userRoles.includes("FINAL_JUDGE");
 
   const baseTabs = [
     { id: "quickboard", content: <QuickboardTab /> },
@@ -41,6 +45,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "colleges", content: <CollegesTab /> },
     { id: "payments", content: <PaymentsTab /> },
     { id: "submissions", content: <SubmissionsTab /> },
+    { id: "mentor-feedback", content: <MentorTab /> },
     { id: "selection", content: <SelectionsTab /> },
     { id: "results", content: <ResultsTab /> },
     { id: "attendance", content: <AttendanceTab /> },
@@ -56,6 +61,17 @@ export function DashboardContent({ session }: DashboardContentProps) {
 
   const checkTabAccess = (config: (typeof dashboardFeatureTabs)[0]) => {
     if (_isAdmin) return true;
+
+    if (config.id === "mentor-feedback") {
+      // Mentors should always see their feedback workspace tab.
+      if (isMentor) return true;
+    }
+
+    if (config.id === "submissions") {
+      // Hide submissions tab for mentor-only users to avoid duplicate mentor portals.
+      if (isMentor && !isJudge) return false;
+    }
+
     if (!config.permissions || config.permissions.length === 0) return true;
 
     if (config.requireAll) {

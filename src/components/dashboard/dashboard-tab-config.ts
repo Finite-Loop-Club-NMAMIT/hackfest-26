@@ -37,6 +37,11 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     permissions: ["submission:score"],
   },
   {
+    id: "mentor-feedback",
+    label: "Mentor Feedback",
+    permissions: ["submission:remark"],
+  },
+  {
     id: "selection",
     label: "Selection",
     permissions: ["selection:promote", "selection:view"],

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 type TabConfig = {
@@ -27,31 +27,44 @@ export function DashboardTabs({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isClient, setIsClient] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("");
+  const hasInitialized = useRef(false);
 
-  const accessibleTabs = tabs.filter((tab) => tab.hasAccess);
+  const accessibleTabs = useMemo(
+    () => tabs.filter((tab) => tab.hasAccess),
+    [tabs],
+  );
 
-  const getInitialTab = (): string => {
+  const initialTab = useMemo(() => {
     const urlTab = searchParams.get(searchParamKey);
-    if (urlTab && accessibleTabs.some((t) => t.id === urlTab)) {
+    if (urlTab && accessibleTabs.some((tab) => tab.id === urlTab)) {
       return urlTab;
     }
 
     if (typeof window !== "undefined") {
       const storedTab = localStorage.getItem(storageKey);
-      if (storedTab && accessibleTabs.some((t) => t.id === storedTab)) {
+      if (storedTab && accessibleTabs.some((tab) => tab.id === storedTab)) {
         return storedTab;
       }
     }
 
     return defaultTab ?? accessibleTabs[0]?.id ?? "";
-  };
-
-  const [activeTab, setActiveTab] = useState<string>("");
+  }, [accessibleTabs, defaultTab, searchParamKey, searchParams, storageKey]);
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+
     setIsClient(true);
-    setActiveTab(getInitialTab());
-  });
+    setActiveTab(initialTab);
+    hasInitialized.current = true;
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (!activeTab) return;
+    if (accessibleTabs.some((tab) => tab.id === activeTab)) return;
+
+    setActiveTab(accessibleTabs[0]?.id ?? "");
+  }, [accessibleTabs, activeTab]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);

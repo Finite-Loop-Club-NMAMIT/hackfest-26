@@ -3,6 +3,8 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useDashboardUserRoles } from "~/components/dashboard/permissions-context";
+import { MentorTab } from "~/components/dashboard/tabs/Mentor";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -70,6 +72,11 @@ export function SubmissionsTab() {
     useState<Allocation | null>(null);
   const [scoreDialogPayload, setScoreDialogPayload] =
     useState<ScoreDialogPayload | null>(null);
+  const userRoles = useDashboardUserRoles();
+
+  const isJudgeRole =
+    userRoles.includes("JUDGE") || userRoles.includes("FINAL_JUDGE");
+  const isMentorRole = userRoles.includes("MENTOR");
 
   const fetchAllocations = async () => {
     const res = await fetch("/api/dashboard/judge/my-allocations");
@@ -101,16 +108,16 @@ export function SubmissionsTab() {
       setIsScoreDialogOpen(true);
       setIsLoadingScores(true);
 
-      const res = await fetch(
+      const scoresRes = await fetch(
         `/api/dashboard/judge/scores?assignmentId=${encodeURIComponent(allocation.assignmentId)}`,
       );
 
-      if (!res.ok) {
-        const data = (await res.json()) as { message?: string };
+      if (!scoresRes.ok) {
+        const data = (await scoresRes.json()) as { message?: string };
         throw new Error(data.message || "Failed to load score criteria");
       }
 
-      const payload = (await res.json()) as ScoreDialogPayload;
+      const payload = (await scoresRes.json()) as ScoreDialogPayload;
       setScoreDialogPayload(payload);
     } catch (error) {
       toast.error(
@@ -223,6 +230,10 @@ export function SubmissionsTab() {
         return a.roundName.localeCompare(b.roundName);
       });
   }, [allocations]);
+
+  if (isMentorRole && !isJudgeRole) {
+    return <MentorTab />;
+  }
 
   return (
     <div className="space-y-6">
