@@ -733,11 +733,13 @@ export function JudgeSetupTab() {
                       {allTeams.map((team) => {
                         const checked = selectedTeamIds.includes(team.id);
                         return (
-                          <div
+                          <label
                             key={team.id}
-                            className="flex items-center gap-2 text-sm"
+                            htmlFor={`team-${team.id}`}
+                            className="flex cursor-pointer items-center gap-2 text-sm"
                           >
                             <Checkbox
+                              id={`team-${team.id}`}
                               checked={checked}
                               onCheckedChange={(value) =>
                                 toggleTeamSelection(team.id, value === true)
@@ -745,7 +747,7 @@ export function JudgeSetupTab() {
                               disabled={!canManageAssignments}
                             />
                             <span>{team.name}</span>
-                          </div>
+                          </label>
                         );
                       })}
                     </div>
