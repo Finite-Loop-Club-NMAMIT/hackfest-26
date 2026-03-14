@@ -1,4 +1,11 @@
-import { integer, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import {
+  doublePrecision,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+} from "drizzle-orm/pg-core";
 import { dashboardUsers, roles } from "./rbac";
 import { roundStatus, teamStage } from "../enum";
 import { teams } from "./team";
@@ -87,7 +94,7 @@ export const ideaTeamEvaluations = pgTable(
 
     rawTotalScore: integer("raw_total_score").notNull().default(0),
 
-    normalizedTotalScore: integer("normalized_total_score")
+    normalizedTotalScore: doublePrecision("normalized_total_score")
       .notNull()
       .default(0),
   },

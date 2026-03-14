@@ -35,7 +35,7 @@ function buildLeaderboardUrl({
   search: string;
   trackId: string;
   round: "all" | "ROUND_1" | "ROUND_2";
-  scoreType: "average" | "sum";
+  scoreType: "average" | "sum" | "normalized";
 }) {
   const params = new URLSearchParams({
     cursor: String(offset),
@@ -63,7 +63,9 @@ export function LeaderboardPanel() {
   const [search, setSearch] = useState("");
   const [trackId, setTrackId] = useState("all");
   const [round, setRound] = useState<"all" | "ROUND_1" | "ROUND_2">("all");
-  const [scoreType, setScoreType] = useState<"average" | "sum">("average");
+  const [scoreType, setScoreType] = useState<"average" | "sum" | "normalized">(
+    "average",
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -192,7 +194,9 @@ export function LeaderboardPanel() {
 
         <Select
           value={scoreType}
-          onValueChange={(value: "average" | "sum") => setScoreType(value)}
+          onValueChange={(value: "average" | "sum" | "normalized") =>
+            setScoreType(value)
+          }
         >
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Score type" />
@@ -200,6 +204,7 @@ export function LeaderboardPanel() {
           <SelectContent>
             <SelectItem value="average">Average</SelectItem>
             <SelectItem value="sum">Sum</SelectItem>
+            <SelectItem value="normalized">Normalized (fair)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -220,7 +225,11 @@ export function LeaderboardPanel() {
                 <TableCell>{row.rank}</TableCell>
                 <TableCell>{row.teamName}</TableCell>
                 <TableCell>{row.trackName}</TableCell>
-                <TableCell>{row.score.toFixed(2)}</TableCell>
+                <TableCell>
+                  {scoreType === "normalized"
+                    ? (row.score >= 0 ? "+" : "") + row.score.toFixed(3)
+                    : row.score.toFixed(2)}
+                </TableCell>
               </TableRow>
             ))}
 

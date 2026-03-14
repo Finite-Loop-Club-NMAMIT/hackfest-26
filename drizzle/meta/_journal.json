@@ -232,6 +232,13 @@
       "when": 1773508852985,
       "tag": "0032_pale_logan",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1773514967357,
+      "tag": "0033_deep_scarecrow",
+      "breakpoints": true
     }
   ]
 }

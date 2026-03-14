@@ -10,7 +10,7 @@ const querySchema = z.object({
   trackId: z.string().optional(),
   search: z.string().optional(),
   round: z.enum(["ROUND_1", "ROUND_2", "all"]).optional(),
-  scoreType: z.enum(["average", "sum"]).default("average"),
+  scoreType: z.enum(["average", "sum", "normalized"]).default("average"),
 });
 
 export const GET = permissionProtected(

@@ -167,7 +167,7 @@ export async function listLeaderboard({
   trackId?: string;
   search?: string;
   round?: SubmissionRound | "all";
-  scoreType?: "average" | "sum";
+  scoreType?: "average" | "sum" | "normalized";
 }) {
   const safeLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
   const offset = parseOffsetCursor(cursor);
@@ -194,7 +194,9 @@ export async function listLeaderboard({
   const scoreExpression =
     scoreType === "sum"
       ? sql<number>`COALESCE(SUM(${ideaTeamEvaluations.rawTotalScore}), 0)`
-      : sql<number>`COALESCE(AVG(${ideaTeamEvaluations.rawTotalScore}), 0)`;
+      : scoreType === "normalized"
+        ? sql<number>`COALESCE(AVG(${ideaTeamEvaluations.normalizedTotalScore}), 0)`
+        : sql<number>`COALESCE(AVG(${ideaTeamEvaluations.rawTotalScore}), 0)`;
 
   const rows = await db
     .select({
