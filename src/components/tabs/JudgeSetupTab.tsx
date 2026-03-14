@@ -446,7 +446,7 @@ export function JudgeSetupTab() {
       }
 
       toast.success("Team allocations updated");
-      setSelectedTeamIds([]);
+      await fetchAssignments(selectedRoundId, selectedJudgeUserId);
       await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
     } catch (error) {
       toast.error(
