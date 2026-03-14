@@ -34,7 +34,7 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
   {
     id: "submissions",
     label: "Submissions",
-    permissions: ["submission:score"],
+    permissions: ["submission:view", "submission:score"],
   },
   {
     id: "selection",

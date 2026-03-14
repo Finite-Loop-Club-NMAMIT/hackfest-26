@@ -12,6 +12,9 @@ function getRedisClient(): Redis {
       throw new Error("REDIS_URL is required to initialize rate limiting");
     }
     redis = new Redis(env.REDIS_URL);
+    redis.on("error", (err: Error) => {
+      console.error("[Redis] Connection error:", err.message);
+    });
   }
   return redis;
 }
@@ -84,10 +87,19 @@ export async function withRateLimit(
   identifier: string,
 ): Promise<NextResponse | null> {
   try {
-    const _rateLimitRes = await limiter.consume(identifier);
-
+    await limiter.consume(identifier);
     return null;
   } catch (rateLimitError) {
+    // Real Error instance = Redis connection failure — fail open so requests still work
+    if (rateLimitError instanceof Error) {
+      console.error(
+        "[RateLimit] Redis error, skipping rate limit:",
+        rateLimitError.message,
+      );
+      return null;
+    }
+
+    // RateLimiterRes object = actual rate limit exceeded
     const error = rateLimitError as {
       msBeforeNext?: number;
       remainingPoints?: number;

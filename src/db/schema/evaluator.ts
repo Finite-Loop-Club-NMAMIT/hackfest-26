@@ -1,11 +1,7 @@
 import { integer, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
-import {
-  dashboardUsers,
-  roles,
-  roundStatus,
-  teamStage,
-  teams,
-} from "../schema";
+import { dashboardUsers, roles } from "./rbac";
+import { roundStatus, teamStage } from "../enum";
+import { teams } from "./team";
 
 export const ideaRounds = pgTable("idea_rounds", {
   id: text("id")
