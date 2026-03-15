@@ -76,6 +76,17 @@ export function useHasPermission(permissionKey: string): boolean {
   return checkPermission(ctx.dashboardUser, permissionKey);
 }
 
+export function useDashboardUser() {
+  const ctx = useContext(DashboardPermissionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useDashboardUser must be used within DashboardPermissionsProvider",
+    );
+  }
+
+  return ctx.dashboardUser;
+}
+
 type PermissionGateProps = {
   beAdmin?: boolean;
   permission?: string;
