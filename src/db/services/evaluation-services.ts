@@ -12,6 +12,7 @@ import {
   ensureRoundForEvaluation,
   type SubmissionRound,
 } from "./submission-services";
+import { addEvaluationNormalizationJob } from "~/lib/queue/normalization";
 
 const EVALUATOR_ACCESS_PERMISSION_KEY = "submission:score";
 
@@ -109,8 +110,8 @@ export async function submitEvaluationScore({
     mode = "created";
   }
 
-  //Z-score normalized scores for the entire round so rankings stay fair
-  await recomputeNormalizedScores(roundRecord.id);
+  // Queue normalization to keep score submission latency low.
+  await addEvaluationNormalizationJob(roundRecord.id);
 
   return { mode };
 }
