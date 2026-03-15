@@ -1,0 +1,1 @@
+ALTER TABLE "idea_team_evaluations" ALTER COLUMN "normalized_total_score" SET DATA TYPE double precision;

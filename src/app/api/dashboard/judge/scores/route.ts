@@ -8,6 +8,7 @@ import {
   judgeRoundAssignments,
   judgeScores,
 } from "~/db/schema";
+import { addNormalizationJob } from "~/lib/queue/normalization";
 
 const saveScoresSchema = z.object({
   assignmentId: z.string().min(1, "Assignment ID is required"),
@@ -219,11 +220,10 @@ export const POST = permissionProtected(
 
       await db
         .update(judgeRoundAssignments)
-        .set({
-          rawTotalScore: totalRawScore,
-          normalizedTotalScore: totalRawScore,
-        })
+        .set({ rawTotalScore: totalRawScore })
         .where(eq(judgeRoundAssignments.id, assignment.id));
+
+      await addNormalizationJob(judge.id, assignment.judgeRoundId);
 
       return NextResponse.json(
         { message: "Scores saved successfully", totalRawScore },

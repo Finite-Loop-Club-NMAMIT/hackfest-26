@@ -1,20 +1,7 @@
-import Redis from "ioredis";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { RateLimiterRedis } from "rate-limiter-flexible";
-import { env } from "~/env";
-
-let redis: Redis | null = null;
-
-function getRedisClient(): Redis {
-  if (!redis) {
-    if (!env.REDIS_URL) {
-      throw new Error("REDIS_URL is required to initialize rate limiting");
-    }
-    redis = new Redis(env.REDIS_URL);
-  }
-  return redis;
-}
+import { getRedisClient } from "~/lib/redis";
 
 function createRateLimiters() {
   const redisClient = getRedisClient();
@@ -84,10 +71,19 @@ export async function withRateLimit(
   identifier: string,
 ): Promise<NextResponse | null> {
   try {
-    const _rateLimitRes = await limiter.consume(identifier);
-
+    await limiter.consume(identifier);
     return null;
   } catch (rateLimitError) {
+    // Real Error instance = Redis connection failure — fail open so requests still work
+    if (rateLimitError instanceof Error) {
+      console.error(
+        "[RateLimit] Redis error, skipping rate limit:",
+        rateLimitError.message,
+      );
+      return null;
+    }
+
+    // RateLimiterRes object = actual rate limit exceeded
     const error = rateLimitError as {
       msBeforeNext?: number;
       remainingPoints?: number;

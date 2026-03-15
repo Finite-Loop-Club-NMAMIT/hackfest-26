@@ -76,15 +76,15 @@ export function useHasPermission(permissionKey: string): boolean {
   return checkPermission(ctx.dashboardUser, permissionKey);
 }
 
-export function useDashboardUserRoles(): string[] {
+export function useDashboardUser() {
   const ctx = useContext(DashboardPermissionsContext);
   if (!ctx) {
     throw new Error(
-      "useDashboardUserRoles must be used within DashboardPermissionsProvider",
+      "useDashboardUser must be used within DashboardPermissionsProvider",
     );
   }
 
-  return ctx.dashboardUser.roles.map((role) => role.name);
+  return ctx.dashboardUser;
 }
 
 type PermissionGateProps = {
