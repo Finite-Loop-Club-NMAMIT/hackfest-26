@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { permissionProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
@@ -46,7 +46,12 @@ export const GET = permissionProtected(
         )
         .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
         .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
-        .where(inArray(mentorRoundAssignments.mentorId, mentorIds));
+        .where(
+          and(
+            inArray(mentorRoundAssignments.mentorId, mentorIds),
+            eq(teams.teamStage, "SELECTED"),
+          ),
+        );
 
       if (assignments.length === 0) {
         return NextResponse.json([], { status: 200 });

@@ -55,6 +55,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
     const allTeams = await db
       .select({ id: teams.id, name: teams.name })
       .from(teams)
+      .where(eq(teams.teamStage, "SELECTED"))
       .orderBy(asc(teams.name));
 
     let assignedTeamIds: string[] = [];
@@ -109,6 +110,24 @@ export const POST = adminProtected(async (req: NextRequest) => {
     }
 
     const { mentorRoundId, mentorUserId, teamIds } = result.data;
+
+    if (teamIds.length > 0) {
+      const selectedTeams = await db
+        .select({ id: teams.id })
+        .from(teams)
+        .where(
+          and(inArray(teams.id, teamIds), eq(teams.teamStage, "SELECTED")),
+        );
+
+      if (selectedTeams.length !== new Set(teamIds).size) {
+        return NextResponse.json(
+          {
+            message: "Only teams in SELECTED stage can be assigned to mentors",
+          },
+          { status: 400 },
+        );
+      }
+    }
 
     const existingRound = await db.query.mentorRounds.findFirst({
       where: (round, { eq }) => eq(round.id, mentorRoundId),
@@ -282,7 +301,13 @@ export const PATCH = adminProtected(async (req: NextRequest) => {
         teamId: mentorRoundAssignments.teamId,
       })
       .from(mentorRoundAssignments)
-      .where(eq(mentorRoundAssignments.mentorRoundId, sourceMentorRoundId));
+      .innerJoin(teams, eq(teams.id, mentorRoundAssignments.teamId))
+      .where(
+        and(
+          eq(mentorRoundAssignments.mentorRoundId, sourceMentorRoundId),
+          eq(teams.teamStage, "SELECTED"),
+        ),
+      );
 
     if (sourceAssignments.length === 0) {
       return NextResponse.json(

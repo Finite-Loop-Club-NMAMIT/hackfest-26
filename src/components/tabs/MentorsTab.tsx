@@ -1,8 +1,10 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { ChevronRight, Loader2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useDashboardUser } from "~/components/dashboard/permissions-context";
+import { MentorTab } from "~/components/dashboard/tabs/Mentor";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -62,7 +64,7 @@ type MentorHistoryRow = {
   feedback: string | null;
 };
 
-export function MentorSetupTab() {
+function AdminMentorPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingRound, setIsCreatingRound] = useState(false);
   const [isUpdatingRoundStatus, setIsUpdatingRoundStatus] = useState(false);
@@ -84,6 +86,9 @@ export function MentorSetupTab() {
   const [feedbackHistory, setFeedbackHistory] = useState<MentorHistoryRow[]>(
     [],
   );
+  const [historyMentorFilterId, setHistoryMentorFilterId] = useState("all");
+  const [historyRoundFilterId, setHistoryRoundFilterId] = useState("all");
+  const [historyTeamFilterId, setHistoryTeamFilterId] = useState("all");
 
   const [teamSearch, setTeamSearch] = useState("");
 
@@ -108,6 +113,127 @@ export function MentorSetupTab() {
         team.id.toLowerCase().includes(term),
     );
   }, [allTeams, teamSearch]);
+
+  const historyMentorOptions = useMemo(() => {
+    const unique = new Map<string, { id: string; label: string }>();
+    for (const row of feedbackHistory) {
+      if (!unique.has(row.mentorUserId)) {
+        unique.set(row.mentorUserId, {
+          id: row.mentorUserId,
+          label: `${row.mentorName} (@${row.mentorUsername})`,
+        });
+      }
+    }
+    return Array.from(unique.values()).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+  }, [feedbackHistory]);
+
+  const historyRoundOptions = useMemo(() => {
+    const statusPriority: Record<MentorRound["status"], number> = {
+      Active: 0,
+      Draft: 1,
+      Completed: 2,
+    };
+
+    const unique = new Map<
+      string,
+      { id: string; name: string; status: MentorRound["status"] }
+    >();
+    for (const row of feedbackHistory) {
+      if (!unique.has(row.mentorRoundId)) {
+        unique.set(row.mentorRoundId, {
+          id: row.mentorRoundId,
+          name: row.mentorRoundName,
+          status: row.mentorRoundStatus,
+        });
+      }
+    }
+
+    return Array.from(unique.values()).sort((a, b) => {
+      const byStatus = statusPriority[a.status] - statusPriority[b.status];
+      if (byStatus !== 0) return byStatus;
+      return a.name.localeCompare(b.name);
+    });
+  }, [feedbackHistory]);
+
+  const historyTeamOptions = useMemo(() => {
+    const unique = new Map<string, { id: string; name: string }>();
+    for (const row of feedbackHistory) {
+      if (!unique.has(row.teamId)) {
+        unique.set(row.teamId, {
+          id: row.teamId,
+          name: row.teamName,
+        });
+      }
+    }
+
+    return Array.from(unique.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [feedbackHistory]);
+
+  const filteredHistory = useMemo(() => {
+    return feedbackHistory.filter((row) => {
+      const mentorPass =
+        historyMentorFilterId === "all" ||
+        row.mentorUserId === historyMentorFilterId;
+      const roundPass =
+        historyRoundFilterId === "all" ||
+        row.mentorRoundId === historyRoundFilterId;
+      const teamPass =
+        historyTeamFilterId === "all" || row.teamId === historyTeamFilterId;
+      return mentorPass && roundPass && teamPass;
+    });
+  }, [
+    feedbackHistory,
+    historyMentorFilterId,
+    historyRoundFilterId,
+    historyTeamFilterId,
+  ]);
+
+  const groupedHistoryByRound = useMemo(() => {
+    const statusPriority: Record<MentorRound["status"], number> = {
+      Active: 0,
+      Draft: 1,
+      Completed: 2,
+    };
+
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        status: MentorRound["status"];
+        rows: MentorHistoryRow[];
+      }
+    >();
+
+    for (const row of filteredHistory) {
+      const existing = map.get(row.mentorRoundId);
+      if (existing) {
+        existing.rows.push(row);
+      } else {
+        map.set(row.mentorRoundId, {
+          id: row.mentorRoundId,
+          name: row.mentorRoundName,
+          status: row.mentorRoundStatus,
+          rows: [row],
+        });
+      }
+    }
+
+    return Array.from(map.values())
+      .map((group) => ({
+        ...group,
+        rows: group.rows.sort((a, b) => a.teamName.localeCompare(b.teamName)),
+      }))
+      .sort((a, b) => {
+        const byStatus = statusPriority[a.status] - statusPriority[b.status];
+        if (byStatus !== 0) return byStatus;
+        return a.name.localeCompare(b.name);
+      });
+  }, [filteredHistory]);
 
   const fetchRounds = async () => {
     const res = await fetch("/api/dashboard/mentor/rounds");
@@ -211,11 +337,11 @@ export function MentorSetupTab() {
     run();
   }, [selectedRoundId, selectedMentorUserId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: history follows round filter
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refresh history when selected round context changes
   useEffect(() => {
     const run = async () => {
       try {
-        await fetchHistory(selectedRoundId || undefined);
+        await fetchHistory();
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -433,7 +559,7 @@ export function MentorSetupTab() {
 
       toast.success("Mentor assignments saved");
       await fetchAssignments(selectedRoundId, selectedMentorUserId);
-      await fetchHistory(selectedRoundId);
+      await fetchHistory();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to save assignments",
@@ -747,8 +873,70 @@ export function MentorSetupTab() {
           <div>
             <CardTitle className="mb-2">Mentor Feedback History</CardTitle>
             <CardDescription>
-              Review mentor feedback records for the selected round.
+              Review mentor feedback records by mentor and round.
             </CardDescription>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Mentor</p>
+              <Select
+                value={historyMentorFilterId}
+                onValueChange={setHistoryMentorFilterId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by mentor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All mentors</SelectItem>
+                  {historyMentorOptions.map((mentorOption) => (
+                    <SelectItem key={mentorOption.id} value={mentorOption.id}>
+                      {mentorOption.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Team</p>
+              <Select
+                value={historyTeamFilterId}
+                onValueChange={setHistoryTeamFilterId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All teams</SelectItem>
+                  {historyTeamOptions.map((teamOption) => (
+                    <SelectItem key={teamOption.id} value={teamOption.id}>
+                      {teamOption.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Round</p>
+              <Select
+                value={historyRoundFilterId}
+                onValueChange={setHistoryRoundFilterId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by round" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All rounds</SelectItem>
+                  {historyRoundOptions.map((roundOption) => (
+                    <SelectItem key={roundOption.id} value={roundOption.id}>
+                      {roundOption.name} ({roundOption.status})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {isLoadingHistory ? (
@@ -756,48 +944,79 @@ export function MentorSetupTab() {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading feedback history...
             </div>
-          ) : feedbackHistory.length === 0 ? (
+          ) : filteredHistory.length === 0 ? (
             <div className="rounded-md border p-4 text-sm text-muted-foreground">
-              No mentor feedback recorded for this round yet.
+              No mentor feedback matches the selected filters.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Round</TableHead>
-                    <TableHead>Mentor</TableHead>
-                    <TableHead>Team</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Feedback</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedbackHistory.map((row, index) => (
-                    <TableRow key={`${row.assignmentId}-${index}`}>
-                      <TableCell className="font-medium">
-                        {row.mentorRoundName}
-                      </TableCell>
-                      <TableCell>
-                        {row.mentorName} @{row.mentorUsername}
-                      </TableCell>
-                      <TableCell>{row.teamName}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {row.mentorRoundStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-105 truncate">
-                        {row.feedback?.trim() || "No feedback submitted"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-3">
+              {groupedHistoryByRound.map((group) => (
+                <details
+                  key={group.id}
+                  open
+                  className="group overflow-hidden rounded-md border"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+                      <span className="font-medium">{group.name}</span>
+                      <Badge variant="secondary">{group.status}</Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {group.rows.length} entr
+                      {group.rows.length > 1 ? "ies" : "y"}
+                    </span>
+                  </summary>
+
+                  <div className="overflow-x-auto border-t">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mentor</TableHead>
+                          <TableHead>Team</TableHead>
+                          <TableHead>Feedback</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {group.rows.map((row, index) => (
+                          <TableRow key={`${row.assignmentId}-${index}`}>
+                            <TableCell>
+                              {row.mentorName} @{row.mentorUsername}
+                            </TableCell>
+                            <TableCell>{row.teamName}</TableCell>
+                            <TableCell className="max-w-105 truncate">
+                              {row.feedback?.trim() || "No feedback submitted"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </details>
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+export function MentorsTab() {
+  const dashboardUser = useDashboardUser();
+  const roleNames = dashboardUser.roles.map((role) => role.name);
+
+  if (roleNames.includes("ADMIN")) {
+    return <AdminMentorPanel />;
+  }
+
+  if (roleNames.includes("MENTOR")) {
+    return <MentorTab />;
+  }
+
+  return (
+    <div className="rounded-md border p-4 text-sm text-muted-foreground">
+      You do not have access to mentor features.
     </div>
   );
 }

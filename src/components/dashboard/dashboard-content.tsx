@@ -11,7 +11,7 @@ import {
   DashboardUsersTab,
   JudgeSetupTab,
   MealsTab,
-  MentorSetupTab,
+  MentorsTab,
   ParticipantsTab,
   PaymentsTab,
   ResultsTab,
@@ -23,7 +23,6 @@ import {
 } from "../tabs";
 import { CollegesTab } from "./tabs/colleges/CollegesTab";
 import { ManageEventsTab } from "./tabs/ManageEvents";
-import { MentorTab } from "./tabs/Mentor";
 import { QuickboardTab } from "./tabs/quickboard/QuickBoard";
 
 type DashboardContentProps = {
@@ -45,7 +44,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "colleges", content: <CollegesTab /> },
     { id: "payments", content: <PaymentsTab /> },
     { id: "submissions", content: <SubmissionsTab /> },
-    { id: "mentor-feedback", content: <MentorTab /> },
+    { id: "mentors", content: <MentorsTab /> },
     { id: "selection", content: <SelectionsTab /> },
     { id: "results", content: <ResultsTab /> },
     { id: "attendance", content: <AttendanceTab /> },
@@ -56,15 +55,13 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "settings", content: <SettingsTab /> },
     { id: "events", content: <ManageEventsTab session={session} /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
-    { id: "mentor-setup", content: <MentorSetupTab /> },
   ];
 
   const checkTabAccess = (config: (typeof dashboardFeatureTabs)[0]) => {
     if (_isAdmin) return true;
 
-    if (config.id === "mentor-feedback") {
-      // Mentors should always see their feedback workspace tab.
-      if (isMentor) return true;
+    if (config.id === "mentors") {
+      return _isAdmin || isMentor;
     }
 
     if (config.id === "submissions") {

@@ -10,16 +10,22 @@ import {
   mentors,
   teams,
 } from "~/db/schema";
+import { isAdmin } from "~/lib/auth/permissions";
 
 export const GET = permissionProtected(
   ["submission:remark", "submission:score"],
-  async (req: NextRequest) => {
+  async (req: NextRequest, _context, user) => {
     try {
       const { searchParams } = new URL(req.url);
       const teamId = searchParams.get("teamId");
       const mentorRoundId = searchParams.get("mentorRoundId");
 
       const filters = [];
+
+      if (!isAdmin(user)) {
+        filters.push(eq(mentors.dashboardUserId, user.id));
+      }
+
       if (teamId) {
         filters.push(eq(mentorRoundAssignments.teamId, teamId));
       }

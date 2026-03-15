@@ -37,9 +37,9 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     permissions: ["submission:view", "submission:score"],
   },
   {
-    id: "mentor-feedback",
-    label: "Mentor Feedback",
-    permissions: ["submission:remark"],
+    id: "mentors",
+    label: "Mentors",
+    permissions: ["roles:manage", "submission:remark"],
   },
   {
     id: "selection",
@@ -90,11 +90,6 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
   {
     id: "judge-setup",
     label: "Judge Setup",
-    permissions: ["roles:manage"],
-  },
-  {
-    id: "mentor-setup",
-    label: "Mentor Setup",
     permissions: ["roles:manage"],
   },
 ];

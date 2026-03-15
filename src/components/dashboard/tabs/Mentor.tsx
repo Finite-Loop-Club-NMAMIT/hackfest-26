@@ -1,17 +1,24 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,7 +33,6 @@ type MentorAllocation = {
   assignmentId: string;
   teamId: string;
   teamName: string;
-  teamStage: string;
   paymentStatus: string | null;
   roundId: string;
   roundName: string;
@@ -36,10 +42,15 @@ type MentorAllocation = {
   feedbackCount: number;
 };
 
+type MentorAllocationWithNumber = MentorAllocation & {
+  teamNumber: number;
+};
+
 type MentorHistoryRow = {
   assignmentId: string;
   teamId: string;
   teamName: string;
+  mentorRoundId: string;
   mentorRoundName: string;
   mentorRoundStatus: "Draft" | "Active" | "Completed";
   mentorName: string;
@@ -53,25 +64,55 @@ type FeedbackPayload = {
   feedback: string;
 };
 
-function formatEnumLabel(value: string | null | undefined) {
-  if (!value) return "-";
-  return value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function MentorTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [allocations, setAllocations] = useState<MentorAllocation[]>([]);
-  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
-  const [selectedAllocation, setSelectedAllocation] =
-    useState<MentorAllocation | null>(null);
+  const [selectedRoundId, setSelectedRoundId] = useState("");
+  const [selectedTeamNumber, setSelectedTeamNumber] = useState(1);
   const [feedbackPayload, setFeedbackPayload] =
     useState<FeedbackPayload | null>(null);
   const [teamHistory, setTeamHistory] = useState<MentorHistoryRow[]>([]);
+
+  const roundOptions = useMemo(() => {
+    const uniqueRounds = new Map<
+      string,
+      { id: string; name: string; status: MentorAllocation["roundStatus"] }
+    >();
+
+    for (const allocation of allocations) {
+      if (!uniqueRounds.has(allocation.roundId)) {
+        uniqueRounds.set(allocation.roundId, {
+          id: allocation.roundId,
+          name: allocation.roundName,
+          status: allocation.roundStatus,
+        });
+      }
+    }
+
+    return Array.from(uniqueRounds.values());
+  }, [allocations]);
+
+  const teamsInSelectedRound = useMemo<MentorAllocationWithNumber[]>(() => {
+    const roundAllocations = allocations.filter(
+      (allocation) => allocation.roundId === selectedRoundId,
+    );
+
+    return roundAllocations.map((allocation, index) => ({
+      ...allocation,
+      // TODO: Replace derived teamNumber with a stable mapped team identifier from DB.
+      teamNumber: index + 1,
+    }));
+  }, [allocations, selectedRoundId]);
+
+  const selectedAllocation = useMemo(() => {
+    return (
+      teamsInSelectedRound.find(
+        (allocation) => allocation.teamNumber === selectedTeamNumber,
+      ) ?? null
+    );
+  }, [teamsInSelectedRound, selectedTeamNumber]);
 
   const previousRoundHistory = useMemo(() => {
     if (!selectedAllocation) return [];
@@ -81,7 +122,7 @@ export function MentorTab() {
         row.assignmentId !== selectedAllocation.assignmentId &&
         Boolean(row.feedback?.trim()),
     );
-  }, [teamHistory, selectedAllocation]);
+  }, [selectedAllocation, teamHistory]);
 
   const fetchAllocations = async () => {
     const res = await fetch("/api/dashboard/mentor/my-allocations");
@@ -94,59 +135,10 @@ export function MentorTab() {
     setAllocations(data);
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: initial fetch
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setIsLoading(true);
-        await fetchAllocations();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    run();
-  }, []);
+  const loadTeamContext = useCallback(async (allocation: MentorAllocation) => {
+    setIsLoadingFeedback(true);
 
-  const grouped = useMemo(() => {
-    const statusPriority: Record<MentorAllocation["roundStatus"], number> = {
-      Active: 0,
-      Draft: 1,
-      Completed: 2,
-    };
-
-    const map = new Map<string, MentorAllocation[]>();
-    for (const item of allocations) {
-      const key = `${item.roundId}|${item.roundName}|${item.roundStatus}`;
-      const existing = map.get(key) ?? [];
-      existing.push(item);
-      map.set(key, existing);
-    }
-
-    return Array.from(map.entries())
-      .map(([key, items]) => {
-        const [roundId, roundName, roundStatus] = key.split("|");
-        const typedStatus = roundStatus as MentorAllocation["roundStatus"];
-        return {
-          roundId,
-          roundName,
-          roundStatus: typedStatus,
-          items: items.sort((a, b) => a.teamName.localeCompare(b.teamName)),
-        };
-      })
-      .sort((a, b) => {
-        const byStatus =
-          statusPriority[a.roundStatus] - statusPriority[b.roundStatus];
-        if (byStatus !== 0) return byStatus;
-        return a.roundName.localeCompare(b.roundName);
-      });
-  }, [allocations]);
-
-  const openFeedbackDialog = async (allocation: MentorAllocation) => {
     try {
-      setSelectedAllocation(allocation);
-      setIsFeedbackDialogOpen(true);
-      setIsLoadingFeedback(true);
-
       const [feedbackRes, historyRes] = await Promise.all([
         fetch(
           `/api/dashboard/mentor/feedback?assignmentId=${encodeURIComponent(allocation.assignmentId)}`,
@@ -171,18 +163,68 @@ export function MentorTab() {
 
       setFeedbackPayload(feedbackData);
       setTeamHistory(historyData);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to load feedback",
-      );
-      setIsFeedbackDialogOpen(false);
-      setSelectedAllocation(null);
-      setFeedbackPayload(null);
-      setTeamHistory([]);
     } finally {
       setIsLoadingFeedback(false);
     }
-  };
+  }, []);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: initial fetch
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setIsLoading(true);
+        await fetchAllocations();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  useEffect(() => {
+    if (roundOptions.length === 0) {
+      setSelectedRoundId("");
+      return;
+    }
+
+    if (!roundOptions.some((round) => round.id === selectedRoundId)) {
+      setSelectedRoundId(roundOptions[0]?.id ?? "");
+    }
+  }, [roundOptions, selectedRoundId]);
+
+  useEffect(() => {
+    if (teamsInSelectedRound.length === 0) {
+      setSelectedTeamNumber(1);
+      return;
+    }
+
+    const maxTeamNumber = teamsInSelectedRound.length;
+    if (selectedTeamNumber < 1 || selectedTeamNumber > maxTeamNumber) {
+      setSelectedTeamNumber(1);
+    }
+  }, [teamsInSelectedRound, selectedTeamNumber]);
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedAllocation) {
+        setFeedbackPayload(null);
+        setTeamHistory([]);
+        return;
+      }
+
+      try {
+        await loadTeamContext(selectedAllocation);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load feedback",
+        );
+        setFeedbackPayload(null);
+        setTeamHistory([]);
+      }
+    };
+
+    run();
+  }, [loadTeamContext, selectedAllocation]);
 
   const handleSaveFeedback = async () => {
     if (!feedbackPayload) return;
@@ -210,10 +252,10 @@ export function MentorTab() {
 
       toast.success("Feedback saved");
       await fetchAllocations();
-      setIsFeedbackDialogOpen(false);
-      setSelectedAllocation(null);
-      setFeedbackPayload(null);
-      setTeamHistory([]);
+
+      if (selectedAllocation) {
+        await loadTeamContext(selectedAllocation);
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to save feedback",
@@ -228,7 +270,8 @@ export function MentorTab() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Mentor Feedback</h2>
         <p className="text-muted-foreground">
-          Submit and review feedback for allocated teams across rounds.
+          Review allocated teams by round, switch using team number, and submit
+          feedback in a single workspace.
         </p>
       </div>
 
@@ -237,184 +280,245 @@ export function MentorTab() {
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading assigned teams...
         </div>
-      ) : grouped.length === 0 ? (
+      ) : roundOptions.length === 0 ? (
         <div className="rounded-md border p-4 text-sm text-muted-foreground">
           No teams are allocated to your mentor account yet.
         </div>
       ) : (
         <div className="space-y-6">
-          {grouped.map((group) => (
-            <div key={group.roundId} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">{group.roundName}</h3>
-                <Badge variant="secondary">{group.roundStatus}</Badge>
-              </div>
-
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Team</TableHead>
-                      <TableHead>Track</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Submission</TableHead>
-                      <TableHead>Feedback</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.items.map((item) => (
-                      <TableRow key={item.assignmentId}>
-                        <TableCell className="font-medium">
-                          {item.teamName}
-                        </TableCell>
-                        <TableCell>{item.trackName ?? "-"}</TableCell>
-                        <TableCell>{formatEnumLabel(item.teamStage)}</TableCell>
-                        <TableCell>
-                          {item.pptUrl ? (
-                            <a
-                              href={item.pptUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="underline underline-offset-4"
-                            >
-                              View PPT
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground">
-                              Not submitted
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {item.feedbackCount > 0 ? "Saved" : "Not submitted"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openFeedbackDialog(item)}
-                          >
-                            {item.roundStatus === "Completed"
-                              ? "View"
-                              : item.feedbackCount > 0
-                                ? "View / Edit"
-                                : "Add Feedback"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Round</CardTitle>
+                <CardDescription>Select which round to review.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={selectedRoundId}
+                  onValueChange={setSelectedRoundId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select round" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roundOptions.map((round) => (
+                      <SelectItem key={round.id} value={round.id}>
+                        {round.name} ({round.status})
+                      </SelectItem>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
-      <Dialog
-        open={isFeedbackDialogOpen}
-        onOpenChange={setIsFeedbackDialogOpen}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
-              Mentor Feedback
-              {selectedAllocation ? ` - ${selectedAllocation.teamName}` : ""}
-            </DialogTitle>
-            <DialogDescription>
-              Add or edit feedback for this assignment and review historical
-              feedback for the same team.
-            </DialogDescription>
-          </DialogHeader>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  Team IDs ({selectedTeamNumber})
+                </CardTitle>
+                <CardDescription>Pick a team number directly.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedTeamNumber((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={
+                      teamsInSelectedRound.length === 0 ||
+                      selectedTeamNumber <= 1
+                    }
+                  >
+                    Prev
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedTeamNumber((prev) =>
+                        Math.min(teamsInSelectedRound.length, prev + 1),
+                      )
+                    }
+                    disabled={
+                      teamsInSelectedRound.length === 0 ||
+                      selectedTeamNumber >= teamsInSelectedRound.length
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
 
-          {isLoadingFeedback ? (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading feedback...
-            </div>
-          ) : !feedbackPayload ? (
-            <p className="text-sm text-muted-foreground">
-              No feedback data available.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  Current Assignment Feedback
+                <div className="rounded-md border p-2">
+                  <div className="flex max-w-full flex-wrap gap-1">
+                    {teamsInSelectedRound.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        No teams in this round
+                      </span>
+                    ) : (
+                      teamsInSelectedRound.map((team) => (
+                        <Button
+                          key={team.assignmentId}
+                          type="button"
+                          size="sm"
+                          variant={
+                            team.teamNumber === selectedTeamNumber
+                              ? "default"
+                              : "outline"
+                          }
+                          className="h-7 min-w-8 px-2"
+                          onClick={() => setSelectedTeamNumber(team.teamNumber)}
+                        >
+                          {team.teamNumber}
+                        </Button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {selectedAllocation
+                    ? `Team ${selectedAllocation.teamNumber}: ${selectedAllocation.teamName}`
+                    : "No team available for selected round"}
                 </p>
-                <Textarea
-                  value={feedbackPayload.feedback}
-                  onChange={(event) =>
-                    setFeedbackPayload((prev) =>
-                      prev ? { ...prev, feedback: event.target.value } : prev,
-                    )
-                  }
-                  placeholder="Write actionable feedback for this team"
-                  disabled={feedbackPayload.roundStatus === "Completed"}
-                />
-                {feedbackPayload.roundStatus === "Completed" ? (
-                  <p className="text-xs text-amber-600">
-                    Round is completed. Feedback is read-only.
-                  </p>
-                ) : null}
-                {feedbackPayload.roundStatus !== "Completed" ? (
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSaveFeedback}
-                      disabled={isSavingFeedback}
-                    >
-                      {isSavingFeedback ? "Saving..." : "Save Feedback"}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Team Feedback History</p>
-                {previousRoundHistory.length === 0 ? (
-                  <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                    No previous round feedback available.
+          {!selectedAllocation ? (
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+              No team available for the selected round.
+            </div>
+          ) : (
+            <div className="grid min-h-[70vh] grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>{selectedAllocation.teamName}</CardTitle>
+                  <CardDescription>
+                    Team {selectedAllocation.teamNumber} in{" "}
+                    {selectedAllocation.roundName}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">
+                      {selectedAllocation.roundStatus}
+                    </Badge>
+                    <Badge variant="outline">
+                      {selectedAllocation.feedbackCount > 0
+                        ? "Feedback Saved"
+                        : "No Feedback Yet"}
+                    </Badge>
                   </div>
-                ) : (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Round</TableHead>
-                          <TableHead>Mentor</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Feedback</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {previousRoundHistory.map((row, index) => (
-                          <TableRow key={`${row.assignmentId}-${index}`}>
-                            <TableCell className="font-medium">
-                              {row.mentorRoundName}
-                            </TableCell>
-                            <TableCell>
-                              {row.mentorName} @{row.mentorUsername}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {row.mentorRoundStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="max-w-85 whitespace-pre-wrap text-sm">
-                              {row.feedback}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      Your Previous Feedback For This Team
+                    </p>
+                    {isLoadingFeedback ? (
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading feedback history...
+                      </div>
+                    ) : previousRoundHistory.length === 0 ? (
+                      <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                        No previous round feedback from you is available.
+                      </div>
+                    ) : (
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Round</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Feedback</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {previousRoundHistory.map((row, index) => (
+                              <TableRow key={`${row.assignmentId}-${index}`}>
+                                <TableCell className="font-medium">
+                                  {row.mentorRoundName}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary">
+                                    {row.mentorRoundStatus}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="max-w-85 whitespace-pre-wrap text-sm">
+                                  {row.feedback}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </CardContent>
+              </Card>
+
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Current Round Feedback</CardTitle>
+                  <CardDescription>
+                    Add or update feedback for the selected team.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoadingFeedback ? (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading feedback...
+                    </div>
+                  ) : !feedbackPayload ? (
+                    <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                      No feedback data available.
+                    </div>
+                  ) : (
+                    <>
+                      <Textarea
+                        value={feedbackPayload.feedback}
+                        onChange={(event) =>
+                          setFeedbackPayload((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  feedback: event.target.value,
+                                }
+                              : prev,
+                          )
+                        }
+                        placeholder="Write actionable feedback for this team"
+                        disabled={feedbackPayload.roundStatus === "Completed"}
+                        className="min-h-64"
+                      />
+
+                      {feedbackPayload.roundStatus === "Completed" ? (
+                        <p className="text-xs text-amber-600">
+                          Round is completed. Feedback is read-only.
+                        </p>
+                      ) : (
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={handleSaveFeedback}
+                            disabled={isSavingFeedback}
+                          >
+                            {isSavingFeedback ? "Saving..." : "Save Feedback"}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }
