@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import { DayNightProvider } from "~/components/providers/useDayNight";
 import { GlobalLoader } from "~/components/ui/global-loader";
+import { RegistrationMarquee } from "~/components/ui/registration-marquee";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
 import "./globals.css";
 import { LoaderProvider } from "~/components/providers/loader-context";
@@ -107,6 +108,7 @@ export default function RootLayout({
           <DayNightProvider>
             <LoaderProvider>
               <GlobalLoader />
+              <RegistrationMarquee />
               {children}
               <ThemeToggle />
               <ToasterWrapper />

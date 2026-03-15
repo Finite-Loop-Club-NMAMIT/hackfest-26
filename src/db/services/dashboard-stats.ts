@@ -253,3 +253,74 @@ export async function getCollegeBreakdownStates() {
     throw new AppError("COLLEGE_BREAKDOWN_STATES_FETCH_FAILED", 500);
   }
 }
+
+// For sake of visual trends, sry (iykyk)
+export async function getRegistrationTrends() {
+  "use cache";
+  cacheLife("seconds");
+  cacheTag("dashboard-stats");
+
+  try {
+    const teamTrends = await db
+      .select({
+        date: sql<string>`DATE(${teams.createdAt})`.as("date"),
+        totalRegistrations: count(),
+        confirmedRegistrations:
+          sql<number>`count(case when ${teams.isCompleted} = true then 1 end)`.mapWith(
+            Number,
+          ),
+      })
+      .from(teams)
+      .groupBy(sql`DATE(${teams.createdAt})`)
+      .orderBy(sql`DATE(${teams.createdAt})`);
+
+    const ideaTrends = await db
+      .select({
+        date: sql<string>`DATE(${ideaSubmission.createdAt})`.as("date"),
+        submissions: count(),
+      })
+      .from(ideaSubmission)
+      .groupBy(sql`DATE(${ideaSubmission.createdAt})`)
+      .orderBy(sql`DATE(${ideaSubmission.createdAt})`);
+
+    const userTrends = await db
+      .select({
+        date: sql<string>`DATE(${participants.createdAt})`.as("date"),
+        userAccounts: count(),
+      })
+      .from(participants)
+      .groupBy(sql`DATE(${participants.createdAt})`)
+      .orderBy(sql`DATE(${participants.createdAt})`);
+
+    const ideaMap = new Map(ideaTrends.map((i) => [i.date, i.submissions]));
+    const userMap = new Map(userTrends.map((u) => [u.date, u.userAccounts]));
+    const teamMap = new Map(
+      teamTrends.map((t) => [
+        t.date,
+        {
+          totalRegistrations: t.totalRegistrations,
+          confirmedRegistrations: t.confirmedRegistrations,
+        },
+      ]),
+    );
+
+    const allDates = [
+      ...new Set([
+        ...teamTrends.map((t) => t.date),
+        ...userTrends.map((u) => u.date),
+        ...ideaTrends.map((i) => i.date),
+      ]),
+    ].sort();
+
+    return allDates.map((date) => ({
+      date,
+      totalRegistrations: teamMap.get(date)?.totalRegistrations ?? 0,
+      confirmedRegistrations: teamMap.get(date)?.confirmedRegistrations ?? 0,
+      ideaSubmissions: ideaMap.get(date) ?? 0,
+      userAccounts: userMap.get(date) ?? 0,
+    }));
+  } catch (error) {
+    console.log(error);
+    throw new AppError("REGISTRATION_TRENDS_FETCH_FAILED", 500);
+  }
+}

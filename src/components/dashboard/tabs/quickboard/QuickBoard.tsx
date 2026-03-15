@@ -11,7 +11,7 @@ import {
 } from "~/components/ui/card";
 import { CollegeAnalytics } from "./CollegeAnalytics";
 import { type StateStat, StatesAnalytics } from "./StateAnalytics";
-import { type QuickStats, Stats } from "./Stats";
+import { type QuickStats, Stats, type TrendPoint } from "./Stats";
 
 type CollegeRanking = {
   college: string | null;
@@ -24,6 +24,9 @@ export function QuickboardTab() {
   const [statesStats, setStatesStats] = useState<StateStat[]>([]);
   const [statesStatsTotal, setStatesStatsTotal] = useState<StateStat[]>([]);
   const [collegeRankings, setCollegeRankings] = useState<CollegeRanking[]>([]);
+  const [registrationTrends, setRegistrationTrends] = useState<TrendPoint[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,6 +41,7 @@ export function QuickboardTab() {
         setStatesStats(data.statesConfirmedStats);
         setStatesStatsTotal(data.statesTotalStats);
         setCollegeRankings(data.collegeRankings);
+        setRegistrationTrends(data.registrationTrends ?? []);
       } catch (error) {
         console.error(error);
         toast.error("Failed to load dashboard statistics");
@@ -74,7 +78,7 @@ export function QuickboardTab() {
 
   return (
     <div className="space-y-6">
-      <Stats data={quickStats} />
+      <Stats data={quickStats} trends={registrationTrends} />
       <StatesAnalytics
         statesStatsTotal={statesStatsTotal}
         statesStatsConfirmed={statesStats}

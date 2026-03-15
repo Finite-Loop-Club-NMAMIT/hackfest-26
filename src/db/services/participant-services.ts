@@ -118,9 +118,11 @@ export async function fetchParticipants({
 
   if (search?.trim()) {
     const term = `%${search.trim()}%`;
-    conditions.push(
-      or(ilike(participants.name, term), ilike(participants.email, term))!,
+    const searchCondition = or(
+      ilike(participants.name, term),
+      ilike(participants.email, term),
     );
+    if (searchCondition) conditions.push(searchCondition);
   }
 
   if (

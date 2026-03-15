@@ -198,7 +198,7 @@ export function CollegeRequestsTable({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to export data");
     } finally {
       setIsExporting(false);

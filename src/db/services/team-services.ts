@@ -313,7 +313,6 @@ export async function fetchTeams({
   if (filter?.attended && filter.attended !== "all") {
     conditions.push(eq(teams.attended, filter.attended === "true"));
   }
-
   const memberCount = db
     .select({
       teamId: participants.teamId,
@@ -353,7 +352,6 @@ export async function fetchTeams({
     : null;
 
   const { totalCount, confirmedCount } = await getTeamCounts();
-
   return {
     teams: paginatedTeams,
     nextCursor,
@@ -374,7 +372,6 @@ export async function getTeamCounts() {
       .from(teams)
       .where(eq(teams.isCompleted, true)),
   ]);
-
   return {
     totalCount: totalResult?.count ?? 0,
     confirmedCount: confirmedResult?.count ?? 0,

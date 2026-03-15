@@ -20,7 +20,7 @@ export default async function EventsPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const session = await auth();
-  const participantSession = await participantAuth();
+  const _participantSession = await participantAuth();
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
