@@ -101,6 +101,17 @@ export async function createParticipationPayment({
     return inserted;
 }
 
+export async function hasPendingPayment(teamId: string) {
+    const existingPayment = await db.query.payment.findFirst({
+        where: and(
+            eq(payment.teamId, teamId),
+            eq(payment.paymentStatus, "Pending"),
+        ),
+    });
+
+    return !!existingPayment;
+}
+
 // ---------------------------------------------------------------------------
 // Fetch payments for admin dashboard
 // ---------------------------------------------------------------------------

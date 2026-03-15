@@ -7,7 +7,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowDownUp, CheckCircle2, Circle, ExternalLink, Search, X } from "lucide-react";
+import {
+  ArrowDownUp,
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+  Search,
+  X,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -41,6 +48,7 @@ type Payment = {
   id: string;
   paymentStatus: PaymentStatus;
   paymentScreenshotUrl: string | null;
+  paymentTransactionId: string | null;
   createdAt: string;
   team: { id: string; name: string } | null;
   user: { id: string; name: string | null; email: string | null } | null;
@@ -144,38 +152,34 @@ export function PaymentsTable() {
     });
   }, [fetchData]);
 
-  const handleToggleVerify = useCallback(
-    async (paymentId: string) => {
-      setVerifyingIds((prev) => new Set(prev).add(paymentId));
-      try {
-        const res = await fetch(
-          `/api/dashboard/payments/${paymentId}/verify`,
-          { method: "PATCH" },
+  const handleToggleVerify = useCallback(async (paymentId: string) => {
+    setVerifyingIds((prev) => new Set(prev).add(paymentId));
+    try {
+      const res = await fetch(`/api/dashboard/payments/${paymentId}/verify`, {
+        method: "PATCH",
+      });
+      if (!res.ok) return;
+      const json = (await res.json()) as {
+        data: { paymentStatus: PaymentStatus };
+      };
+      const newStatus = json?.data?.paymentStatus;
+      if (newStatus) {
+        setData((prev) =>
+          prev.map((p) =>
+            p.id === paymentId ? { ...p, paymentStatus: newStatus } : p,
+          ),
         );
-        if (!res.ok) return;
-        const json = (await res.json()) as {
-          data: { paymentStatus: PaymentStatus };
-        };
-        const newStatus = json?.data?.paymentStatus;
-        if (newStatus) {
-          setData((prev) =>
-            prev.map((p) =>
-              p.id === paymentId ? { ...p, paymentStatus: newStatus } : p,
-            ),
-          );
-        }
-      } catch (err) {
-        console.error("Failed to toggle verification:", err);
-      } finally {
-        setVerifyingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(paymentId);
-          return next;
-        });
       }
-    },
-    [],
-  );
+    } catch (err) {
+      console.error("Failed to toggle verification:", err);
+    } finally {
+      setVerifyingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(paymentId);
+        return next;
+      });
+    }
+  }, []);
 
   const dataWithIndex = useMemo(
     () => data.map((p, i) => ({ ...p, rowIndex: i + 1 })),
@@ -187,30 +191,38 @@ export function PaymentsTable() {
       columnHelper.accessor("rowIndex", {
         header: "#",
         cell: (info) => (
-          <span className="text-muted-foreground text-sm">{info.getValue()}</span>
+          <span className="text-muted-foreground text-sm">
+            {info.getValue()}
+          </span>
         ),
       }),
-      columnHelper.accessor(
-        (row) => row.user?.name ?? row.user?.email ?? "—",
-        {
-          id: "userName",
-          header: "User",
-          cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      columnHelper.accessor((row) => row.user?.name ?? row.user?.email ?? "—", {
+        id: "userName",
+        header: "User",
+        cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor((row) => row.team?.name ?? "—", {
+        id: "teamName",
+        header: "Team",
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("paymentTransactionId", {
+        header: "Transaction ID",
+        cell: (info) => {
+          const val = info.getValue();
+          return val ? (
+            <span className="font-mono text-xs">{val}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          );
         },
-      ),
-      columnHelper.accessor(
-        (row) => row.team?.name ?? "—",
-        {
-          id: "teamName",
-          header: "Team",
-          cell: (info) => <span>{info.getValue()}</span>,
-        },
-      ),
+      }),
       columnHelper.accessor("paymentScreenshotUrl", {
         header: "Screenshot",
         cell: (info) => {
           const url = info.getValue();
-          if (!url) return <span className="text-muted-foreground text-sm">—</span>;
+          if (!url)
+            return <span className="text-muted-foreground text-sm">—</span>;
           return (
             <a
               href={url}
@@ -229,8 +241,10 @@ export function PaymentsTable() {
         cell: (info) => {
           const status = info.getValue();
           if (status === "Paid") return <Badge variant="success">Paid</Badge>;
-          if (status === "Pending") return <Badge variant="warning">Pending</Badge>;
-          if (status === "Refunded") return <Badge variant="destructive">Refunded</Badge>;
+          if (status === "Pending")
+            return <Badge variant="warning">Pending</Badge>;
+          if (status === "Refunded")
+            return <Badge variant="destructive">Refunded</Badge>;
           return <Badge variant="outline">{status ?? "N/A"}</Badge>;
         },
       }),
@@ -249,16 +263,23 @@ export function PaymentsTable() {
               onClick={() => void handleToggleVerify(id)}
               className={
                 isPaid
-                  ? "bg-green-600 text-white hover:bg-green-700 gap-1"
-                  : "gap-1"
+                  ? "bg-green-600 text-white hover:bg-destructive gap-1 min-w-[90px] group transition-colors"
+                  : "gap-1 min-w-[90px]"
               }
             >
               {isPaid ? (
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5 group-hover:hidden" />
+                  <X className="h-3.5 w-3.5 hidden group-hover:block" />
+                  <span className="group-hover:hidden">Verified</span>
+                  <span className="hidden group-hover:block">Revoke</span>
+                </>
               ) : (
-                <Circle className="h-3.5 w-3.5" />
+                <>
+                  <Circle className="h-3.5 w-3.5" />
+                  <span>Verify</span>
+                </>
               )}
-              {isPaid ? "Verified" : "Verify"}
             </Button>
           );
         },
@@ -326,8 +347,7 @@ export function PaymentsTable() {
     setFilters({ sortOrder: "desc" });
   }, []);
 
-  const hasActiveFilters =
-    search.trim() !== "" || filters.sortOrder !== "desc";
+  const hasActiveFilters = search.trim() !== "" || filters.sortOrder !== "desc";
 
   return (
     <div className="space-y-3">
@@ -344,7 +364,9 @@ export function PaymentsTable() {
         <div className="flex gap-2 flex-wrap">
           <Select
             value={filters.sortOrder}
-            onValueChange={(v) => setFilters((prev) => ({ ...prev, sortOrder: v }))}
+            onValueChange={(v) =>
+              setFilters((prev) => ({ ...prev, sortOrder: v }))
+            }
           >
             <SelectTrigger className="w-[140px]">
               <ArrowDownUp className="size-4 mr-1" />
@@ -390,9 +412,9 @@ export function PaymentsTable() {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
