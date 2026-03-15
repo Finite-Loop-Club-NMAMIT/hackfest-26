@@ -10,4 +10,5 @@ export { RolesTab } from "./Roles";
 export { SelectionsTab } from "./SelectionsTab";
 export { SettingsTab } from "./Settings";
 export { SubmissionsTab } from "./SubmissionsTab";
+export { JudgeTab } from "./JudgeTab";
 export { TeamsTab } from "./TeamsTab";
