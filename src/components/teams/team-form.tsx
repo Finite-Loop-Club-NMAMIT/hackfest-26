@@ -193,7 +193,7 @@ export function TeamForm() {
             </span>
             . Registration ends on{" "}
             <span className="font-bold text-white text-base md:text-lg bg-white/20 px-1.5 py-0.5 rounded-md mx-0.5">
-              15th March
+              20th March, 11:59 PM
             </span>
             .
           </p>

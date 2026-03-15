@@ -45,6 +45,13 @@ export async function listMembers(teamId: string) {
 
   const members = await query.participants.findMany({
     where: (u, { eq }) => eq(u.teamId, teamId),
+    with: {
+      college: {
+        columns: {
+          name: true,
+        },
+      },
+    },
   });
 
   return members.map((m) => ({

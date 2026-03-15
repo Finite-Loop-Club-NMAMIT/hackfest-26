@@ -28,7 +28,7 @@ const JOURNEY_STEPS = [
   },
   {
     icon: Send,
-    title: "Submit Your Idea by March 15",
+    title: "Submit Your Idea by March 20, 11:59 PM",
     description: "Submit your polished idea and wait for the results.",
     accent: "#06b6d4",
   },

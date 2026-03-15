@@ -32,6 +32,7 @@ type TeamMember = {
   email: string | null;
   github: string | null;
   isLeader: boolean;
+  college?: { name: string | null } | null;
 };
 
 type TeamWithMembers = {
@@ -334,6 +335,11 @@ export function TeamDetailDialog({
                       <p className="text-sm text-muted-foreground">
                         {member.email}
                       </p>
+                      {member.college?.name && (
+                        <p className="text-xs text-muted-foreground">
+                          {member.college.name}
+                        </p>
+                      )}
                       {member.github && (
                         <p className="text-xs text-muted-foreground">
                           @{member.github}

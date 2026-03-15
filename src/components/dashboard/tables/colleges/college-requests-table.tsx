@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Check, Clock, Edit, Search, X } from "lucide-react";
+import { Check, Clock, Download, Edit, Search, X } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -98,6 +98,7 @@ export function CollegeRequestsTable({
   const [editName, setEditName] = useState("");
   const [editState, setEditState] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Confirmation State
   const [confirmApproval, setConfirmApproval] = useState<{
@@ -167,6 +168,42 @@ export function CollegeRequestsTable({
         handleInvalidate,
       );
   }, [fetchData]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const url = `/api/dashboard/college-requests?status=Approved&limit=100000`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch requests for export");
+      const { requests } = (await res.json()) as CollegeRequestsData;
+
+      const headers = ["College Name", "State"];
+      const rows = requests.map((r) => [
+        `"${(r.approved_name || r.requested_name).replace(/"/g, '""')}"`,
+        `"${(r.state || "").replace(/"/g, '""')}"`,
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((r) => r.join(",")),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute(
+        "download",
+        `approved_colleges_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      toast.error("Failed to export data");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleUpdateStatus = async (
     id: string,
@@ -484,6 +521,17 @@ export function CollegeRequestsTable({
               className="pl-9"
             />
           </div>
+          {statusMode === "Approved" && (
+            <Button
+              variant="outline"
+              disabled={isExporting}
+              onClick={handleExport}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {isExporting ? "Exporting..." : "Export"}
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
