@@ -21,7 +21,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
     "setup:env": "cp .env.example .env && echo AUTH_SECRET=$(openssl rand -base64 32) && echo 'Setup complete'",
-    "test:rate-limit": "tsx scripts/test-rate-limiting.ts"
+    "test:rate-limit": "tsx scripts/test-rate-limiting.ts",
+    "worker:normalization": "tsx scripts/normalization-worker.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.3",
@@ -44,6 +45,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@types/three": "^0.182.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.71.0",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",

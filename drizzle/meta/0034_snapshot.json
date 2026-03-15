@@ -1,6 +1,6 @@
 {
-  "id": "0dc27955-4c8c-4ac3-918b-70c416e90300",
-  "prevId": "fb786146-3e22-4f15-a4d3-ef4795f15b46",
+  "id": "25b62eb7-d597-4325-b504-f98ae79dc7cf",
+  "prevId": "0dc27955-4c8c-4ac3-918b-70c416e90300",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1650,7 +1650,7 @@
         },
         "normalized_total_score": {
           "name": "normalized_total_score",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1960,6 +1960,57 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.team_round_scores": {
+      "name": "team_round_scores",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_id": {
+          "name": "round_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "normalized_total_score": {
+          "name": "normalized_total_score",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "judge_count": {
+          "name": "judge_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "team_round_scores_unique": {
+          "name": "team_round_scores_unique",
+          "nullsNotDistinct": false,
+          "columns": ["team_id", "round_id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2570,6 +2621,12 @@
         },
         "payment_screenshot_url": {
           "name": "payment_screenshot_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_transaction_id": {
+          "name": "payment_transaction_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -76,6 +76,7 @@ export function RoundSubmissionsPanel({
   const [scoreDrafts, setScoreDrafts] = useState<Record<string, string>>({});
   const [savingTeamId, setSavingTeamId] = useState<string | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: TODO[DARSHAN]: is this necessary
   useEffect(() => {
     const timer = setTimeout(() => {
       setOffset(0);

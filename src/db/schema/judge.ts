@@ -1,4 +1,11 @@
-import { index, integer, pgTable, text, unique } from "drizzle-orm/pg-core";
+import {
+  doublePrecision,
+  index,
+  integer,
+  pgTable,
+  text,
+  unique,
+} from "drizzle-orm/pg-core";
 import { roundStatus } from "../enum";
 import { dashboardUsers } from "./rbac";
 import { teams } from "./team";
@@ -46,7 +53,7 @@ export const judgeRoundAssignments = pgTable(
       .references(() => judgeRounds.id, { onDelete: "cascade" }),
 
     rawTotalScore: integer("raw_total_score").notNull().default(0),
-    normalizedTotalScore: integer("normalized_total_score")
+    normalizedTotalScore: doublePrecision("normalized_total_score")
       .notNull()
       .default(0),
   },
@@ -104,4 +111,24 @@ export const judgeCriterias = pgTable(
     maxScore: integer("max_score").notNull().default(10),
   },
   (table) => [index("judge_criteria_round_idx").on(table.judgeRoundId)],
+);
+
+export const teamRoundScores = pgTable(
+  "team_round_scores",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+
+    teamId: text("team_id").notNull(),
+    roundId: text("round_id").notNull(),
+
+    normalizedTotalScore: doublePrecision("normalized_total_score")
+      .notNull()
+      .default(0),
+    judgeCount: integer("judge_count").notNull().default(0),
+  },
+  (table) => [
+    unique("team_round_scores_unique").on(table.teamId, table.roundId),
+  ],
 );

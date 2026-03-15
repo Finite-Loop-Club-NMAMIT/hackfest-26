@@ -74,7 +74,7 @@ export function LeaderboardPanel() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [search, trackId, round, scoreType]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

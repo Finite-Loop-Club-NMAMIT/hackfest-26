@@ -52,6 +52,7 @@ export function EvaluatorSettingsPanel() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
   useEffect(() => {
     void fetchData();
   }, []);

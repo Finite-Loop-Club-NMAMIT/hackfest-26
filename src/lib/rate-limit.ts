@@ -1,23 +1,7 @@
-import Redis from "ioredis";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { RateLimiterRedis } from "rate-limiter-flexible";
-import { env } from "~/env";
-
-let redis: Redis | null = null;
-
-function getRedisClient(): Redis {
-  if (!redis) {
-    if (!env.REDIS_URL) {
-      throw new Error("REDIS_URL is required to initialize rate limiting");
-    }
-    redis = new Redis(env.REDIS_URL);
-    redis.on("error", (err: Error) => {
-      console.error("[Redis] Connection error:", err.message);
-    });
-  }
-  return redis;
-}
+import { getRedisClient } from "~/lib/redis";
 
 function createRateLimiters() {
   const redisClient = getRedisClient();

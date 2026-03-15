@@ -13,6 +13,7 @@ export const payment = pgTable("payment", {
   amount: text("amount").notNull(),
   paymentStatus: paymentStatusEnum("payment_status").default("Pending"),
   paymentScreenshotUrl: text("payment_screenshot_url"),
+  paymentTransactionId: text("payment_transaction_id"),
 
   userId: text("user_id").references(() => participants.id),
   teamId: text("team_id").references(() => teams.id),

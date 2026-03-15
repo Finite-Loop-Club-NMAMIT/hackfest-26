@@ -135,9 +135,9 @@ export function JudgeTab() {
       criteria: scoreDialogPayload.criteria.map((criterion) =>
         criterion.id === criteriaId
           ? {
-            ...criterion,
-            rawScore: Number.isFinite(parsed) ? parsed : criterion.rawScore,
-          }
+              ...criterion,
+              rawScore: Number.isFinite(parsed) ? parsed : criterion.rawScore,
+            }
           : criterion,
       ),
     });

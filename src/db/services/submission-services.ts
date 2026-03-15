@@ -11,11 +11,6 @@ import {
 } from "drizzle-orm";
 import db from "~/db";
 import {
-  ideaRoundCriteria,
-  ideaRounds,
-  ideaTeamEvaluations,
-} from "~/db/schema/evaluator";
-import {
   ideaSubmission,
   permissions,
   rolePermissions,
@@ -23,6 +18,11 @@ import {
   teams,
   tracks,
 } from "~/db/schema";
+import {
+  ideaRoundCriteria,
+  ideaRounds,
+  ideaTeamEvaluations,
+} from "~/db/schema/evaluator";
 import { AppError } from "~/lib/errors/app-error";
 
 export type SubmissionRound = "ROUND_1" | "ROUND_2";
