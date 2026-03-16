@@ -8,7 +8,10 @@ import {
 } from "~/db/schema";
 import { ideaRounds, ideaTeamEvaluations } from "~/db/schema/evaluator";
 import { AppError } from "~/lib/errors/app-error";
-import { addEvaluationNormalizationJob } from "~/lib/queue/normalization";
+import {
+  addEvaluationAggregationJob,
+  addEvaluationNormalizationJob,
+} from "~/lib/queue/normalization";
 import {
   ensureRoundForEvaluation,
   type SubmissionRound,
@@ -111,7 +114,8 @@ export async function submitEvaluationScore({
   }
 
   // Queue normalization to keep score submission latency low.
-  await addEvaluationNormalizationJob(roundRecord.id);
+  await addEvaluationNormalizationJob(evaluatorId, roundRecord.id);
+  await addEvaluationAggregationJob(roundRecord.id);
 
   return { mode };
 }
@@ -166,10 +170,33 @@ export async function recomputeNormalizedScores(roundId: string) {
         COALESCE(STDDEV_POP(raw_total_score::double precision), 0) AS stddev
       FROM idea_team_evaluations
       WHERE round_id = ${roundId}
+      AND raw_total_score IS NOT NULL
       GROUP BY evaluator_id, round_id
     ) AS stats
     WHERE ite.evaluator_id = stats.evaluator_id
       AND ite.round_id = stats.round_id
       AND ite.round_id = ${roundId}
+  `);
+}
+
+export async function aggregateIdeaTeamScores(roundId: string) {
+  await db.execute(sql`
+    INSERT INTO idea_team_round_scores (id, team_id, round_id, raw_total_score, normalized_total_score, evaluator_count)
+    SELECT
+      gen_random_uuid(),
+      ite.team_id,
+      ite.round_id,
+      AVG(ite.raw_total_score)::integer,
+      AVG(ite.normalized_total_score),
+      COUNT(DISTINCT ite.evaluator_id)
+    FROM idea_team_evaluations ite
+    WHERE ite.round_id = ${roundId}
+      AND ite.normalized_total_score IS NOT NULL
+    GROUP BY ite.team_id, ite.round_id
+    ON CONFLICT (team_id, round_id)
+    DO UPDATE SET
+      raw_total_score = EXCLUDED.raw_total_score,
+      normalized_total_score = EXCLUDED.normalized_total_score,
+      evaluator_count = EXCLUDED.evaluator_count
   `);
 }

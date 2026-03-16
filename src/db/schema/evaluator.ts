@@ -28,6 +28,36 @@ export const ideaRounds = pgTable("idea_rounds", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const ideaRoundAssignments = pgTable(
+  "idea_round_assignments",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+
+    roundId: text("round_id")
+      .notNull()
+      .references(() => ideaRounds.id, { onDelete: "cascade" }),
+
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+
+    evaluatorId: text("evaluator_id")
+      .notNull()
+      .references(() => dashboardUsers.id, { onDelete: "cascade" }),
+
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("unique_idea_assignment").on(
+      table.roundId,
+      table.teamId,
+      table.evaluatorId,
+    ),
+  ],
+);
+
 export const ideaRoundCriteria = pgTable("idea_round_criteria", {
   id: text("id")
     .primaryKey()
@@ -72,6 +102,33 @@ export const ideaScores = pgTable(
       table.evaluatorId,
       table.criteriaId,
     ),
+  ],
+);
+
+export const ideaTeamRoundScores = pgTable(
+  "idea_team_round_scores",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+
+    roundId: text("round_id")
+      .notNull()
+      .references(() => ideaRounds.id, { onDelete: "cascade" }),
+
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+
+    rawTotalScore: integer("raw_total_score").notNull().default(0),
+    normalizedTotalScore: doublePrecision("normalized_total_score")
+      .notNull()
+      .default(0),
+
+    evaluatorCount: integer("evaluator_count").notNull().default(0),
+  },
+  (table) => [
+    unique("unique_idea_team_round_score").on(table.roundId, table.teamId),
   ],
 );
 

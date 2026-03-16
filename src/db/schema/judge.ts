@@ -123,6 +123,7 @@ export const teamRoundScores = pgTable(
     teamId: text("team_id").notNull(),
     roundId: text("round_id").notNull(),
 
+    rawTotalScore: integer("raw_total_score").notNull().default(0),
     normalizedTotalScore: doublePrecision("normalized_total_score")
       .notNull()
       .default(0),

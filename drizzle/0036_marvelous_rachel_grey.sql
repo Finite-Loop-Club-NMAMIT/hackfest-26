@@ -1,0 +1,1 @@
+ALTER TABLE "team_round_scores" ADD COLUMN "raw_total_score" integer DEFAULT 0 NOT NULL;

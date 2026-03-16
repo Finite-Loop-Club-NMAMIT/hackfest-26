@@ -246,6 +246,20 @@
       "when": 1773545359927,
       "tag": "0034_happy_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1773653947365,
+      "tag": "0035_pretty_spiral",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1773702989803,
+      "tag": "0036_marvelous_rachel_grey",
+      "breakpoints": true
     }
   ]
 }
