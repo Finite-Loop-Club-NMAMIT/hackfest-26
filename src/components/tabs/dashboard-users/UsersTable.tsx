@@ -67,6 +67,18 @@ export function UsersTable() {
   }, []);
 
   const assignRole = async (userId: string, roleId: string) => {
+    const roleToAdd = allRoles.find((r) => r.id === roleId);
+    if (!roleToAdd) return;
+
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId && !u.roles.some((r) => r.id === roleId)) {
+          return { ...u, roles: [...u.roles, roleToAdd] };
+        }
+        return u;
+      }),
+    );
+
     try {
       const res = await fetch("/api/dashboard/user-roles", {
         method: "POST",
@@ -80,15 +92,24 @@ export function UsersTable() {
       }
 
       toast.success("Role assigned successfully");
-      fetchData(); // Refresh list to fetch exact roles
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to assign role",
       );
+      fetchData();
     }
   };
 
   const removeRole = async (userId: string, roleId: string) => {
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          return { ...u, roles: u.roles.filter((r) => r.id !== roleId) };
+        }
+        return u;
+      }),
+    );
+
     try {
       const res = await fetch(
         `/api/dashboard/user-roles?userId=${userId}&roleId=${roleId}`,
@@ -103,11 +124,43 @@ export function UsersTable() {
       }
 
       toast.success("Role removed successfully");
-      fetchData();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to remove role",
       );
+      fetchData();
+    }
+  };
+
+  const toggleStatus = async (user: DashboardUser) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id ? { ...u, isActive: !user.isActive } : u,
+      ),
+    );
+
+    try {
+      const res = await fetch("/api/dashboard/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dashboardUserId: user.id,
+          isActive: !user.isActive,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success(
+          `User ${!user.isActive ? "activated" : "deactivated"} successfully`,
+        );
+      } else {
+        throw new Error("Failed to update user status");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update user status",
+      );
+      fetchData();
     }
   };
 
@@ -162,27 +215,7 @@ export function UsersTable() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() =>
-                            fetch("/api/dashboard/status", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                dashboardUserId: user.id,
-                                isActive: !user.isActive,
-                              }),
-                            }).then((res) => {
-                              if (res.ok) {
-                                toast.success(
-                                  `User ${
-                                    !user.isActive ? "activated" : "deactivated"
-                                  } successfully`,
-                                );
-                                fetchData();
-                              } else {
-                                toast.error("Failed to update user status");
-                              }
-                            })
-                          }
+                          onClick={() => toggleStatus(user)}
                           className="cursor-pointer"
                         >
                           {user.isActive ? (

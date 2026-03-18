@@ -9,7 +9,9 @@ import {
   AllocationsTab,
   AttendanceTab,
   DashboardUsersTab,
+  JudgeSetupTab,
   MealsTab,
+  MentorsTab,
   ParticipantsTab,
   PaymentsTab,
   ResultsTab,
@@ -31,6 +33,9 @@ export function DashboardContent({ session }: DashboardContentProps) {
   const { dashboardUser } = session;
   const userRoles = dashboardUser.roles.map((r) => r.name);
   const _isAdmin = userRoles.includes("ADMIN");
+  const isMentor = userRoles.includes("MENTOR");
+  const isJudge =
+    userRoles.includes("JUDGE") || userRoles.includes("FINAL_JUDGE");
 
   const baseTabs = [
     { id: "quickboard", content: <QuickboardTab /> },
@@ -39,6 +44,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "colleges", content: <CollegesTab /> },
     { id: "payments", content: <PaymentsTab /> },
     { id: "submissions", content: <SubmissionsTab /> },
+    { id: "mentors", content: <MentorsTab /> },
     { id: "selection", content: <SelectionsTab /> },
     { id: "results", content: <ResultsTab /> },
     { id: "attendance", content: <AttendanceTab /> },
@@ -48,10 +54,21 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "users", content: <DashboardUsersTab /> },
     { id: "settings", content: <SettingsTab /> },
     { id: "events", content: <ManageEventsTab session={session} /> },
+    { id: "judge-setup", content: <JudgeSetupTab /> },
   ];
 
   const checkTabAccess = (config: (typeof dashboardFeatureTabs)[0]) => {
     if (_isAdmin) return true;
+
+    if (config.id === "mentors") {
+      return _isAdmin || isMentor;
+    }
+
+    if (config.id === "submissions") {
+      // Hide submissions tab for mentor-only users to avoid duplicate mentor portals.
+      if (isMentor && !isJudge) return false;
+    }
+
     if (!config.permissions || config.permissions.length === 0) return true;
 
     if (config.requireAll) {
