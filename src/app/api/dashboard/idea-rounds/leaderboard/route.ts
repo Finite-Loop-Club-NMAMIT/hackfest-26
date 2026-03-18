@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { adminProtected } from "~/auth/routes-wrapper";
 import { fetchIdeaLeaderboard } from "~/db/services/idea-services";
+import { errorResponse } from "~/lib/response/error";
 
 export const GET = adminProtected(async (req: NextRequest) => {
   try {
@@ -15,12 +16,6 @@ export const GET = adminProtected(async (req: NextRequest) => {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    console.error("Error fetching idea leaderboard:", error);
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to fetch idea leaderboard";
-    const status = (error as any).statusCode || 500;
-    return NextResponse.json({ message }, { status });
+    return errorResponse(error);
   }
 });

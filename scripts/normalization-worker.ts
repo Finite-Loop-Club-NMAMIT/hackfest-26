@@ -25,76 +25,111 @@ if (!REDIS_URL) {
 
 const connection = new Redis(REDIS_URL, { maxRetriesPerRequest: null });
 
-const worker = new Worker(
-  QUEUE_NAME,
-  async (job) => {
-    if (job.name === JUDGE_NORMALIZE_JOB_NAME) {
-      const { judgeId, judgeRoundId } = job.data as {
-        judgeId: string;
-        judgeRoundId: string;
-      };
+let worker: Worker | null = null;
 
-      console.log(
-        `[normalization] Processing judge scores: judge=${judgeId} round=${judgeRoundId}`,
+async function startWorker() {
+  try {
+    worker = new Worker(
+      QUEUE_NAME,
+      async (job) => {
+        if (job.name === JUDGE_NORMALIZE_JOB_NAME) {
+          const { judgeId, judgeRoundId } = job.data as {
+            judgeId: string;
+            judgeRoundId: string;
+          };
+          console.log(
+            `[normalization] Processing judge scores: judge=${judgeId} round=${judgeRoundId}`,
+          );
+          await recalculateNormalizedScores(judgeId, judgeRoundId);
+          console.log(
+            `[normalization] Done judge scores: judge=${judgeId} round=${judgeRoundId}`,
+          );
+          return;
+        }
+
+        if (job.name === AGGREGATE_SCORES_JOB_NAME) {
+          const { judgeRoundId } = job.data as { judgeRoundId: string };
+          console.log(
+            `[normalization] Aggregating judge team scores: round=${judgeRoundId}`,
+          );
+          await aggregateTeamScores(judgeRoundId);
+          console.log(
+            `[normalization] Done aggregating team scores: round=${judgeRoundId}`,
+          );
+          return;
+        }
+
+        if (job.name === EVALUATION_NORMALIZE_JOB_NAME) {
+          const { evaluatorId, roundId } = job.data as {
+            evaluatorId: string;
+            roundId: string;
+          };
+          console.log(
+            `[normalization] Processing evaluation scores: evaluator=${evaluatorId} round=${roundId}`,
+          );
+          await recomputeNormalizedScores(evaluatorId, roundId);
+          console.log(
+            `[normalization] Done evaluation scores: evaluator=${evaluatorId} round=${roundId}`,
+          );
+          return;
+        }
+
+        if (job.name === EVALUATION_AGGREGATE_SCORES_JOB_NAME) {
+          const { roundId } = job.data as { roundId: string };
+          console.log(
+            `[normalization] Aggregating evaluation team scores: round=${roundId}`,
+          );
+          await aggregateIdeaTeamScores(roundId);
+          console.log(
+            `[normalization] Done aggregating evaluation scores: round=${roundId}`,
+          );
+          return;
+        }
+
+        throw new Error(`Unknown normalization job: ${job.name}`);
+      },
+      {
+        connection,
+        concurrency: 1,
+      },
+    );
+
+    worker.on("failed", (job, err) => {
+      console.error(
+        `[normalization] Job ${job?.id} (${job?.name}) failed: ${err.message}`,
       );
+    });
 
-      await recalculateNormalizedScores(judgeId, judgeRoundId);
-
-      console.log(
-        `[normalization] Done judge scores: judge=${judgeId} round=${judgeRoundId}`,
+    worker.on("error", (err) => {
+      console.error(
+        `[normalization] Worker error, restarting in 3s:`,
+        err.message,
       );
-      return;
-    }
+      setTimeout(startWorker, 3000);
+    });
 
-    if (job.name === AGGREGATE_SCORES_JOB_NAME) {
-      const { judgeRoundId } = job.data;
-      await aggregateTeamScores(judgeRoundId);
-      console.log(
-        `[normalization] Done aggregating team scores for round=${judgeRoundId}`,
-      );
-      return;
-    }
-
-    if (job.name === EVALUATION_NORMALIZE_JOB_NAME) {
-      const { roundId } = job.data as { roundId: string };
-
-      console.log(
-        `[normalization] Processing evaluation scores: round=${roundId}`,
-      );
-
-      await recomputeNormalizedScores(roundId);
-
-      console.log(`[normalization] Done evaluation scores: round=${roundId}`);
-      return;
-    }
-
-    if (job.name === EVALUATION_AGGREGATE_SCORES_JOB_NAME) {
-      const { roundId } = job.data as { roundId: string };
-      await aggregateIdeaTeamScores(roundId);
-      console.log(
-        `[normalization] Done aggregating evaluation scores for round=${roundId}`,
-      );
-      return;
-    }
-
-    throw new Error(`Unknown normalization job: ${job.name}`);
-  },
-  {
-    connection,
-    concurrency: 1,
-  },
-);
-
-worker.on("failed", (job, err) => {
-  console.error(`[normalization] Job ${job?.id} failed:`, err.message);
-});
-
-worker.on("ready", () => {
-  console.log("[normalization] Worker ready and listening for jobs...");
-});
+    worker.on("ready", () => {
+      console.log("[normalization] Worker ready and listening for jobs...");
+    });
+  } catch (err) {
+    console.error(
+      "[normalization] Failed to start worker, retrying in 3s:",
+      err,
+    );
+    setTimeout(startWorker, 3000);
+  }
+}
 
 process.on("SIGINT", async () => {
   console.log("[normalization] Shutting down...");
-  await worker.close();
+  await worker?.close();
   process.exit(0);
 });
+
+process.on("SIGTERM", async () => {
+  console.log("[normalization] SIGTERM received, shutting down...");
+  await worker?.close();
+  process.exit(0);
+});
+
+startWorker();

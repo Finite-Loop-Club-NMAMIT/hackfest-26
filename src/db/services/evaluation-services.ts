@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
 import db from "~/db";
 
-export async function recomputeNormalizedScores(roundId: string) {
+export async function recomputeNormalizedScores(
+  evaluatorId: string,
+  roundId: string,
+) {
   await db.execute(sql`
     UPDATE idea_team_evaluations AS ite
     SET normalized_total_score = CASE
@@ -15,13 +18,14 @@ export async function recomputeNormalizedScores(roundId: string) {
         AVG(raw_total_score::double precision) AS mean,
         COALESCE(STDDEV_POP(raw_total_score::double precision), 0) AS stddev
       FROM idea_team_evaluations
-      WHERE round_id = ${roundId}
-      AND raw_total_score IS NOT NULL
+      WHERE evaluator_id = ${evaluatorId}
+        AND round_id = ${roundId}
+        AND raw_total_score IS NOT NULL
       GROUP BY evaluator_id, round_id
     ) AS stats
     WHERE ite.evaluator_id = stats.evaluator_id
       AND ite.round_id = stats.round_id
-      AND ite.round_id = ${roundId}
+      AND ite.evaluator_id = ${evaluatorId}
   `);
 }
 

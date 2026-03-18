@@ -22,6 +22,10 @@ import {
   updateRoundStatusSchema,
 } from "~/lib/validation/idea-submissions";
 import db from "..";
+
+type CreateRoundInput = z.infer<typeof createRoundSchema>;
+type UpdateRoundStatusInput = z.infer<typeof updateRoundStatusSchema>;
+
 import {
   colleges,
   dashboardUserRoles,
@@ -86,10 +90,10 @@ export async function getIdeaSubmission(teamId: string) {
     });
     const submission = ideaSubmissionData
       ? {
-        pdfUrl: ideaSubmissionData.pptUrl,
-        trackId: ideaSubmissionData.trackId,
-        trackName: ideaSubmissionData.track?.name ?? "Unknown Track",
-      }
+          pdfUrl: ideaSubmissionData.pptUrl,
+          trackId: ideaSubmissionData.trackId,
+          trackName: ideaSubmissionData.track?.name ?? "Unknown Track",
+        }
       : null;
     return submission;
   } catch (error) {
@@ -245,7 +249,12 @@ export async function assignIdeaRound(roundId: string) {
     const assignedEvaluatorsForTeam = new Set<string>();
 
     while (assigned < MIN_EVALUATORS_PER_TEAM && attempts < evaluators.length) {
-      const evaluator = evaluators[evalIdx % evaluators.length]!;
+      const evaluator = evaluators[evalIdx % evaluators.length];
+      if (!evaluator) {
+        evalIdx++;
+        attempts++;
+        continue;
+      }
       evalIdx++;
       attempts++;
 
@@ -321,7 +330,7 @@ export async function fetchIdeaRounds(user: DashboardUser) {
   }
 }
 
-export async function createIdeaRound(input: any) {
+export async function createIdeaRound(input: CreateRoundInput) {
   try {
     const res = createRoundSchema.safeParse(input);
     if (!res.success) {
@@ -350,7 +359,7 @@ export async function createIdeaRound(input: any) {
   }
 }
 
-export async function updateIdeaRoundStatus(input: any) {
+export async function updateIdeaRoundStatus(input: UpdateRoundStatusInput) {
   try {
     const res = updateRoundStatusSchema.safeParse(input);
     if (!res.success) {
@@ -394,7 +403,9 @@ const createCriteriaSchema = z.object({
   maxScore: z.number().int().min(1).max(100),
 });
 
-export async function createIdeaCriterion(input: any) {
+type CreateCriteriaInput = z.infer<typeof createCriteriaSchema>;
+
+export async function createIdeaCriterion(input: CreateCriteriaInput) {
   try {
     const result = createCriteriaSchema.safeParse(input);
     if (!result.success) {
@@ -644,7 +655,10 @@ export async function fetchMyAllocations(user: DashboardUser) {
     const roundMap = new Map(matchingRounds.map((r) => [r.id, r]));
 
     return assignments.map((assignment) => {
-      const round = roundMap.get(assignment.roundId)!;
+      const round = roundMap.get(assignment.roundId);
+      if (!round) {
+        throw new AppError("Round not found", 404);
+      }
       const criteria = criteriaMap.get(assignment.roundId) ?? {
         totalCriteria: 0,
         totalMaxScore: 0,
@@ -743,7 +757,12 @@ const saveScoresSchema = z.object({
   ),
 });
 
-export async function saveIdeaScores(user: DashboardUser, input: any) {
+type SaveIdeaScoresInput = z.infer<typeof saveScoresSchema>;
+
+export async function saveIdeaScores(
+  user: DashboardUser,
+  input: SaveIdeaScoresInput,
+) {
   try {
     const parsed = saveScoresSchema.safeParse(input);
     if (!parsed.success) {
@@ -774,17 +793,17 @@ export async function saveIdeaScores(user: DashboardUser, input: any) {
       criteriaIds.length === 0
         ? []
         : await db
-          .select({
-            id: ideaRoundCriteria.id,
-            maxScore: ideaRoundCriteria.maxScore,
-          })
-          .from(ideaRoundCriteria)
-          .where(
-            and(
-              eq(ideaRoundCriteria.roundId, assignment.roundId),
-              inArray(ideaRoundCriteria.id, criteriaIds),
-            ),
-          );
+            .select({
+              id: ideaRoundCriteria.id,
+              maxScore: ideaRoundCriteria.maxScore,
+            })
+            .from(ideaRoundCriteria)
+            .where(
+              and(
+                eq(ideaRoundCriteria.roundId, assignment.roundId),
+                inArray(ideaRoundCriteria.id, criteriaIds),
+              ),
+            );
 
     const criteriaMap = new Map(
       criteriaRows.map((row) => [row.id, row.maxScore]),

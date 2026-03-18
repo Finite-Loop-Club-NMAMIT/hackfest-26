@@ -7,19 +7,21 @@ import {
   roles,
   selected,
   semiSelected,
+  type teamStage,
   teams,
 } from "~/db/schema";
 import { isAdmin } from "~/lib/auth/permissions";
 import { AppError } from "~/lib/errors/app-error";
 
 export type SubmissionRound = "ROUND_1" | "ROUND_2";
+export type TeamStage = (typeof teamStage.enumValues)[number];
 
 const EVALUATOR_ACCESS_PERMISSION_KEY = "submission:score";
 
 export async function promoteLeaderboardTeams(
   teamIds: string[],
-  currentStage: string,
-  nextStage: string,
+  currentStage: TeamStage,
+  nextStage: TeamStage,
   user: DashboardUser,
 ) {
   const isAdminUser = isAdmin(user);
@@ -40,10 +42,7 @@ export async function promoteLeaderboardTeams(
     .from(teams)
     .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
     .where(
-      and(
-        inArray(teams.id, uniqueTeamIds),
-        eq(teams.teamStage, currentStage as any),
-      ),
+      and(inArray(teams.id, uniqueTeamIds), eq(teams.teamStage, currentStage)),
     );
 
   const eligibleTeamIds = eligibleRows.map((row) => row.id);
@@ -75,7 +74,7 @@ export async function promoteLeaderboardTeams(
     }
     movedRows = await tx
       .update(teams)
-      .set({ teamStage: nextStage as any })
+      .set({ teamStage: nextStage })
       .where(inArray(teams.id, eligibleTeamIds))
       .returning({ id: teams.id });
   });

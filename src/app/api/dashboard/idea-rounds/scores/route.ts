@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { permissionProtected } from "~/auth/routes-wrapper";
 import { fetchIdeaScores, saveIdeaScores } from "~/db/services/idea-services";
+import { errorResponse } from "~/lib/response/error";
 
 export const GET = permissionProtected(
   ["submission:score"],
@@ -19,11 +20,7 @@ export const GET = permissionProtected(
       const response = await fetchIdeaScores(user, assignmentId);
       return NextResponse.json(response, { status: 200 });
     } catch (error) {
-      console.error("Error fetching idea scores:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to fetch idea scores";
-      const status = (error as any).statusCode || 500;
-      return NextResponse.json({ message }, { status });
+      return errorResponse(error);
     }
   },
 );
@@ -36,11 +33,7 @@ export const POST = permissionProtected(
       const result = await saveIdeaScores(user, body);
       return NextResponse.json(result, { status: 200 });
     } catch (error) {
-      console.error("Error saving idea scores:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to save idea scores";
-      const status = (error as any).statusCode || 500;
-      return NextResponse.json({ message }, { status });
+      return errorResponse(error);
     }
   },
 );

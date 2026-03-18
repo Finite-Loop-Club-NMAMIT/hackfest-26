@@ -5,6 +5,7 @@ import {
   fetchIdeaRounds,
   updateIdeaRoundStatus,
 } from "~/db/services/idea-services";
+import { errorResponse } from "~/lib/response/error";
 
 export const GET = permissionProtected(
   ["submission:score"],
@@ -13,11 +14,7 @@ export const GET = permissionProtected(
       const rounds = await fetchIdeaRounds(user);
       return NextResponse.json(rounds, { status: 200 });
     } catch (error) {
-      console.error("Error fetching idea rounds:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to fetch idea rounds";
-      const status = (error as any).statusCode || 500;
-      return NextResponse.json({ message }, { status });
+      return errorResponse(error);
     }
   },
 );
@@ -29,11 +26,7 @@ export const POST = adminProtected(async (req: NextRequest) => {
     const createdRound = await createIdeaRound(body);
     return NextResponse.json(createdRound, { status: 201 });
   } catch (error) {
-    console.error("Error creating idea round:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to create idea round";
-    const status = (error as any).statusCode || 500;
-    return NextResponse.json({ message }, { status });
+    return errorResponse(error);
   }
 });
 
@@ -43,12 +36,6 @@ export const PATCH = adminProtected(async (req: NextRequest) => {
     const updatedRound = await updateIdeaRoundStatus(body);
     return NextResponse.json(updatedRound, { status: 200 });
   } catch (error) {
-    console.error("Error updating idea round status:", error);
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to update idea round status";
-    const status = (error as any).statusCode || 500;
-    return NextResponse.json({ message }, { status });
+    return errorResponse(error);
   }
 });
