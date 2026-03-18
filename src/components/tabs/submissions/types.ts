@@ -26,6 +26,10 @@ export type LeaderboardItem = {
   trackId: string;
   trackName: string;
   score: number;
+  rawScore: number;
+  averageScore: number;
+  normalizedScore: number;
+  evaluatorCount: number;
 };
 
 export type LeaderboardResponse = {
@@ -48,4 +52,37 @@ export type PdfWindow = {
   width: number;
   height: number;
   zIndex: number;
+};
+
+export type IdeaRound = {
+  id: string;
+  name: string;
+  roleId: string;
+  roleName: string;
+  targetStage: string;
+  status: "Draft" | "Active" | "Completed";
+  criteriaCount: number;
+  assignmentCount: number;
+};
+
+export type IdeaCriterion = {
+  id: string;
+  name: string;
+  maxScore: number;
+};
+
+export type IdeaAllocation = {
+  assignmentId: string;
+  teamId: string;
+  teamName: string;
+  teamStage: string;
+  roundId: string;
+  roundName: string;
+  roundStatus: "Draft" | "Active" | "Completed";
+  pptUrl: string | null;
+  trackName: string | null;
+  scoredCriteria: number;
+  totalCriteria: number;
+  totalRawScore: number;
+  totalMaxScore: number;
 };

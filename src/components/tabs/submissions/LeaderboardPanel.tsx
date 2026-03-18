@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useDashboardPermissions } from "~/components/dashboard/permissions-context";
 import { Button } from "~/components/ui/button";
@@ -22,95 +22,72 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { LeaderboardItem, LeaderboardResponse, TrackItem } from "./types";
+import type { IdeaRound, TrackItem } from "./types";
 
-const PAGE_SIZE = 25;
-
-function buildLeaderboardUrl({
-  offset,
-  search,
-  trackId,
-  round,
-  scoreType,
-  refreshKey,
-}: {
-  offset: number;
-  search: string;
+type LeaderboardRow = {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  collegeName: string | null;
   trackId: string;
-  round: "all" | "ROUND_1" | "ROUND_2";
-  scoreType: "average" | "sum" | "normalized";
-  refreshKey: number;
-}) {
-  const params = new URLSearchParams({
-    cursor: String(offset),
-    limit: String(PAGE_SIZE),
-    round,
-    scoreType,
-    refresh: String(refreshKey),
-  });
-
-  if (search.trim()) {
-    params.set("search", search.trim());
-  }
-
-  if (trackId !== "all") {
-    params.set("trackId", trackId);
-  }
-
-  return `/api/dashboard/leaderboard?${params.toString()}`;
-}
+  trackName: string;
+  rawTotalScore: number;
+  normalizedTotalScore: number;
+  evaluatorCount: number;
+};
 
 export function LeaderboardPanel() {
   const permissions = useDashboardPermissions();
   const [tracks, setTracks] = useState<TrackItem[]>([]);
-  const [rows, setRows] = useState<LeaderboardItem[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [search, setSearch] = useState("");
+  const [rounds, setRounds] = useState<IdeaRound[]>([]);
+
+  const [selectedRoundId, setSelectedRoundId] = useState<string>("all");
   const [trackId, setTrackId] = useState("all");
-  const [round, setRound] = useState<"all" | "ROUND_1" | "ROUND_2">("all");
-  const [scoreType, setScoreType] = useState<"average" | "sum" | "normalized">(
-    "average",
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"normalized" | "raw" | "average">(
+    "normalized",
   );
+
+  const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMovingTeams, setIsMovingTeams] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setOffset(0);
-    }, 250);
+    fetch("/api/tracks")
+      .then((res) => res.json())
+      .then((data) => setTracks(data))
+      .catch(() => toast.error("Failed to load tracks"));
 
-    return () => clearTimeout(timer);
+    fetch("/api/dashboard/idea-rounds")
+      .then((res) => res.json())
+      .then((data) => {
+        setRounds(data);
+        if (data.length > 0 && selectedRoundId === "all") {
+          setSelectedRoundId(data[0].id);
+        }
+      })
+      .catch(() => toast.error("Failed to load rounds"));
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    if (selectedRoundId === "all" || !selectedRoundId) {
+      setRows([]);
+      setIsLoading(false);
+      return;
+    }
 
-    const fetchTracks = async () => {
-      try {
-        const res = await fetch("/api/tracks");
-        if (!res.ok) {
-          throw new Error("Failed to fetch tracks");
-        }
-
-        const data: TrackItem[] = await res.json();
-        if (!cancelled) {
-          setTracks(data);
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error("Failed to load tracks");
-        }
-      }
-    };
-
-    void fetchTracks();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    setIsLoading(true);
+    fetch(`/api/dashboard/idea-rounds/leaderboard?roundId=${selectedRoundId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setRows(data.rows || []);
+      })
+      .catch(() => toast.error("Failed to load leaderboard"))
+      .finally(() => setIsLoading(false));
+  }, [selectedRoundId]);
 
   useEffect(() => {
     setSelectedTeamIds((prev) =>
@@ -118,59 +95,45 @@ export function LeaderboardPanel() {
     );
   }, [rows]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const filteredRows = useMemo(() => {
+    let result = rows;
+    if (trackId !== "all") {
+      result = result.filter((r) => r.trackId === trackId);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((r) => r.teamName.toLowerCase().includes(q));
+    }
 
-    const fetchLeaderboard = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(
-          buildLeaderboardUrl({
-            offset,
-            search,
-            trackId,
-            round,
-            scoreType,
-            refreshKey,
-          }),
-        );
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch leaderboard");
+    // Re-sort based on selected score display
+    return [...result]
+      .sort((a, b) => {
+        let scoreA = 0;
+        let scoreB = 0;
+        if (sortBy === "normalized") {
+          scoreA = a.normalizedTotalScore;
+          scoreB = b.normalizedTotalScore;
+        } else if (sortBy === "raw") {
+          scoreA = a.rawTotalScore;
+          scoreB = b.rawTotalScore;
+        } else if (sortBy === "average") {
+          scoreA =
+            a.evaluatorCount > 0 ? a.rawTotalScore / a.evaluatorCount : 0;
+          scoreB =
+            b.evaluatorCount > 0 ? b.rawTotalScore / b.evaluatorCount : 0;
         }
-
-        const data: LeaderboardResponse = await res.json();
-        if (!cancelled) {
-          setRows(data.leaderboard);
-          setTotalCount(data.totalCount);
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error("Failed to load leaderboard");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchLeaderboard();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [offset, search, trackId, round, scoreType, refreshKey]);
+        return scoreB - scoreA;
+      })
+      .map((row, index) => ({ ...row, rank: index + 1 }));
+  }, [rows, trackId, search, sortBy]);
 
   const allVisibleSelected =
-    rows.length > 0 &&
-    rows.every((row) => selectedTeamIds.includes(row.teamId));
+    filteredRows.length > 0 &&
+    filteredRows.every((row) => selectedTeamIds.includes(row.teamId));
 
   const toggleRowSelection = (teamId: string, checked: boolean) => {
     setSelectedTeamIds((prev) => {
-      if (checked) {
-        return prev.includes(teamId) ? prev : [...prev, teamId];
-      }
+      if (checked) return prev.includes(teamId) ? prev : [...prev, teamId];
       return prev.filter((id) => id !== teamId);
     });
   };
@@ -180,47 +143,49 @@ export function LeaderboardPanel() {
       setSelectedTeamIds([]);
       return;
     }
-    setSelectedTeamIds(rows.map((row) => row.teamId));
+    setSelectedTeamIds(filteredRows.map((row) => row.teamId));
   };
 
+  const currentRound = rounds.find((r) => r.id === selectedRoundId);
+  const targetStage = currentRound?.targetStage;
+  const isTerminalStage = targetStage === "SELECTED";
+  
+  let nextStage: string | null = null;
+  if (targetStage === "NOT_SELECTED") {
+    nextStage = "SEMI_SELECTED";
+  } else if (targetStage === "SEMI_SELECTED") {
+    nextStage = "SELECTED";
+  }
+
   const handleMoveToRound2 = async () => {
-    if (selectedTeamIds.length === 0) return;
+    if (selectedTeamIds.length === 0 || !currentRound || !nextStage) return;
 
     setIsMovingTeams(true);
     try {
       const res = await fetch("/api/dashboard/leaderboard", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ teamIds: selectedTeamIds }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          teamIds: selectedTeamIds,
+          currentStage: currentRound.targetStage,
+          nextStage
+        }),
       });
 
-      const data = (await res.json()) as {
-        movedCount?: number;
-        message?: string;
-      };
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to promote teams");
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to move teams to Round 2");
-      }
-
-      toast.success(`Moved ${data.movedCount ?? 0} team(s) to Round 2`);
+      toast.success(`Moved ${data.movedCount ?? 0} team(s) to next round`);
       setSelectedTeamIds([]);
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to move teams to Round 2",
+        error instanceof Error ? error.message : "Failed to move teams",
       );
     } finally {
       setIsMovingTeams(false);
     }
   };
-
-  const page = Math.floor(offset / PAGE_SIZE) + 1;
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <div className="space-y-4">
@@ -251,46 +216,43 @@ export function LeaderboardPanel() {
           </SelectContent>
         </Select>
 
-        <Select
-          value={round}
-          onValueChange={(value: "all" | "ROUND_1" | "ROUND_2") =>
-            setRound(value)
-          }
-        >
-          <SelectTrigger className="h-9 w-40 text-sm font-normal">
-            <SelectValue placeholder="Round" />
+        <Select value={selectedRoundId} onValueChange={setSelectedRoundId}>
+          <SelectTrigger className="h-9 w-48 text-sm font-normal">
+            <SelectValue placeholder="Select Round" />
           </SelectTrigger>
           <SelectContent className="text-sm">
-            <SelectItem value="all" className="text-sm">
-              All rounds
-            </SelectItem>
-            <SelectItem value="ROUND_1" className="text-sm">
-              Round 1
-            </SelectItem>
-            <SelectItem value="ROUND_2" className="text-sm">
-              Round 2
-            </SelectItem>
+            {rounds.length === 0 ? (
+              <SelectItem value="all" disabled>
+                No rounds available
+              </SelectItem>
+            ) : (
+              rounds.map((r) => (
+                <SelectItem key={r.id} value={r.id} className="text-sm">
+                  {r.name}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
 
         <Select
-          value={scoreType}
-          onValueChange={(value: "average" | "sum" | "normalized") =>
-            setScoreType(value)
+          value={sortBy}
+          onValueChange={(value: "normalized" | "raw" | "average") =>
+            setSortBy(value)
           }
         >
           <SelectTrigger className="h-9 w-44 text-sm font-normal">
-            <SelectValue placeholder="Score type" />
+            <SelectValue placeholder="Sort By" />
           </SelectTrigger>
           <SelectContent className="text-sm">
-            <SelectItem value="average" className="text-sm">
-              Average
-            </SelectItem>
-            <SelectItem value="sum" className="text-sm">
-              Sum
-            </SelectItem>
             <SelectItem value="normalized" className="text-sm">
-              Normalized (fair)
+              Sort by Z-Score
+            </SelectItem>
+            <SelectItem value="raw" className="text-sm">
+              Sort by Raw Sum
+            </SelectItem>
+            <SelectItem value="average" className="text-sm">
+              Sort by Average
             </SelectItem>
           </SelectContent>
         </Select>
@@ -299,10 +261,14 @@ export function LeaderboardPanel() {
           <Button
             onClick={handleMoveToRound2}
             disabled={
-              selectedTeamIds.length === 0 || isMovingTeams || isLoading
+              isTerminalStage || selectedTeamIds.length === 0 || isMovingTeams || isLoading
             }
           >
-            {isMovingTeams ? "Moving..." : "Move Selected To Round 2"}
+            {isMovingTeams 
+              ? "Moving..." 
+              : isTerminalStage 
+                ? "Already in last stage" 
+                : "Move Selected To Next Round"}
           </Button>
         )}
       </div>
@@ -326,11 +292,14 @@ export function LeaderboardPanel() {
               <TableHead>Team</TableHead>
               <TableHead>College/University</TableHead>
               <TableHead>Track</TableHead>
-              <TableHead>Score</TableHead>
+              <TableHead className="text-center">Evaluators</TableHead>
+              <TableHead className="text-right">Raw Total</TableHead>
+              <TableHead className="text-right">Avg Score</TableHead>
+              <TableHead className="text-right">Z-Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row) => (
+            {filteredRows.map((row) => (
               <TableRow key={row.teamId}>
                 {permissions.isAdmin && (
                   <TableCell>
@@ -346,19 +315,29 @@ export function LeaderboardPanel() {
                 <TableCell>{row.rank}</TableCell>
                 <TableCell>{row.teamName}</TableCell>
                 <TableCell>{row.collegeName ?? "-"}</TableCell>
-                <TableCell>{row.trackName}</TableCell>
-                <TableCell>
-                  {scoreType === "normalized"
-                    ? (row.score >= 0 ? "+" : "") + row.score.toFixed(3)
-                    : row.score.toFixed(2)}
+                <TableCell>{row.trackName || "-"}</TableCell>
+                <TableCell className="text-center">
+                  {row.evaluatorCount}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.rawTotalScore?.toFixed(0) || "0"}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.evaluatorCount && row.evaluatorCount > 0
+                    ? (row.rawTotalScore / row.evaluatorCount).toFixed(2)
+                    : "0.00"}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +
+                    (row.normalizedTotalScore || 0).toFixed(3)}
                 </TableCell>
               </TableRow>
             ))}
 
-            {!isLoading && rows.length === 0 && (
+            {!isLoading && filteredRows.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={permissions.isAdmin ? 6 : 5}
+                  colSpan={permissions.isAdmin ? 9 : 8}
                   className="text-center text-muted-foreground py-8"
                 >
                   No leaderboard entries found for the selected filters.
@@ -367,28 +346,6 @@ export function LeaderboardPanel() {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Page {page} of {totalPages}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
-            disabled={offset === 0 || isLoading}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
-            disabled={offset + PAGE_SIZE >= totalCount || isLoading}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -1,13 +1,17 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
 import Redis from "ioredis";
-import { recomputeNormalizedScores } from "../src/db/services/evaluation-services";
+import {
+  aggregateIdeaTeamScores,
+  recomputeNormalizedScores,
+} from "../src/db/services/evaluation-services";
 import {
   aggregateTeamScores,
   recalculateNormalizedScores,
 } from "../src/db/services/judge-services";
 import {
   AGGREGATE_SCORES_JOB_NAME,
+  EVALUATION_AGGREGATE_SCORES_JOB_NAME,
   EVALUATION_NORMALIZE_JOB_NAME,
   JUDGE_NORMALIZE_JOB_NAME,
   QUEUE_NAME,
@@ -61,6 +65,15 @@ const worker = new Worker(
       await recomputeNormalizedScores(roundId);
 
       console.log(`[normalization] Done evaluation scores: round=${roundId}`);
+      return;
+    }
+
+    if (job.name === EVALUATION_AGGREGATE_SCORES_JOB_NAME) {
+      const { roundId } = job.data as { roundId: string };
+      await aggregateIdeaTeamScores(roundId);
+      console.log(
+        `[normalization] Done aggregating evaluation scores for round=${roundId}`,
+      );
       return;
     }
 

@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useDashboardPermissions,
   useDashboardUser,
 } from "~/components/dashboard/permissions-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { EvaluatorSettingsPanel } from "./submissions/EvaluatorSettingsPanel";
 import { FloatingPdfWindows } from "./submissions/FloatingPdfWindows";
+import { IdeaRoundPanel } from "./submissions/IdeaRoundPanel";
+import { IdeaRoundSettingsPanel } from "./submissions/IdeaRoundSettingsPanel";
 import { LeaderboardPanel } from "./submissions/LeaderboardPanel";
-import { RoundSubmissionsPanel } from "./submissions/RoundSubmissionsPanel";
-import type { PdfWindow, SubmissionItem } from "./submissions/types";
+import type { IdeaAllocation, PdfWindow } from "./submissions/types";
 
 export function SubmissionsTab() {
   const permissions = useDashboardPermissions();
@@ -25,8 +25,48 @@ export function SubmissionsTab() {
     [dashboardUser.roles],
   );
 
-  const [activeTab, setActiveTab] = useState("ROUND_1");
+  const [activeTab, setActiveTab] = useState<string>("LEADERBOARD");
   const [windows, setWindows] = useState<PdfWindow[]>([]);
+  const [allocations, setAllocations] = useState<IdeaAllocation[]>([]);
+  const [_loadingAllocations, setLoadingAllocations] = useState(true);
+
+  const fetchAllocations = async () => {
+    if (!isEvaluator) {
+      setLoadingAllocations(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/dashboard/idea-rounds/my-allocations");
+      if (res.ok) {
+        const data = await res.json();
+        setAllocations(data);
+
+        if (data.length > 0 && activeTab === "LEADERBOARD") {
+          setActiveTab(data[0].roundId);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load allocations", e);
+    } finally {
+      setLoadingAllocations(false);
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Initialize ONCE
+  useEffect(() => {
+    void fetchAllocations();
+  }, [isEvaluator]);
+
+  const uniqueRounds = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    for (const a of allocations) {
+      if (!map.has(a.roundId)) {
+        map.set(a.roundId, { id: a.roundId, name: a.roundName });
+      }
+    }
+    return Array.from(map.values());
+  }, [allocations]);
 
   const bringToFront = (id: string) => {
     setWindows((prev) => {
@@ -42,7 +82,12 @@ export function SubmissionsTab() {
     });
   };
 
-  const openPdfWindow = (submission: SubmissionItem) => {
+  const openPdfWindow = (submission: {
+    id: string;
+    teamName: string;
+    trackName: string;
+    pdfUrl: string;
+  }) => {
     setWindows((prev) => {
       const existing = prev.find((item) => item.id === submission.id);
       if (existing) {
@@ -84,30 +129,27 @@ export function SubmissionsTab() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="ROUND_1">Round 1</TabsTrigger>
-          <TabsTrigger value="ROUND_2">Round 2</TabsTrigger>
+        <TabsList className="mb-4 flex flex-wrap h-auto gap-2 p-1">
+          {uniqueRounds.map((r) => (
+            <TabsTrigger key={r.id} value={r.id} className="min-w-24">
+              {r.name}
+            </TabsTrigger>
+          ))}
           <TabsTrigger value="LEADERBOARD">Leaderboard</TabsTrigger>
           {permissions.isAdmin && (
             <TabsTrigger value="SETTINGS">Settings</TabsTrigger>
           )}
         </TabsList>
 
-        <TabsContent value="ROUND_1">
-          <RoundSubmissionsPanel
-            round="ROUND_1"
-            canScore={isEvaluator}
-            onOpenPdf={openPdfWindow}
-          />
-        </TabsContent>
-
-        <TabsContent value="ROUND_2">
-          <RoundSubmissionsPanel
-            round="ROUND_2"
-            canScore={isEvaluator}
-            onOpenPdf={openPdfWindow}
-          />
-        </TabsContent>
+        {uniqueRounds.map((r) => (
+          <TabsContent key={r.id} value={r.id}>
+            <IdeaRoundPanel
+              allocations={allocations.filter((a) => a.roundId === r.id)}
+              onOpenPdf={openPdfWindow}
+              onScoresSaved={fetchAllocations}
+            />
+          </TabsContent>
+        ))}
 
         <TabsContent value="LEADERBOARD">
           <LeaderboardPanel />
@@ -115,7 +157,7 @@ export function SubmissionsTab() {
 
         {permissions.isAdmin && (
           <TabsContent value="SETTINGS">
-            <EvaluatorSettingsPanel />
+            <IdeaRoundSettingsPanel />
           </TabsContent>
         )}
       </Tabs>

@@ -9,9 +9,9 @@
     }
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev && tsx scripts/normalization-worker.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "next start && tsx scripts/normalization-worker.ts",
     "lint": "biome check",
     "format": "biome format --write",
     "db:generate": "drizzle-kit generate",
