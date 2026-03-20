@@ -61,6 +61,14 @@ export async function submitIdea({
         leaderId: true,
       },
     });
+    const regstrationData = await db.query.siteSettings.findFirst();
+    if (regstrationData?.registrationsOpen === false) {
+      throw new AppError("REGISTRATION_CLOSED", 403, {
+        title: "Registration closed",
+        description:
+          "Team registrations have been closed. Please try next year.",
+      });
+    }
     if (!leader || !(leader.leaderId === userId)) {
       throw new AppError("You are not the leader of this team", 400);
     }

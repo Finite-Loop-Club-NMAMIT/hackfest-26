@@ -5,16 +5,12 @@ import { usePathname } from "next/navigation";
 const MarqueeItem = () => (
   <span className="inline-flex items-center gap-3 px-8 text-sm tracking-wide">
     <span className="font-crimson text-amber-100 font-semibold">
-      Registrations Extended!
+      Registrations closed, check back next year.
     </span>
     <span className="text-amber-400/60">•</span>
     <span className="font-crimson text-amber-200/90">
-      Last date to register:{" "}
-      <strong className="text-amber-300">20th March, 11:59 PM</strong>
-    </span>
-    <span className="text-amber-400/60">•</span>
-    <span className="font-crimson text-amber-200/80 italic">
-      Don&apos;t miss out, set sail now!
+      For more information check our instagram handle:{" "}
+      <strong className="text-amber-300">@hackfest.dev</strong>
     </span>
   </span>
 );

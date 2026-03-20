@@ -24,6 +24,14 @@ export async function createTeam(userId: string, name: string) {
   const user = await userData.findById(userId);
   if (!user) throw new AppError("USER_NOT_FOUND", 404);
 
+  const regstrationData = await db.query.siteSettings.findFirst();
+  if (regstrationData?.registrationsOpen === false) {
+    throw new AppError("REGISTRATION_CLOSED", 403, {
+      title: "Registration closed",
+      description: "Team registrations have been closed. Please try next year.",
+    });
+  }
+
   if (user.teamId)
     throw new AppError("ALREADY_IN_TEAM", 400, {
       title: "Already in team",
@@ -60,6 +68,14 @@ export async function createTeam(userId: string, name: string) {
 export async function joinTeam(userId: string, teamId: string) {
   const user = await userData.findById(userId);
   if (!user) throw new AppError("USER_NOT_FOUND", 404);
+
+  const regstrationData = await db.query.siteSettings.findFirst();
+  if (regstrationData?.registrationsOpen === false) {
+    throw new AppError("REGISTRATION_CLOSED", 403, {
+      title: "Registration closed",
+      description: "Team registrations have been closed. Please try next year.",
+    });
+  }
 
   if (user.teamId)
     throw new AppError("ALREADY_IN_TEAM", 400, {
@@ -161,6 +177,14 @@ export async function completeTeam(userId: string, teamId: string) {
     throw new AppError("NOT_TEAM_MEMBER", 403, {
       title: "Not a member of this team",
       description: "You can only complete teams you are a member of.",
+    });
+  }
+
+  const regstrationData = await db.query.siteSettings.findFirst();
+  if (regstrationData?.registrationsOpen === false) {
+    throw new AppError("REGISTRATION_CLOSED", 403, {
+      title: "Registration closed",
+      description: "Team registrations have been closed. Please try next year.",
     });
   }
 
