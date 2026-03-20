@@ -4,13 +4,13 @@ import { usePathname } from "next/navigation";
 
 const MarqueeItem = () => (
   <span className="inline-flex items-center gap-3 px-8 text-sm tracking-wide">
-    <span className="font-crimson text-amber-100 font-semibold">
+    <span className="font-crimson text-red-100 font-semibold">
       Registrations closed, check back next year.
     </span>
-    <span className="text-amber-400/60">•</span>
-    <span className="font-crimson text-amber-200/90">
+    <span className="text-red-400/60">•</span>
+    <span className="font-crimson text-red-200/90">
       For more information check our instagram handle:{" "}
-      <strong className="text-amber-300">@hackfest.dev</strong>
+      <strong className="text-red-300">@hackfest.dev</strong>
     </span>
   </span>
 );
@@ -21,7 +21,7 @@ export function RegistrationMarquee() {
   if (pathname.startsWith("/dashboard")) return null;
 
   return (
-    <div className="relative z-50 overflow-hidden bg-linear-to-r from-amber-900/90 via-yellow-800/90 to-amber-900/90 border-b border-amber-600/40">
+    <div className="relative z-50 overflow-hidden bg-linear-to-r from-red-950 via-red-900 to-red-950 border-b border-red-800/40">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjE1LDAsMC4wOCkiLz48L3N2Zz4=')] opacity-50" />
       <div className="marquee-track flex whitespace-nowrap py-1">
         <div className="flex shrink-0 min-w-full justify-around">
