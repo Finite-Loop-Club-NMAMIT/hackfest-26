@@ -37,7 +37,7 @@ export async function aggregateTeamScores(judgeRoundId: string) {
       gen_random_uuid(),
       jra.team_id,
       jra.judge_round_id,
-      AVG(jra.raw_total_score)::integer,
+      SUM(jra.raw_total_score)::integer,
       AVG(jra.normalized_total_score),
       COUNT(DISTINCT jra.judge_id)
     FROM judge_round_assignments jra

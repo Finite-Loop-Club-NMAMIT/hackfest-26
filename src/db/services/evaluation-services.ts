@@ -36,7 +36,7 @@ export async function aggregateIdeaTeamScores(roundId: string) {
       gen_random_uuid(),
       ite.team_id,
       ite.round_id,
-      AVG(ite.raw_total_score)::integer,
+      SUM(ite.raw_total_score)::integer,
       AVG(ite.normalized_total_score),
       COUNT(DISTINCT ite.evaluator_id)
     FROM idea_team_evaluations ite
