@@ -21,6 +21,7 @@ export default function EventDrawer({
   fetchEvents,
   registrationOpen,
   drawerDirection,
+  hackfestSelected,
 }: {
   event: Event | null;
   session: Session | null;
@@ -29,6 +30,7 @@ export default function EventDrawer({
   fetchEvents: () => Promise<void>;
   registrationOpen: boolean;
   drawerDirection: "right" | "bottom";
+  hackfestSelected: boolean;
 }) {
   if (!event) return null;
 
@@ -197,6 +199,7 @@ export default function EventDrawer({
                   session={session}
                   fetchEvents={fetchEvents}
                   setDrawerOpen={setDrawerOpen}
+                  hackfestSelected={hackfestSelected}
                 />
               ) : (
                 <>

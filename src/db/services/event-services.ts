@@ -8,7 +8,12 @@ import {
   type UserParticipation,
   updateById,
 } from "~/db/data/event-users";
-import { eventParticipants, eventTeams, payment } from "~/db/schema";
+import {
+  eventParticipants,
+  eventTeams,
+  participants,
+  payment,
+} from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
 import { successResponse } from "~/lib/response/success";
@@ -28,9 +33,17 @@ export async function getAllEvents(userId?: string) {
   const events = await findAllPublishedEvents();
 
   let participations: Record<string, UserParticipation> = {};
+  let isHackathonSelected = false;
 
   if (userId) {
     participations = await findUserParticipations(userId);
+    const user = await db.query.participants.findFirst({
+      where: eq(participants.id, userId),
+      with: { team: { columns: { teamStage: true } } },
+    });
+    if (user?.team?.teamStage === "SELECTED") {
+      isHackathonSelected = true;
+    }
   }
 
   const formattedEvents = events.map((e) => {
@@ -81,6 +94,7 @@ export async function getAllEvents(userId?: string) {
     {
       events: formattedEvents,
       registrationsOpen,
+      isHackathonSelected,
     },
     {
       toast: false,
@@ -289,6 +303,27 @@ export async function teamRegistrationChecker(
   return eventUser;
 }
 
+async function checkEligibility(userId: string) {
+  const user = await db.query.participants.findFirst({
+    where: eq(participants.id, userId),
+    with: {
+      team: {
+        columns: {
+          teamStage: true,
+        },
+      },
+    },
+  });
+
+  if (user?.team?.teamStage === "SELECTED") {
+    return new AppError("HACKFEST_ALREADY_SELECTED", 400, {
+      title: "Hackfest already selected",
+      description:
+        "You are already selected for hackfest. So you can't register for any other event.",
+    });
+  }
+}
+
 export async function createEventTeam(
   eventId: string,
   userId: string,
@@ -305,6 +340,9 @@ export async function createEventTeam(
           "The maximum number of teams for this event has been reached.",
       }),
     );
+
+  const eligibility = await checkEligibility(userId);
+  if (eligibility) return errorResponse(eligibility);
 
   const eventTeam = await db.transaction(async (tx) => {
     const [team] = await tx
@@ -415,6 +453,9 @@ export async function joinEventTeam(
         description: "The team you are trying to join does not exist.",
       }),
     );
+
+  const eligibility = await checkEligibility(userId);
+  if (eligibility) return errorResponse(eligibility);
 
   const event = await findByEventId(eventId);
   const leader = await findLeaderByTeam(teamId);
@@ -565,6 +606,15 @@ export async function confirmEventTeam(
       }),
     );
 
+  const allMembers = await db.query.eventParticipants.findMany({
+    where: eq(eventParticipants.teamId, teamId),
+  });
+
+  for (const member of allMembers) {
+    const eligibility = await checkEligibility(member.userId);
+    if (eligibility) return errorResponse(eligibility);
+  }
+
   const event = await findByEventId(eventId);
   const members = await memberCount(eventId, teamId);
 
@@ -673,6 +723,15 @@ export async function submitEventPayment(
         description: "The team you are trying to pay for does not exist.",
       }),
     );
+
+  const allMembers = await db.query.eventParticipants.findMany({
+    where: eq(eventParticipants.teamId, teamId),
+  });
+
+  for (const member of allMembers) {
+    const eligibility = await checkEligibility(member.userId);
+    if (eligibility) return errorResponse(eligibility);
+  }
 
   const team = await findByIdandEvent(eventId, teamId);
 

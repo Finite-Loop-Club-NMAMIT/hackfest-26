@@ -80,6 +80,7 @@ export const POST = registrationOpenEventRoute(
           );
       }
     } catch (err) {
+      console.log("de");
       return errorResponse(
         new AppError("Action failed", 500, {
           title: "Action Failed",

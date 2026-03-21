@@ -1,7 +1,9 @@
 import { asc, count, desc, eq } from "drizzle-orm";
+import { auth } from "~/auth/dashboard-config";
 import db from "~/db";
 import { getSiteSettings } from "~/db/data/siteSettings";
-import { payment, selected, teams } from "~/db/schema";
+import { eventTeams, payment, selected, teams } from "~/db/schema";
+import { isAdmin } from "~/lib/auth/permissions";
 import { AppError } from "~/lib/errors/app-error";
 
 // ---------------------------------------------------------------------------
@@ -139,6 +141,9 @@ export async function getPaymentsForDashboard({
         team: {
           columns: { id: true, name: true },
         },
+        eventTeam: {
+          columns: { id: true, name: true },
+        },
         user: {
           columns: { id: true, name: true, email: true },
         },
@@ -158,6 +163,7 @@ export async function getPaymentsForDashboard({
     filteredPayments = paymentsResult.filter(
       (p) =>
         p.team?.name?.toLowerCase().includes(searchLower) ||
+        p.eventTeam?.name?.toLowerCase().includes(searchLower) ||
         p.user?.name?.toLowerCase().includes(searchLower) ||
         p.user?.email?.toLowerCase().includes(searchLower),
     );
@@ -165,8 +171,17 @@ export async function getPaymentsForDashboard({
 
   const total = totalResult[0]?.total ?? 0;
 
+  const processedPayments = filteredPayments.map((p) => {
+    const defaultTeam = p.paymentType === "EVENT" ? p.eventTeam : p.team;
+    return {
+      ...p,
+      team: defaultTeam,
+      eventTeam: undefined,
+    };
+  });
+
   return {
-    payments: filteredPayments,
+    payments: processedPayments,
     pagination: {
       page,
       limit,
@@ -181,10 +196,20 @@ export async function getPaymentsForDashboard({
 // ---------------------------------------------------------------------------
 
 export async function togglePaymentVerification(paymentId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new AppError("UNAUTHORIZED", 401);
+  }
+  if (!isAdmin(session.dashboardUser)) {
+    throw new AppError("UNAUTHORIZED", 401);
+  }
   const existing = await db.query.payment.findFirst({
     where: eq(payment.id, paymentId),
-    columns: { id: true, paymentStatus: true },
-    with: { team: { columns: { id: true } } },
+    columns: { id: true, paymentStatus: true, paymentType: true },
+    with: {
+      team: { columns: { id: true } },
+      eventTeam: { columns: { id: true } },
+    },
   });
 
   if (!existing) {
@@ -201,7 +226,17 @@ export async function togglePaymentVerification(paymentId: string) {
     .where(eq(payment.id, paymentId));
 
   // If toggling to Paid, also update team payment status
-  if (existing.team?.id) {
+  if (existing.paymentType === "EVENT" && existing.eventTeam?.id) {
+    await db
+      .update(eventTeams)
+      .set({
+        paymentStatus: newStatus,
+        ...(newStatus === "Paid"
+          ? { isComplete: true }
+          : { isComplete: false }),
+      })
+      .where(eq(eventTeams.id, existing.eventTeam.id));
+  } else if (existing.team?.id) {
     await db
       .update(teams)
       .set({ paymentStatus: newStatus })

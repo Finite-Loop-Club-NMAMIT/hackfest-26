@@ -1,6 +1,6 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, Trophy } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
@@ -9,7 +9,16 @@ import { toast } from "sonner";
 import { apiFetch } from "~/lib/fetcher";
 import { useLoader } from "../providers/loader-context";
 import { useDayNight } from "../providers/useDayNight";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader } from "../ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Skeleton } from "../ui/skeleton";
 import EventDetails from "./details";
 import EventDrawer from "./drawer";
@@ -85,6 +94,10 @@ const Events = ({
   const { loaderDone } = useLoader();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [registration, setRegistration] = useState(false);
+  const [hackfestSelected, setHackfestSelected] = useState(
+    session?.user?.isHackathonSelected ?? false,
+  );
+  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [drawerDirection, setDrawerDirection] = useState<"right" | "bottom">(
     "right",
@@ -100,16 +113,24 @@ const Events = ({
     ? (events.find((e) => e.id === selectedEventId) ?? null)
     : null;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiFetch<{
         events: Event[];
         registrationsOpen: boolean;
+        isHackathonSelected?: boolean;
       }>("/api/events/getAll", { method: "GET" });
 
       setRegistration(response.registrationsOpen ?? false);
-      if (response) setEvents(response.events);
+      if (response) {
+        setEvents(response.events);
+        if (response.isHackathonSelected && hackfestSelected) {
+          setHackfestSelected(true);
+          setShowEligibilityModal(true);
+        }
+      }
     } catch {
       toast.error("Failed to load events. Please refresh.");
     } finally {
@@ -187,7 +208,34 @@ const Events = ({
         setDrawerOpen={setDrawerOpen}
         registrationOpen={registration}
         drawerDirection={drawerDirection}
+        hackfestSelected={hackfestSelected}
       />
+
+      <Dialog
+        open={showEligibilityModal}
+        onOpenChange={setShowEligibilityModal}
+      >
+        <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-6 max-w-sm w-full rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#f4d35e] flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Congratulations!
+            </DialogTitle>
+            <DialogDescription className="text-white/60 pt-2">
+              You have been selected for Hackfest! As a participant of the main
+              hackathon, you are not eligible to register for side events.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={() => setShowEligibilityModal(false)}
+              className="w-full bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all cursor-pointer"
+            >
+              Ok
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-14">
         <div className="text-center mb-16">

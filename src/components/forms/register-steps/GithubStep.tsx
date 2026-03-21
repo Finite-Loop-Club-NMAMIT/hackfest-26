@@ -77,9 +77,16 @@ export function GithubStep({ form, initialGithubUsername }: GithubStepProps) {
                     <RepeatIcon className="h-5 w-5 text-[#10569c] group-hover:text-[#0c4075] transition-colors" />
                   </button>
                 </div>
-                <p className="text-white/60 text-sm font-crimson text-right">
-                  Click the icon to switch accounts
-                </p>
+                <div className="flex flex-col gap-1 w-full mt-1">
+                  <p className="text-white/60 text-sm font-crimson text-right">
+                    Click the icon to switch accounts
+                  </p>
+                  {!(field.value ?? initialGithubUsername) && (
+                    <p className="text-red-400 font-bold text-sm font-crimson text-center mt-2 animate-in fade-in slide-in-from-top-1">
+                      A linked GitHub account is required to register.
+                    </p>
+                  )}
+                </div>
               </div>
             </FormControl>
           </FormItem>

@@ -191,6 +191,13 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
       });
       return;
     }
+    if (data.github && data.github.trim().length === 0) {
+      form.setError("github", {
+        type: "manual",
+        message: "Github is required",
+      });
+      return;
+    }
     if (data.alias && data.alias.trim().length > 15) {
       form.setError("alias", {
         type: "manual",
@@ -404,7 +411,10 @@ export function RegisterForm({ initialGithubUsername }: RegisterFormProps) {
             <Button
               type={isLastStep ? "submit" : "button"}
               onClick={!isLastStep ? handleNext : undefined}
-              disabled={form.formState.isSubmitting}
+              disabled={
+                form.formState.isSubmitting ||
+                (currentField === "github" && !formValues.github)
+              }
               className="
                 gap-4
                 flex-1 h-12 rounded-xl text-lg font-pirate font-bold shadow-lg transition-all tracking-wide

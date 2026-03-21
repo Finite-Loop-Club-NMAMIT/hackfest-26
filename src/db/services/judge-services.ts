@@ -32,7 +32,7 @@ export async function recalculateNormalizedScores(
 
 export async function aggregateTeamScores(judgeRoundId: string) {
   await db.execute(sql`
-    INSERT INTO team_round_scores (id, team_id, round_id, normalized_total_score, judge_count)
+    INSERT INTO team_round_scores (id, team_id, round_id, raw_total_score, normalized_total_score, judge_count)
     SELECT
       gen_random_uuid(),
       jra.team_id,

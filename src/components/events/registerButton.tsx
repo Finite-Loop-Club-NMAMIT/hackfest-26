@@ -23,11 +23,13 @@ export default function RegisterButton({
   session,
   fetchEvents,
   setDrawerOpen,
+  hackfestSelected,
 }: {
   event: Event;
   session: Session | null;
   fetchEvents: () => Promise<void>;
   setDrawerOpen: (open: boolean) => void;
+  hackfestSelected: boolean;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -117,11 +119,16 @@ export default function RegisterButton({
             </div>
           )
         ) : (
-          isAvailable && (
+          isAvailable &&
+          (hackfestSelected ? (
+            <Button disabled className={baseClass}>
+              Not eligible to register
+            </Button>
+          ) : (
             <Button onClick={handleRegisterClick} className={baseClass}>
               Register Now
             </Button>
-          )
+          ))
         )}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-0 overflow-hidden max-w-sm w-full rounded-2xl">
@@ -167,11 +174,16 @@ export default function RegisterButton({
   return (
     <>
       {event.userStatus === "not_registered" ? (
-        isAvailable && (
+        isAvailable &&
+        (hackfestSelected ? (
+          <Button disabled className={baseClass}>
+            Not eligible to register
+          </Button>
+        ) : (
           <Button onClick={() => setDialogOpen(true)} className={baseClass}>
             Register Now
           </Button>
-        )
+        ))
       ) : (
         <Button onClick={() => setTeamDialogOpen(true)} className={baseClass}>
           Team Details
