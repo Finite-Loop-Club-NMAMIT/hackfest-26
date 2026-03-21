@@ -64,6 +64,7 @@ function resetForm(
     type: "Solo",
     status: "Draft",
     registrationsOpen: false,
+    amount: 0,
     maxTeams: 0,
     minTeamSize: 1,
     maxTeamSize: 1,
@@ -89,6 +90,7 @@ export default function CreateEventTab({
       type: "Solo",
       status: "Draft",
       registrationsOpen: false,
+      amount: 0,
       maxTeams: 0,
       minTeamSize: 1,
       maxTeamSize: 1,
@@ -112,6 +114,7 @@ export default function CreateEventTab({
           type: "Solo",
           status: "Draft",
           registrationsOpen: false,
+          amount: 0,
           maxTeams: 0,
           minTeamSize: 1,
           maxTeamSize: 1,
@@ -272,16 +275,6 @@ export default function CreateEventTab({
                   folder="events"
                   label="Upload Image"
                 />
-                <span className="text-sm text-muted-foreground">or</span>
-                <Input
-                  id="image"
-                  name="image"
-                  type="url"
-                  placeholder="Paste image URL"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="flex-1"
-                />
               </div>
               {formData.image && (
                 <div className="relative mt-2 flex justify-center rounded-md border overflow-hidden">
@@ -441,20 +434,38 @@ export default function CreateEventTab({
 
           {/* Team Configuration */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxTeams">
-                Maximum Teams <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="maxTeams"
-                name="maxTeams"
-                type="number"
-                min="0"
-                placeholder="Enter maximum number of teams"
-                value={formData.maxTeams || ""}
-                onChange={handleNumberChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">
+                  Amount <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  placeholder="Enter event amount"
+                  value={formData.amount || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxTeams">
+                  Maximum Teams <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="maxTeams"
+                  name="maxTeams"
+                  type="number"
+                  min="0"
+                  placeholder="Enter maximum number of teams"
+                  value={formData.maxTeams || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -523,6 +534,7 @@ export default function CreateEventTab({
                       type: "Solo",
                       status: "Draft",
                       registrationsOpen: false,
+                      amount: 0,
                       maxTeams: 0,
                       minTeamSize: 1,
                       maxTeamSize: 1,

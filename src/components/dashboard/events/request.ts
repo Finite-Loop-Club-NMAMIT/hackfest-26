@@ -18,6 +18,7 @@ export type EventData = {
   deadline: Date;
   status: "Draft" | "Published" | "Ongoing" | "Completed";
   registrationsOpen: boolean;
+  amount: number;
   priority: number;
   maxTeams: number;
   minTeamSize: number;
@@ -33,6 +34,20 @@ export type EventTeam = {
   isComplete: boolean;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type OrganizerEventStat = {
+  eventId: string;
+  eventTitle: string;
+  eventStatus: "Draft" | "Published" | "Ongoing" | "Completed";
+  registeredUsers: number;
+  confirmedUsers: number;
+  totalTeams: number;
+  confirmedTeams: number;
+};
+
+export type OrganizerEventTeam = EventTeam & {
+  memberCount: number;
 };
 
 export async function createEvent(
@@ -234,5 +249,99 @@ export async function getTeamDetails(
     return data;
   } catch (_error) {
     return null;
+  }
+}
+
+export async function getOrganizerEventStats(): Promise<OrganizerEventStat[]> {
+  try {
+    const data = await apiFetch<OrganizerEventStat[]>(
+      "/api/dashboard/events/getOrganizerEventStats",
+      {
+        method: "GET",
+      },
+    );
+
+    return data || [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+export async function getOrganizerEventTeams(
+  eventId: string,
+): Promise<OrganizerEventTeam[]> {
+  try {
+    const data = await apiFetch<OrganizerEventTeam[]>(
+      `/api/dashboard/events/getOrganizerEventTeams?id=${eventId}`,
+      {
+        method: "GET",
+      },
+    );
+
+    return data || [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+export async function createOrganizerEventTeam(
+  eventId: string,
+  name: string,
+): Promise<OrganizerEventTeam | null> {
+  try {
+    const data = await apiFetch<OrganizerEventTeam>(
+      "/api/dashboard/events/createOrganizerEventTeam",
+      {
+        method: "POST",
+        body: JSON.stringify({ eventId, name }),
+      },
+    );
+
+    return data;
+  } catch (_error) {
+    return null;
+  }
+}
+
+export async function updateOrganizerEventTeam(
+  eventId: string,
+  teamId: string,
+  payload: {
+    name?: string;
+    attended?: boolean;
+    isComplete?: boolean;
+  },
+): Promise<OrganizerEventTeam | null> {
+  try {
+    const data = await apiFetch<OrganizerEventTeam>(
+      "/api/dashboard/events/updateOrganizerEventTeam",
+      {
+        method: "POST",
+        body: JSON.stringify({ eventId, teamId, ...payload }),
+      },
+    );
+
+    return data;
+  } catch (_error) {
+    return null;
+  }
+}
+
+export async function deleteOrganizerEventTeam(
+  eventId: string,
+  teamId: string,
+): Promise<boolean> {
+  try {
+    await apiFetch<OrganizerEventTeam>(
+      "/api/dashboard/events/deleteOrganizerEventTeam",
+      {
+        method: "DELETE",
+        body: JSON.stringify({ eventId, teamId }),
+      },
+    );
+
+    return true;
+  } catch (_error) {
+    return false;
   }
 }
