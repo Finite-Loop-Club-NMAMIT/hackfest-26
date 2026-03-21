@@ -40,6 +40,7 @@ export const events = pgTable(
     maxTeams: integer("max_teams").notNull().default(0),
     minTeamSize: integer("min_team_size").notNull().default(1),
     maxTeamSize: integer("max_team_size").notNull().default(1),
+    registrationsOpen: boolean("registrations_open").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()

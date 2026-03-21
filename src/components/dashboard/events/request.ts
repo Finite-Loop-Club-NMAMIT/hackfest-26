@@ -17,6 +17,7 @@ export type EventData = {
   venue: string;
   deadline: Date;
   status: "Draft" | "Published" | "Ongoing" | "Completed";
+  registrationsOpen: boolean;
   priority: number;
   maxTeams: number;
   minTeamSize: number;

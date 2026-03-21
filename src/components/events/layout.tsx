@@ -72,6 +72,7 @@ export type Event = {
   maxTeams: number;
   minTeamSize: number;
   maxTeamSize: number;
+  registrationsOpen: boolean;
   image: string;
   deadline: string;
   userStatus?: "registered" | "not_registered" | "not_confirmed";

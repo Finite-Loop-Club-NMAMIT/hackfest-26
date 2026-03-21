@@ -50,6 +50,7 @@ export default function UpdateEventTab({
     image: "",
     type: "Solo",
     status: "Draft",
+    registrationsOpen: false,
     maxTeams: 0,
     minTeamSize: 1,
     maxTeamSize: 1,
@@ -76,6 +77,7 @@ export default function UpdateEventTab({
             image: event.image,
             type: event.type,
             status: event.status,
+            registrationsOpen: event.registrationsOpen,
             maxTeams: event.maxTeams,
             minTeamSize: event.minTeamSize,
             maxTeamSize: event.maxTeamSize,
@@ -353,7 +355,7 @@ export default function UpdateEventTab({
           </div>
 
           {/* Event Type and Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">
                 Event Type <span className="text-destructive">*</span>
@@ -397,6 +399,29 @@ export default function UpdateEventTab({
                   <SelectItem value="Published">Published</SelectItem>
                   <SelectItem value="Ongoing">Ongoing</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="registrationsOpen">
+                Registrations <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.registrationsOpen ? "open" : "closed"}
+                onValueChange={(value: "open" | "closed") =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    registrationsOpen: value === "open",
+                  }))
+                }
+              >
+                <SelectTrigger id="registrationsOpen">
+                  <SelectValue placeholder="Registrations status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
             </div>

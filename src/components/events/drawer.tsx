@@ -19,7 +19,6 @@ export default function EventDrawer({
   drawerOpen,
   setDrawerOpen,
   fetchEvents,
-  registrationOpen,
   drawerDirection,
   hackfestSelected,
 }: {
@@ -197,7 +196,7 @@ export default function EventDrawer({
                 other participant benefits!
               </div>
             )}
-            {registrationOpen &&
+            {event.registrationsOpen &&
               (session ? (
                 <RegisterButton
                   event={event}
@@ -225,7 +224,7 @@ export default function EventDrawer({
                   </Button>
                 </>
               ))}
-            {registrationOpen &&
+            {event.registrationsOpen &&
               (event.status === "Published" &&
               new Date(event.deadline) < new Date() ? (
                 <div className="p-3 rounded-md bg-red-900 border border-red-500 text-xl font-semibold text-red-50 text-center">

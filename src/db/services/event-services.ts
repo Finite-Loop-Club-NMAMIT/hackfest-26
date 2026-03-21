@@ -89,6 +89,7 @@ export async function getAllEvents(userId?: string) {
       maxTeamSize: e.maxTeamSize,
       maxTeams: e.maxTeams,
       amount: e.amount,
+      registrationsOpen: e.registrationsOpen,
       organizers: e.organizers,
       ...(userId && {
         userStatus,

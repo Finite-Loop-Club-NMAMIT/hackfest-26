@@ -6,7 +6,6 @@ import { getEventAttributes } from "./utils";
 
 export default function EventDetails({
   events,
-  registration,
   handleCardClick,
 }: {
   events: Event[];
@@ -93,7 +92,7 @@ export default function EventDetails({
           {/* CTA */}
           <Button className="cursor-pointer tracking-wider text-lg text-[#0b2545] capitalize w-full py-2 flex gap-2 items-center justify-center rounded-full bg-linear-to-r from-[#cfb536] to-[#c2a341] hover:brightness-110 hover:scale-[1.02] transition-all duration-300">
             <Compass size={20} />
-            {registration
+            {event.registrationsOpen
               ? event.status !== "Draft" && statusLabel[event.status]
               : "Docking soon..."}
           </Button>
