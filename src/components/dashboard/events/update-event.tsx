@@ -51,6 +51,7 @@ export default function UpdateEventTab({
     type: "Solo",
     status: "Draft",
     registrationsOpen: false,
+    amount: 0,
     maxTeams: 0,
     minTeamSize: 1,
     maxTeamSize: 1,
@@ -78,6 +79,7 @@ export default function UpdateEventTab({
             type: event.type,
             status: event.status,
             registrationsOpen: event.registrationsOpen,
+            amount: event.amount,
             maxTeams: event.maxTeams,
             minTeamSize: event.minTeamSize,
             maxTeamSize: event.maxTeamSize,
@@ -429,20 +431,38 @@ export default function UpdateEventTab({
 
           {/* Team Configuration */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxTeams">
-                Maximum Teams <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="maxTeams"
-                name="maxTeams"
-                type="number"
-                min="0"
-                placeholder="Enter maximum number of teams"
-                value={formData.maxTeams || ""}
-                onChange={handleNumberChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">
+                  Amount <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  placeholder="Enter event amount"
+                  value={formData.amount || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxTeams">
+                  Maximum Teams <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="maxTeams"
+                  name="maxTeams"
+                  type="number"
+                  min="0"
+                  placeholder="Enter maximum number of teams"
+                  value={formData.maxTeams || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

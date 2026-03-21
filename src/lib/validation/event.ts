@@ -11,6 +11,7 @@ export const eventSchema = z.object({
   image: z.string(),
   type: z.enum(["Solo", "Team"]),
   status: z.enum(["Draft", "Published", "Ongoing", "Completed"]),
+  amount: z.number().min(0),
   maxTeams: z.number().min(0),
   minTeamSize: z.number().min(1),
   maxTeamSize: z.number().min(1),
