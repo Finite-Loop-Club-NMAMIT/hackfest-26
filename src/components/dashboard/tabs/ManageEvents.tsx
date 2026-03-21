@@ -23,12 +23,6 @@ export function ManageEventsTab({ session }: { session: Session }) {
       component: null,
     },
     {
-      id: "assigned",
-      label: "Assigned",
-      permission: "event:manage",
-      component: null,
-    },
-    {
       id: "create",
       permission: "event:manage",
       label: "Create",
@@ -80,15 +74,6 @@ export function ManageEventsTab({ session }: { session: Session }) {
         return (
           <EventListTab
             assigned={false}
-            onEdit={handleNavigateToEdit}
-            onAttendance={handleNavigateToAttendance}
-            session={session}
-          />
-        );
-      case "assigned":
-        return (
-          <EventListTab
-            assigned={true}
             onEdit={handleNavigateToEdit}
             onAttendance={handleNavigateToAttendance}
             session={session}

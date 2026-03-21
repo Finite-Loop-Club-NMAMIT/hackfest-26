@@ -16,6 +16,7 @@ export const eventSchema = z.object({
   minTeamSize: z.number().min(1),
   maxTeamSize: z.number().min(1),
   registrationsOpen: z.boolean().default(false),
+  organizerIds: z.array(z.string().min(1)).default([]),
 });
 
 export const updateEventUserSchema = z.object({

@@ -185,6 +185,10 @@ async function seed() {
     { key: "slot:regenerate", description: "Regenerate slot allocations" },
     // Event management
     { key: "event:manage", description: "Get access to manage events tab" },
+    {
+      key: "event:organizer",
+      description: "Access organizer event stats and organizer team CRUD",
+    },
   ];
 
   const permissionMap = new Map<string, string>(); // key -> id
@@ -267,6 +271,7 @@ async function seed() {
       "event:update",
       "event:attendance",
       "event:delete",
+      "event:organizer",
     ],
   };
 

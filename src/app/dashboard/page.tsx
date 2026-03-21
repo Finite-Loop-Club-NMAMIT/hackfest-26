@@ -24,6 +24,14 @@ export default async function DashboardPage() {
   }
 
   const { dashboardUser } = session;
+  const hasOrganizerRole = dashboardUser.roles.some(
+    (role) => role.name === "ORGANIZER",
+  );
+  const canAccessDashboard =
+    hasPermission(dashboardUser, "dashboard:access") ||
+    hasPermission(dashboardUser, "event:manage") ||
+    hasPermission(dashboardUser, "event:organizer") ||
+    hasOrganizerRole;
 
   const permissions: DashboardPermissions = {
     beAdmin: isAdmin(dashboardUser),
@@ -43,7 +51,7 @@ export default async function DashboardPage() {
     canViewColleges: hasPermission(dashboardUser, "colleges:manage"),
   };
 
-  if (!permissions.isAdmin) {
+  if (!canAccessDashboard) {
     return (
       <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
         <Card className="max-w-md w-full text-center">

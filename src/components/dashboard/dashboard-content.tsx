@@ -22,6 +22,7 @@ import {
   TeamsTab,
 } from "../tabs";
 import { CollegesTab } from "./tabs/colleges/CollegesTab";
+import { EventStatsTab } from "./tabs/EventStats";
 import { ManageEventsTab } from "./tabs/ManageEvents";
 import { QuickboardTab } from "./tabs/quickboard/QuickBoard";
 
@@ -54,6 +55,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "users", content: <DashboardUsersTab /> },
     { id: "settings", content: <SettingsTab /> },
     { id: "events", content: <ManageEventsTab session={session} /> },
+    { id: "event-stats", content: <EventStatsTab /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
   ];
 

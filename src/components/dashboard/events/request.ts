@@ -23,6 +23,7 @@ export type EventData = {
   maxTeams: number;
   minTeamSize: number;
   maxTeamSize: number;
+  organizerIds?: string[];
 };
 
 export type EventTeam = {
@@ -40,6 +41,7 @@ export type OrganizerEventStat = {
   eventId: string;
   eventTitle: string;
   eventStatus: "Draft" | "Published" | "Ongoing" | "Completed";
+  eventType: "Solo" | "Team";
   registeredUsers: number;
   confirmedUsers: number;
   totalTeams: number;
@@ -48,6 +50,28 @@ export type OrganizerEventStat = {
 
 export type OrganizerEventTeam = EventTeam & {
   memberCount: number;
+  leaderName: string | null;
+  leaderEmail: string | null;
+};
+
+export type OrganizerOption = {
+  id: string;
+  name: string;
+  username: string;
+  email: string | null;
+};
+
+export type ParticipantOption = {
+  id: string;
+  name: string | null;
+  email: string | null;
+};
+
+export type TeamMemberOption = {
+  participantId: string;
+  name: string | null;
+  email: string | null;
+  isLeader: boolean;
 };
 
 export async function createEvent(
@@ -284,6 +308,21 @@ export async function getOrganizerEventTeams(
   }
 }
 
+export async function getAssignableOrganizers(): Promise<OrganizerOption[]> {
+  try {
+    const data = await apiFetch<OrganizerOption[]>(
+      "/api/dashboard/events/getAssignableOrganizers",
+      {
+        method: "GET",
+      },
+    );
+
+    return data || [];
+  } catch (_error) {
+    return [];
+  }
+}
+
 export async function createOrganizerEventTeam(
   eventId: string,
   name: string,
@@ -343,5 +382,78 @@ export async function deleteOrganizerEventTeam(
     return true;
   } catch (_error) {
     return false;
+  }
+}
+
+export async function addOrganizerTeamMember(
+  eventId: string,
+  teamId: string,
+  participantId: string,
+): Promise<boolean> {
+  try {
+    await apiFetch("/api/dashboard/events/addOrganizerTeamMember", {
+      method: "POST",
+      body: JSON.stringify({ eventId, teamId, participantId }),
+    });
+
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+export async function setOrganizerTeamLeader(
+  eventId: string,
+  teamId: string,
+  participantId: string,
+): Promise<boolean> {
+  try {
+    await apiFetch("/api/dashboard/events/setOrganizerTeamLeader", {
+      method: "POST",
+      body: JSON.stringify({ eventId, teamId, participantId }),
+    });
+
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+export async function getOrganizerAvailableParticipants(
+  eventId: string,
+  query = "",
+): Promise<ParticipantOption[]> {
+  try {
+    const q = encodeURIComponent(query);
+    const data = await apiFetch<ParticipantOption[]>(
+      `/api/dashboard/events/getOrganizerAvailableParticipants?id=${eventId}&q=${q}`,
+      {
+        method: "GET",
+      },
+    );
+
+    return data || [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+export async function getOrganizerTeamMembers(
+  eventId: string,
+  teamId: string,
+  query = "",
+): Promise<TeamMemberOption[]> {
+  try {
+    const q = encodeURIComponent(query);
+    const data = await apiFetch<TeamMemberOption[]>(
+      `/api/dashboard/events/getOrganizerTeamMembers?eventId=${eventId}&teamId=${teamId}&q=${q}`,
+      {
+        method: "GET",
+      },
+    );
+
+    return data || [];
+  } catch (_error) {
+    return [];
   }
 }

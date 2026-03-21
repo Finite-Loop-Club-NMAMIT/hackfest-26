@@ -8,7 +8,12 @@ import { successResponse } from "~/lib/response/success";
 import { eventSchema } from "~/lib/validation/event";
 import db from "..";
 import type { eventStatusEnum } from "../enum";
-import { eventParticipants, events, eventTeams } from "../schema";
+import {
+  eventOrganizers,
+  eventParticipants,
+  events,
+  eventTeams,
+} from "../schema";
 
 export type TeamDetails = {
   id: string;
@@ -117,8 +122,11 @@ export async function getEventById(id: string | null): Promise<NextResponse> {
       );
     }
 
-    const event = await query.events.findOne({
+    const event = await db.query.events.findFirst({
       where: eq(events.id, id),
+      with: {
+        organizers: true,
+      },
     });
 
     if (!event) {
@@ -131,7 +139,15 @@ export async function getEventById(id: string | null): Promise<NextResponse> {
       );
     }
 
-    return successResponse(event, { toast: false });
+    return successResponse(
+      {
+        ...event,
+        organizerIds: event.organizers.map(
+          (organizer) => organizer.organizerId,
+        ),
+      },
+      { toast: false },
+    );
   } catch (_error) {
     return errorResponse(
       new AppError("Failed to fetch event.", 500, {
@@ -142,6 +158,22 @@ export async function getEventById(id: string | null): Promise<NextResponse> {
   }
 }
 
+function normalizeOrganizerIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      value
+        .filter(
+          (organizerId: unknown): organizerId is string =>
+            typeof organizerId === "string" && organizerId.trim().length > 0,
+        )
+        .map((organizerId) => organizerId.trim()),
+    ),
+  );
+}
 export async function getEventTeams(
   eventId: string | null,
 ): Promise<NextResponse> {
@@ -300,6 +332,10 @@ export async function deleteEventById(
 // biome-ignore lint/suspicious/noExplicitAny: data is checked by zod
 export async function createNewEvent(data: any): Promise<NextResponse> {
   try {
+    const organizerIds = Array.isArray(data.organizerIds)
+      ? normalizeOrganizerIds(data.organizerIds)
+      : [];
+
     const parsedData = eventSchema.safeParse({
       ...data,
       from: data.from ? new Date(data.from) : new Date(),
@@ -325,13 +361,34 @@ export async function createNewEvent(data: any): Promise<NextResponse> {
       .orderBy(desc(events.priority))
       .limit(1);
 
-    const newEvent = await db
-      .insert(events)
-      .values({
-        ...parsedData.data,
-        priority: (priorityMax[0]?.priority ?? 0) + 1,
-      })
-      .returning();
+    const newEvent = await db.transaction(async (tx) => {
+      const { organizerIds: _ignoredOrganizerIds, ...eventValues } =
+        parsedData.data;
+
+      const created = await tx
+        .insert(events)
+        .values({
+          ...eventValues,
+          priority: (priorityMax[0]?.priority ?? 0) + 1,
+        })
+        .returning();
+
+      const eventRecord = created[0];
+      if (!eventRecord) {
+        return [];
+      }
+
+      if (organizerIds.length > 0) {
+        await tx.insert(eventOrganizers).values(
+          organizerIds.map((organizerId) => ({
+            eventId: eventRecord.id,
+            organizerId,
+          })),
+        );
+      }
+
+      return created;
+    });
 
     if (newEvent.length === 0) {
       return errorResponse(
@@ -420,6 +477,8 @@ export async function updateEventById(
       );
     }
 
+    const organizerIds = normalizeOrganizerIds(data.organizerIds);
+
     const parsedData = eventSchema.safeParse({
       ...data,
       from: data.from ? new Date(data.from) : new Date(),
@@ -451,7 +510,29 @@ export async function updateEventById(
       );
     }
 
-    const result = await query.events.update(id, parsedData.data);
+    const result = await db.transaction(async (tx) => {
+      const { organizerIds: _ignoredOrganizerIds, ...eventValues } =
+        parsedData.data;
+
+      const updated = await tx
+        .update(events)
+        .set(eventValues)
+        .where(eq(events.id, id))
+        .returning();
+
+      await tx.delete(eventOrganizers).where(eq(eventOrganizers.eventId, id));
+
+      if (organizerIds.length > 0) {
+        await tx.insert(eventOrganizers).values(
+          organizerIds.map((organizerId) => ({
+            eventId: id,
+            organizerId,
+          })),
+        );
+      }
+
+      return updated;
+    });
     if (result.length === 0) {
       return errorResponse(
         new AppError("Failed to update event", 500, {

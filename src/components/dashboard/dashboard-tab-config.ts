@@ -88,6 +88,11 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     permissions: ["event:manage"],
   },
   {
+    id: "event-stats",
+    label: "Event Stats",
+    permissions: ["event:organizer"],
+  },
+  {
     id: "judge-setup",
     label: "Judge Setup",
     permissions: ["roles:manage"],
