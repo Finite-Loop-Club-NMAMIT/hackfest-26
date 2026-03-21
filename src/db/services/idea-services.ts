@@ -301,6 +301,116 @@ export async function assignIdeaRound(roundId: string) {
   };
 }
 
+export async function reassignUnderScoredTeams(
+  roundId: string,
+  evaluatorId: string,
+) {
+  const round = await db.query.ideaRounds.findFirst({
+    where: eq(ideaRounds.id, roundId),
+  });
+  if (!round) throw new Error(`Round not found: ${roundId}`);
+
+  const evaluator = await db.query.dashboardUsers.findFirst({
+    where: eq(dashboardUsers.id, evaluatorId),
+    columns: { id: true, name: true },
+  });
+  if (!evaluator) throw new Error(`Evaluator not found: ${evaluatorId}`);
+
+  const allAssignedTeams = await db
+    .selectDistinct({ teamId: ideaRoundAssignments.teamId })
+    .from(ideaRoundAssignments)
+    .where(eq(ideaRoundAssignments.roundId, roundId));
+
+  if (allAssignedTeams.length === 0) {
+    return {
+      assigned: 0,
+      skipped: 0,
+      message: "No teams assigned in this round",
+    };
+  }
+
+  const allTeamIds = allAssignedTeams.map((t) => t.teamId);
+
+  const scoredCounts = await db
+    .select({
+      teamId: ideaTeamEvaluations.teamId,
+      scoredCount:
+        sql<number>`count(DISTINCT ${ideaTeamEvaluations.evaluatorId})`.mapWith(
+          Number,
+        ),
+    })
+    .from(ideaTeamEvaluations)
+    .where(
+      and(
+        eq(ideaTeamEvaluations.roundId, roundId),
+        inArray(ideaTeamEvaluations.teamId, allTeamIds),
+      ),
+    )
+    .groupBy(ideaTeamEvaluations.teamId);
+
+  const scoredCountMap = new Map(
+    scoredCounts.map((row) => [row.teamId, row.scoredCount]),
+  );
+
+  const underScoredTeamIds = allTeamIds.filter(
+    (teamId) => (scoredCountMap.get(teamId) ?? 0) < MIN_EVALUATORS_PER_TEAM,
+  );
+
+  if (underScoredTeamIds.length === 0) {
+    return {
+      assigned: 0,
+      skipped: 0,
+      message: "All teams have enough evaluator scores",
+    };
+  }
+
+  const alreadyAssigned = await db
+    .selectDistinct({ teamId: ideaRoundAssignments.teamId })
+    .from(ideaRoundAssignments)
+    .where(
+      and(
+        eq(ideaRoundAssignments.roundId, roundId),
+        eq(ideaRoundAssignments.evaluatorId, evaluatorId),
+        inArray(ideaRoundAssignments.teamId, underScoredTeamIds),
+      ),
+    );
+
+  const alreadyAssignedSet = new Set(alreadyAssigned.map((a) => a.teamId));
+
+  const teamsToAssign = underScoredTeamIds.filter(
+    (teamId) => !alreadyAssignedSet.has(teamId),
+  );
+
+  if (teamsToAssign.length === 0) {
+    return {
+      assigned: 0,
+      skipped: underScoredTeamIds.length,
+      message: `All ${underScoredTeamIds.length} under-scored teams are already assigned to this evaluator`,
+    };
+  }
+
+  const newAssignments = teamsToAssign.map((teamId) => ({
+    roundId,
+    teamId,
+    evaluatorId,
+  }));
+
+  for (let i = 0; i < newAssignments.length; i += CHUNK_SIZE) {
+    await db
+      .insert(ideaRoundAssignments)
+      .values(newAssignments.slice(i, i + CHUNK_SIZE))
+      .onConflictDoNothing();
+  }
+
+  return {
+    assigned: teamsToAssign.length,
+    skipped: alreadyAssignedSet.size,
+    totalUnderScored: underScoredTeamIds.length,
+    evaluatorName: evaluator.name,
+    message: `Assigned ${teamsToAssign.length} under-scored teams to ${evaluator.name} (${alreadyAssignedSet.size} skipped, already assigned)`,
+  };
+}
+
 export async function fetchIdeaRounds(user: DashboardUser) {
   try {
     const isUserAdmin = isAdmin(user);
@@ -534,6 +644,7 @@ export async function fetchIdeaLeaderboard(roundId: string) {
         rawTotalScore: ideaTeamRoundScores.rawTotalScore,
         normalizedTotalScore: ideaTeamRoundScores.normalizedTotalScore,
         evaluatorCount: ideaTeamRoundScores.evaluatorCount,
+        pptUrl: ideaSubmission.pptUrl,
       })
       .from(ideaTeamRoundScores)
       .innerJoin(teams, eq(teams.id, ideaTeamRoundScores.teamId))
@@ -557,6 +668,7 @@ export async function fetchIdeaLeaderboard(roundId: string) {
       rawTotalScore: row.rawTotalScore,
       normalizedTotalScore: Number(row.normalizedTotalScore),
       evaluatorCount: row.evaluatorCount,
+      pptUrl: row.pptUrl,
     }));
 
     return {
@@ -995,5 +1107,285 @@ export async function fetchAllAllocations(roundId: string) {
     if (error instanceof AppError) throw error;
     console.error("Error fetching all allocations:", error);
     throw new AppError("Failed to fetch allocations", 500);
+  }
+}
+
+export async function fetchEvaluatorAllocations(
+  roundId: string,
+  evaluatorId: string,
+) {
+  try {
+    const round = await db.query.ideaRounds.findFirst({
+      where: eq(ideaRounds.id, roundId),
+    });
+
+    if (!round) {
+      throw new AppError("Round not found", 404);
+    }
+
+    const eligibleTeams = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        trackName: tracks.name,
+      })
+      .from(teams)
+      .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .where(
+        and(
+          eq(teams.teamStage, round.targetStage),
+          isNotNull(ideaSubmission.pptUrl),
+        ),
+      )
+      .orderBy(asc(teams.name));
+
+    if (eligibleTeams.length === 0) {
+      return [];
+    }
+
+    const teamIds = eligibleTeams.map((t) => t.id);
+
+    const assignments = await db
+      .select({
+        teamId: ideaRoundAssignments.teamId,
+        evaluatorId: ideaRoundAssignments.evaluatorId,
+      })
+      .from(ideaRoundAssignments)
+      .where(
+        and(
+          eq(ideaRoundAssignments.roundId, roundId),
+          inArray(ideaRoundAssignments.teamId, teamIds),
+        ),
+      );
+
+    const evaluations = await db
+      .select({
+        teamId: ideaTeamEvaluations.teamId,
+        evaluatorId: ideaTeamEvaluations.evaluatorId,
+        rawTotalScore: ideaTeamEvaluations.rawTotalScore,
+        normalizedTotalScore: ideaTeamEvaluations.normalizedTotalScore,
+      })
+      .from(ideaTeamEvaluations)
+      .where(
+        and(
+          eq(ideaTeamEvaluations.roundId, roundId),
+          inArray(ideaTeamEvaluations.teamId, teamIds),
+        ),
+      );
+
+    const assignmentCounts = new Map<string, number>();
+    const isAssigned = new Set<string>();
+
+    for (const a of assignments) {
+      assignmentCounts.set(a.teamId, (assignmentCounts.get(a.teamId) || 0) + 1);
+      if (a.evaluatorId === evaluatorId) {
+        isAssigned.add(a.teamId);
+      }
+    }
+
+    const evaluationMap = new Map<
+      string,
+      { raw: number; normalized: number }
+    >();
+    for (const e of evaluations) {
+      if (e.evaluatorId === evaluatorId) {
+        evaluationMap.set(e.teamId, {
+          raw: e.rawTotalScore,
+          normalized: e.normalizedTotalScore,
+        });
+      }
+    }
+
+    return eligibleTeams.map((team) => {
+      const evaluation = evaluationMap.get(team.id);
+      return {
+        teamId: team.id,
+        teamName: team.name,
+        trackName: team.trackName,
+        isAssigned: isAssigned.has(team.id),
+        hasScored: !!evaluation,
+        rawTotalScore: evaluation ? evaluation.raw : null,
+        normalizedTotalScore: evaluation ? evaluation.normalized : null,
+        assignedEvaluatorCount: assignmentCounts.get(team.id) || 0,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching evaluator allocations:", error);
+    throw new AppError("Failed to fetch evaluator allocations", 500);
+  }
+}
+
+export async function manageEvaluatorAllocation(
+  roundId: string,
+  evaluatorId: string,
+  teamId: string,
+  action: "assign" | "deallocate",
+) {
+  try {
+    const round = await db.query.ideaRounds.findFirst({
+      where: eq(ideaRounds.id, roundId),
+    });
+
+    if (!round) {
+      throw new AppError("Round not found", 404);
+    }
+
+    if (round.status === "Completed") {
+      throw new AppError("Round is completed. Assignments are locked.", 409);
+    }
+
+    if (action === "assign") {
+      await db
+        .insert(ideaRoundAssignments)
+        .values({
+          roundId,
+          evaluatorId,
+          teamId,
+        })
+        .onConflictDoNothing();
+
+      return { message: "Team assigned successfully" };
+    }
+
+    if (action === "deallocate") {
+      const existingScore = await db.query.ideaTeamEvaluations.findFirst({
+        where: and(
+          eq(ideaTeamEvaluations.roundId, roundId),
+          eq(ideaTeamEvaluations.evaluatorId, evaluatorId),
+          eq(ideaTeamEvaluations.teamId, teamId),
+        ),
+      });
+
+      if (existingScore) {
+        throw new AppError(
+          "Cannot deallocate team that has already been scored",
+          409,
+        );
+      }
+
+      await db
+        .delete(ideaRoundAssignments)
+        .where(
+          and(
+            eq(ideaRoundAssignments.roundId, roundId),
+            eq(ideaRoundAssignments.evaluatorId, evaluatorId),
+            eq(ideaRoundAssignments.teamId, teamId),
+          ),
+        );
+
+      return { message: "Team deallocated successfully" };
+    }
+
+    throw new AppError("Invalid action", 400);
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("Error managing evaluator allocation:", error);
+    throw new AppError("Failed to manage evaluator allocation", 500);
+  }
+}
+
+export async function fetchLeaderboardTeamDetails(
+  roundId: string,
+  teamId: string,
+) {
+  try {
+    const round = await db.query.ideaRounds.findFirst({
+      where: eq(ideaRounds.id, roundId),
+    });
+
+    if (!round) {
+      throw new AppError("Round not found", 404);
+    }
+
+    // 1. Get all criteria for this round
+    const criteria = await db
+      .select({
+        id: ideaRoundCriteria.id,
+        name: ideaRoundCriteria.name,
+        maxScore: ideaRoundCriteria.maxScore,
+      })
+      .from(ideaRoundCriteria)
+      .where(eq(ideaRoundCriteria.roundId, roundId));
+
+    const criteriaMap = new Map(criteria.map((c) => [c.id, c]));
+
+    // 2. Get all evaluations for this team in this round
+    const evaluations = await db
+      .select({
+        evaluatorId: ideaTeamEvaluations.evaluatorId,
+        evaluatorName: dashboardUsers.name,
+        rawTotalScore: ideaTeamEvaluations.rawTotalScore,
+        normalizedTotalScore: ideaTeamEvaluations.normalizedTotalScore,
+      })
+      .from(ideaTeamEvaluations)
+      .innerJoin(
+        dashboardUsers,
+        eq(ideaTeamEvaluations.evaluatorId, dashboardUsers.id),
+      )
+      .where(
+        and(
+          eq(ideaTeamEvaluations.roundId, roundId),
+          eq(ideaTeamEvaluations.teamId, teamId),
+        ),
+      );
+
+    if (evaluations.length === 0) {
+      return { evaluations: [] };
+    }
+
+    // 3. Get individual criteria scores
+    const individualScores = await db
+      .select({
+        evaluatorId: ideaScores.evaluatorId,
+        criteriaId: ideaScores.criteriaId,
+        rawScore: ideaScores.rawScore,
+      })
+      .from(ideaScores)
+      .where(
+        and(eq(ideaScores.roundId, roundId), eq(ideaScores.teamId, teamId)),
+      );
+
+    // Filter out scores that don't match our criteria (just in case)
+    const validScores = individualScores.filter((s) =>
+      criteriaMap.has(s.criteriaId),
+    );
+
+    // Group scores by evaluator
+    const scoresByEvaluator = new Map<string, typeof validScores>();
+    for (const score of validScores) {
+      const list = scoresByEvaluator.get(score.evaluatorId) || [];
+      list.push(score);
+      scoresByEvaluator.set(score.evaluatorId, list);
+    }
+
+    // Combine everything
+    const result = evaluations.map((ev) => {
+      const evalScores = scoresByEvaluator.get(ev.evaluatorId) || [];
+
+      const criteriaScores = criteria.map((c) => {
+        const scoreEntry = evalScores.find((s) => s.criteriaId === c.id);
+        return {
+          criteriaId: c.id,
+          criteriaName: c.name,
+          maxScore: c.maxScore,
+          rawScore: scoreEntry ? scoreEntry.rawScore : null,
+        };
+      });
+
+      return {
+        evaluatorId: ev.evaluatorId,
+        evaluatorName: ev.evaluatorName,
+        rawTotalScore: ev.rawTotalScore,
+        normalizedTotalScore: ev.normalizedTotalScore,
+        criteriaScores,
+      };
+    });
+
+    return { evaluations: result };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("Error fetching leaderboard team details:", error);
+    throw new AppError("Failed to fetch leaderboard team details", 500);
   }
 }

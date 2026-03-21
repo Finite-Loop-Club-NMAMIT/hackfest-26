@@ -1,11 +1,18 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useDashboardPermissions } from "~/components/dashboard/permissions-context";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import {
   Select,
@@ -34,6 +41,22 @@ type LeaderboardRow = {
   rawTotalScore: number;
   normalizedTotalScore: number;
   evaluatorCount: number;
+  pptUrl: string | null;
+};
+
+type CriteriaScore = {
+  criteriaId: string;
+  criteriaName: string;
+  maxScore: number;
+  rawScore: number | null;
+};
+
+type EvaluatorBreakdown = {
+  evaluatorId: string;
+  evaluatorName: string;
+  rawTotalScore: number;
+  normalizedTotalScore: number;
+  criteriaScores: CriteriaScore[];
 };
 
 export function LeaderboardPanel() {
@@ -55,6 +78,13 @@ export function LeaderboardPanel() {
   const [_refreshKey, setRefreshKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<LeaderboardRow | null>(null);
+  const [teamEvaluations, setTeamEvaluations] = useState<EvaluatorBreakdown[]>(
+    [],
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
   useEffect(() => {
@@ -169,6 +199,24 @@ export function LeaderboardPanel() {
   } else if (targetStage === "SEMI_SELECTED") {
     nextStage = "SELECTED";
   }
+
+  const handleRowClick = async (row: LeaderboardRow) => {
+    setSelectedTeam(row);
+    setIsDetailsModalOpen(true);
+    setIsLoadingDetails(true);
+    try {
+      const res = await fetch(
+        `/api/dashboard/idea-rounds/leaderboard/details?roundId=${selectedRoundId}&teamId=${row.teamId}`,
+      );
+      if (!res.ok) throw new Error("Failed to load details");
+      const data = await res.json();
+      setTeamEvaluations(data.evaluations || []);
+    } catch {
+      toast.error("Failed to load evaluation details");
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
 
   const handleMoveToRound2 = async () => {
     if (selectedTeamIds.length === 0 || !currentRound || !nextStage) return;
@@ -306,6 +354,7 @@ export function LeaderboardPanel() {
               )}
               <TableHead>Rank</TableHead>
               <TableHead>Team</TableHead>
+              <TableHead className="text-center w-12">PPT</TableHead>
               <TableHead>College/University</TableHead>
               <TableHead>Track</TableHead>
               <TableHead className="text-center">Evaluators</TableHead>
@@ -316,9 +365,13 @@ export function LeaderboardPanel() {
           </TableHeader>
           <TableBody>
             {paginatedRows.map((row) => (
-              <TableRow key={row.teamId}>
+              <TableRow
+                key={row.teamId}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleRowClick(row)}
+              >
                 {permissions.isAdmin && (
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedTeamIds.includes(row.teamId)}
                       onCheckedChange={(checked) =>
@@ -330,6 +383,25 @@ export function LeaderboardPanel() {
                 )}
                 <TableCell>{row.rank}</TableCell>
                 <TableCell>{row.teamName}</TableCell>
+                <TableCell className="text-center">
+                  {row.pptUrl ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!row.pptUrl) return;
+                        window.open(row.pptUrl, "_blank");
+                      }}
+                      title="View PPT"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell>{row.collegeName ?? "-"}</TableCell>
                 <TableCell>{row.trackName || "-"}</TableCell>
                 <TableCell className="text-center">
@@ -353,7 +425,7 @@ export function LeaderboardPanel() {
             {!isLoading && filteredRows.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={permissions.isAdmin ? 9 : 8}
+                  colSpan={permissions.isAdmin ? 10 : 9}
                   className="text-center text-muted-foreground py-8"
                 >
                   No leaderboard entries found for the selected filters.
@@ -410,6 +482,96 @@ export function LeaderboardPanel() {
           </div>
         </div>
       )}
+
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Evaluation Details</DialogTitle>
+            <DialogDescription>
+              {selectedTeam?.teamName} - {selectedTeam?.trackName || "No Track"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingDetails ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+              Loading scores...
+            </div>
+          ) : teamEvaluations.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground border rounded-md">
+              No evaluations found for this team.
+            </div>
+          ) : (
+            <div className="space-y-6 mt-4">
+              {teamEvaluations.map((evaluator) => (
+                <div
+                  key={evaluator.evaluatorId}
+                  className="border rounded-md p-4 space-y-4"
+                >
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-semibold">{evaluator.evaluatorName}</h3>
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">
+                          Raw Total:{" "}
+                        </span>
+                        <span className="font-medium">
+                          {evaluator.rawTotalScore}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Z-Score: </span>
+                        <span className="font-medium">
+                          {(evaluator.normalizedTotalScore >= 0 ? "+" : "") +
+                            evaluator.normalizedTotalScore.toFixed(3)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Criteria</TableHead>
+                          <TableHead className="text-right">Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {evaluator.criteriaScores.map((score) => (
+                          <TableRow key={score.criteriaId}>
+                            <TableCell>{score.criteriaName}</TableCell>
+                            <TableCell className="text-right">
+                              {score.rawScore !== null ? (
+                                <span>
+                                  <span
+                                    className={
+                                      score.rawScore === score.maxScore
+                                        ? "text-green-600 font-medium"
+                                        : ""
+                                    }
+                                  >
+                                    {score.rawScore}
+                                  </span>
+                                  <span className="text-muted-foreground text-xs ml-1">
+                                    /{score.maxScore}
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
