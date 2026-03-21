@@ -92,15 +92,14 @@ export default function EventDrawer({
                 },
                 {
                   label: "Entry Fee",
-                  value: session
-                    ? event?.amount !== 0
-                      ? `${event.amount}${event.type === "Solo" ? "" : " per member"}`
-                      : "Free"
-                    : "To be announced",
+                  value:
+                    event?.amount !== 0
+                      ? `${event.amount}rs${event.type === "Solo" ? "" : " per member"}`
+                      : "Free",
                 },
                 {
                   label: "Date",
-                  value: getDate(event?.date ?? "") || "TBA",
+                  value: event ? getDate(event.from, event.to) : "TBA",
                 },
                 {
                   label: "Deadline",
@@ -192,6 +191,12 @@ export default function EventDrawer({
             </div>
           )}
           <div className="w-full flex flex-col gap-2">
+            {event?.amount !== undefined && event.amount > 0 && (
+              <div className="p-3 mb-2 rounded-xl bg-linear-to-r from-[#133c55]/80 to-[#0f1823] border border-[#f4d35e]/50 text-[#f4d35e] text-sm md:text-md text-center font-semibold shadow-[0_0_15px_rgba(244,211,94,0.15)] flex items-center justify-center">
+                The registration fee covers goodies, food, accommodation, and
+                other participant benefits!
+              </div>
+            )}
             {registrationOpen &&
               (session ? (
                 <RegisterButton

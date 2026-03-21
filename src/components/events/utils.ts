@@ -10,14 +10,32 @@ export const getTeamSize = (minSize: number, maxSize: number) => {
   return `${minSize} - ${maxSize} members per team`;
 };
 
-export const getDate = (date: string) => {
-  return `${new Date(date).toLocaleDateString("en-US", {
+export const getDate = (from: string, to: string) => {
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+
+  const fromDateStr = fromDate.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-  })}, ${new Date(date).toLocaleTimeString("en-US", {
+  });
+  const fromTimeStr = fromDate.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+  });
+
+  const toDateStr = toDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const toTimeStr = toDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (fromDateStr === toDateStr) {
+    return `${fromDateStr}, ${fromTimeStr} - ${toTimeStr}`;
+  }
+  return `${fromDateStr}, ${fromTimeStr} - ${toDateStr}, ${toTimeStr}`;
 };
 
 export const getEventAttributes = (data: Event) => {
@@ -33,7 +51,7 @@ export const getEventAttributes = (data: Event) => {
   return [
     {
       name: "Date",
-      text: getDate(data.date),
+      text: getDate(data.from, data.to),
       Icon: CalendarDays,
     },
     {

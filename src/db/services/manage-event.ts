@@ -43,7 +43,8 @@ export async function getAllEventsForAdmin({
   try {
     let events: {
       type: "Solo" | "Team";
-      date: Date;
+      from: Date;
+      to: Date;
       id: string;
       image: string;
       createdAt: Date;
@@ -301,7 +302,8 @@ export async function createNewEvent(data: any): Promise<NextResponse> {
   try {
     const parsedData = eventSchema.safeParse({
       ...data,
-      date: data.date ? new Date(data.date) : new Date(),
+      from: data.from ? new Date(data.from) : new Date(),
+      to: data.to ? new Date(data.to) : new Date(),
       deadline: data.deadline ? new Date(data.deadline) : new Date(),
     });
 
@@ -420,7 +422,8 @@ export async function updateEventById(
 
     const parsedData = eventSchema.safeParse({
       ...data,
-      date: data.date ? new Date(data.date) : new Date(),
+      from: data.from ? new Date(data.from) : new Date(),
+      to: data.to ? new Date(data.to) : new Date(),
       deadline: data.deadline ? new Date(data.deadline) : new Date(),
     });
     if (!parsedData.success) {

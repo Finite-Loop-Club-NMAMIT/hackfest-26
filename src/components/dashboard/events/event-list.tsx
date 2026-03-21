@@ -339,7 +339,7 @@ export default function EventListTab({
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm">
-                          {formatDate(event.date)}
+                          {formatDate(event.from)} - {formatDate(event.to)}
                         </TableCell>
                         <TableCell className="text-sm">
                           {formatDate(event.deadline)}

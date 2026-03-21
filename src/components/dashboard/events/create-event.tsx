@@ -1,6 +1,6 @@
 "use client";
 import { format } from "date-fns";
-import { AlertCircle, CalendarIcon, Edit, Eye, Loader2 } from "lucide-react";
+import { AlertCircle, Edit, Eye, Loader2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -9,7 +9,6 @@ import z from "zod";
 import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
-import { Calendar } from "~/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -21,11 +20,6 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -34,7 +28,6 @@ import {
 } from "~/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
-import { cn } from "~/lib/utils";
 import { eventSchema } from "~/lib/validation/event";
 import { createEvent } from "./request";
 
@@ -45,7 +38,8 @@ function getDraft(): z.infer<typeof eventSchema> | null {
     const draft = localStorage.getItem(STORAGE_KEY);
     if (draft) {
       const parsedDraft = JSON.parse(draft);
-      if (parsedDraft.date) parsedDraft.date = new Date(parsedDraft.date);
+      if (parsedDraft.from) parsedDraft.from = new Date(parsedDraft.from);
+      if (parsedDraft.to) parsedDraft.to = new Date(parsedDraft.to);
       if (parsedDraft.deadline)
         parsedDraft.deadline = new Date(parsedDraft.deadline);
       return parsedDraft;
@@ -62,7 +56,8 @@ function resetForm(
   setForm({
     title: "",
     description: "",
-    date: undefined,
+    from: undefined,
+    to: undefined,
     venue: "",
     deadline: undefined,
     image: "",
@@ -85,7 +80,8 @@ export default function CreateEventTab({
     getDraft() ?? {
       title: "",
       description: "",
-      date: undefined,
+      from: undefined,
+      to: undefined,
       venue: "",
       deadline: undefined,
       image: "",
@@ -106,7 +102,8 @@ export default function CreateEventTab({
         JSON.stringify({
           title: "",
           description: "",
-          date: undefined,
+          from: undefined,
+          to: undefined,
           venue: "",
           deadline: undefined,
           image: "",
@@ -165,7 +162,8 @@ export default function CreateEventTab({
     try {
       const data = eventSchema.safeParse({
         ...formData,
-        date: formData.date ? new Date(formData.date) : new Date(),
+        from: formData.from ? new Date(formData.from) : new Date(),
+        to: formData.to ? new Date(formData.to) : new Date(),
         deadline: formData.deadline ? new Date(formData.deadline) : new Date(),
       });
       if (!data.success) {
@@ -196,7 +194,8 @@ export default function CreateEventTab({
       formData.description.trim() !== "" &&
       formData.venue.trim() !== "" &&
       formData.image.trim() !== "" &&
-      formData.date !== undefined &&
+      formData.from !== undefined &&
+      formData.to !== undefined &&
       formData.deadline !== undefined &&
       formData.maxTeams > 0 &&
       formData.minTeamSize > 0 &&
@@ -298,40 +297,45 @@ export default function CreateEventTab({
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>
-                Event Date <span className="text-destructive">*</span>
+                Start Time <span className="text-destructive">*</span>
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.date && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? (
-                      format(formData.date, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(date) =>
-                      setFormData((prev) => ({ ...prev, date }))
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Input
+                type="datetime-local"
+                value={
+                  formData.from
+                    ? format(formData.from, "yyyy-MM-dd'T'HH:mm")
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    from: e.target.value ? new Date(e.target.value) : undefined,
+                  }))
+                }
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                End Time <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="datetime-local"
+                value={
+                  formData.to ? format(formData.to, "yyyy-MM-dd'T'HH:mm") : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    to: e.target.value ? new Date(e.target.value) : undefined,
+                  }))
+                }
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -339,35 +343,23 @@ export default function CreateEventTab({
                 Registration Deadline{" "}
                 <span className="text-destructive">*</span>
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.deadline && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.deadline ? (
-                      format(formData.deadline, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.deadline}
-                    onSelect={(date) =>
-                      setFormData((prev) => ({ ...prev, deadline: date }))
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Input
+                type="datetime-local"
+                value={
+                  formData.deadline
+                    ? format(formData.deadline, "yyyy-MM-dd'T'HH:mm")
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    deadline: e.target.value
+                      ? new Date(e.target.value)
+                      : undefined,
+                  }))
+                }
+                required
+              />
             </div>
           </div>
 
@@ -497,7 +489,8 @@ export default function CreateEventTab({
                     setFormData({
                       title: "",
                       description: "",
-                      date: undefined,
+                      from: undefined,
+                      to: undefined,
                       venue: "",
                       deadline: undefined,
                       image: "",

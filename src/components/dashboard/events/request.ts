@@ -5,7 +5,8 @@ import { apiFetch } from "~/lib/fetcher";
 import type { eventSchema } from "~/lib/validation/event";
 
 export type EventData = {
-  date: Date;
+  from: Date;
+  to: Date;
   id: string;
   image: string;
   createdAt: Date;

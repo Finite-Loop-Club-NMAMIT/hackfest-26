@@ -4,7 +4,8 @@ import { genderEnum, stateEnum } from "~/db/enum";
 export const eventSchema = z.object({
   title: z.string().min(2).max(100),
   description: z.string().min(10),
-  date: z.date().optional(),
+  from: z.date().optional(),
+  to: z.date().optional(),
   venue: z.string().min(2).max(100),
   deadline: z.date().optional(),
   image: z.string(),

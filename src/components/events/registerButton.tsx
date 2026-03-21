@@ -185,8 +185,15 @@ export default function RegisterButton({
           </Button>
         ))
       ) : (
-        <Button onClick={() => setTeamDialogOpen(true)} className={baseClass}>
-          Team Details
+        <Button
+          onClick={() => setTeamDialogOpen(true)}
+          className={
+            !event.team?.isComplete
+              ? "w-full py-6 text-xl cursor-pointer capitalize shrink-0 flex gap-2 items-center justify-center transition-all duration-300 bg-red-600 hover:bg-red-700 text-white"
+              : baseClass
+          }
+        >
+          {!event.team?.isComplete ? "Confirm Team" : "Team Details"}
         </Button>
       )}
 
@@ -202,7 +209,7 @@ export default function RegisterButton({
           event={event}
           session={session}
           team={event.team}
-          amount={event.amount}
+          amount={event.amount * (event.teamMembers?.length || 1)}
           members={event.teamMembers ?? []}
           isLeader={event.isLeader ?? false}
           open={teamDialogOpen}

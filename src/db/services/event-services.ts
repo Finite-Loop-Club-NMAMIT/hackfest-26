@@ -34,15 +34,24 @@ export async function getAllEvents(userId?: string) {
 
   let participations: Record<string, UserParticipation> = {};
   let isHackathonSelected = false;
+  let hasSubmittedIdea = false;
 
   if (userId) {
     participations = await findUserParticipations(userId);
     const user = await db.query.participants.findFirst({
       where: eq(participants.id, userId),
-      with: { team: { columns: { teamStage: true } } },
+      with: {
+        team: {
+          columns: { teamStage: true },
+          with: { ideaSubmission: { columns: { id: true } } },
+        },
+      },
     });
     if (user?.team?.teamStage === "SELECTED") {
       isHackathonSelected = true;
+    }
+    if (user?.team?.ideaSubmission) {
+      hasSubmittedIdea = true;
     }
   }
 
@@ -66,7 +75,8 @@ export async function getAllEvents(userId?: string) {
     return {
       id: e.id,
       title: e.title,
-      date: e.date.toISOString(),
+      from: e.from.toISOString(),
+      to: e.to.toISOString(),
       image: e.image,
       venue: e.venue,
       description: e.description,
@@ -95,6 +105,7 @@ export async function getAllEvents(userId?: string) {
       events: formattedEvents,
       registrationsOpen,
       isHackathonSelected,
+      hasSubmittedIdea,
     },
     {
       toast: false,
@@ -199,6 +210,12 @@ export async function registerSoloEvent(
           "The maximum number of registrations for this event has been reached.",
       }),
     );
+
+  const eligibility = await checkEligibility(userId);
+  if (eligibility) return errorResponse(eligibility);
+
+  const overlap = await checkTimeOverlap(userId, eventId);
+  if (overlap) return errorResponse(overlap);
 
   const eventTeam = await db.transaction(async (tx) => {
     const [team] = await tx
@@ -324,6 +341,34 @@ async function checkEligibility(userId: string) {
   }
 }
 
+async function checkTimeOverlap(userId: string, targetEventId: string) {
+  const targetEvent = await findByEventId(targetEventId);
+  if (!targetEvent) return null;
+
+  const userParticipations = await db.query.eventParticipants.findMany({
+    where: eq(eventParticipants.userId, userId),
+    with: { event: true },
+  });
+
+  for (const p of userParticipations) {
+    if (p.eventId === targetEventId) continue;
+    if (!p.event) continue;
+
+    const tStart1 = targetEvent.from.getTime();
+    const tEnd1 = targetEvent.to.getTime();
+    const tStart2 = p.event.from.getTime();
+    const tEnd2 = p.event.to.getTime();
+
+    if (Math.max(tStart1, tStart2) < Math.min(tEnd1, tEnd2)) {
+      return new AppError("EVENT_TIME_OVERLAP", 400, {
+        title: "Schedule overlap",
+        description: `This event overlaps with "${p.event.title}" which you are already registered for. Either unregister from that event or choose another event.`,
+      });
+    }
+  }
+  return null;
+}
+
 export async function createEventTeam(
   eventId: string,
   userId: string,
@@ -343,6 +388,9 @@ export async function createEventTeam(
 
   const eligibility = await checkEligibility(userId);
   if (eligibility) return errorResponse(eligibility);
+
+  const overlap = await checkTimeOverlap(userId, eventId);
+  if (overlap) return errorResponse(overlap);
 
   const eventTeam = await db.transaction(async (tx) => {
     const [team] = await tx
@@ -456,6 +504,9 @@ export async function joinEventTeam(
 
   const eligibility = await checkEligibility(userId);
   if (eligibility) return errorResponse(eligibility);
+
+  const overlap = await checkTimeOverlap(userId, eventId);
+  if (overlap) return errorResponse(overlap);
 
   const event = await findByEventId(eventId);
   const leader = await findLeaderByTeam(teamId);
@@ -615,6 +666,11 @@ export async function confirmEventTeam(
     if (eligibility) return errorResponse(eligibility);
   }
 
+  for (const member of allMembers) {
+    const overlap = await checkTimeOverlap(member.userId, eventId);
+    if (overlap) return errorResponse(overlap);
+  }
+
   const event = await findByEventId(eventId);
   const members = await memberCount(eventId, teamId);
 
@@ -731,6 +787,11 @@ export async function submitEventPayment(
   for (const member of allMembers) {
     const eligibility = await checkEligibility(member.userId);
     if (eligibility) return errorResponse(eligibility);
+  }
+
+  for (const member of allMembers) {
+    const overlap = await checkTimeOverlap(member.userId, eventId);
+    if (overlap) return errorResponse(overlap);
   }
 
   const team = await findByIdandEvent(eventId, teamId);

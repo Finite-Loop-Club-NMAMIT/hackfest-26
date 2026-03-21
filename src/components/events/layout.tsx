@@ -62,7 +62,8 @@ export type Event = {
   id: string;
   title: string;
   description: string;
-  date: string;
+  from: string;
+  to: string;
   venue: string;
   type: "Solo" | "Team";
   status: "Draft" | "Published" | "Ongoing" | "Completed";
@@ -97,7 +98,10 @@ const Events = ({
   const [hackfestSelected, setHackfestSelected] = useState(
     session?.user?.isHackathonSelected ?? false,
   );
-  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
+  const [modalType, setModalType] = useState<
+    "selected" | "awaiting" | "nothing" | null
+  >(null);
+  const [hasCheckedModal, setHasCheckedModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [drawerDirection, setDrawerDirection] = useState<"right" | "bottom">(
     "right",
@@ -121,6 +125,7 @@ const Events = ({
         events: Event[];
         registrationsOpen: boolean;
         isHackathonSelected?: boolean;
+        hasSubmittedIdea?: boolean;
       }>("/api/events/getAll", { method: "GET" });
 
       setRegistration(response.registrationsOpen ?? false);
@@ -128,7 +133,9 @@ const Events = ({
         setEvents(response.events);
         if (response.isHackathonSelected && hackfestSelected) {
           setHackfestSelected(true);
-          setShowEligibilityModal(true);
+          setModalType("selected");
+        } else if (response.hasSubmittedIdea && !response.isHackathonSelected) {
+          setModalType("awaiting");
         }
       }
     } catch {
@@ -141,6 +148,16 @@ const Events = ({
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hmm
+  useEffect(() => {
+    if (!hasCheckedModal && loaderDone) {
+      if (!session) {
+        setModalType("nothing");
+      }
+      setHasCheckedModal(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (error === "email-mismatch") {
@@ -212,28 +229,88 @@ const Events = ({
       />
 
       <Dialog
-        open={showEligibilityModal}
-        onOpenChange={setShowEligibilityModal}
+        open={modalType !== null}
+        onOpenChange={(open) => {
+          if (!open) setModalType(null);
+        }}
       >
-        <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-6 max-w-sm w-full rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#f4d35e] flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Congratulations!
-            </DialogTitle>
-            <DialogDescription className="text-white/60 pt-2">
-              You have been selected for Hackfest! As a participant of the main
-              hackathon, you are not eligible to register for side events.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button
-              onClick={() => setShowEligibilityModal(false)}
-              className="w-full bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all cursor-pointer"
-            >
-              Ok
-            </Button>
-          </DialogFooter>
+        <DialogContent className="bg-[#0f1823] border border-[#39577c] text-white p-6 max-w-sm md:max-w-md w-full rounded-2xl">
+          {modalType === "selected" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-[#f4d35e] flex items-center gap-2">
+                  <Trophy className="w-5 h-5" />
+                  Congratulations!
+                </DialogTitle>
+                <DialogDescription className="text-white/60 pt-2">
+                  You have been selected for Hackfest! As a participant of the
+                  main hackathon, you are not eligible to register for side
+                  events.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4">
+                <Button
+                  onClick={() => setModalType(null)}
+                  className="w-full bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all cursor-pointer"
+                >
+                  Ok
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modalType === "awaiting" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-[#f4d35e] flex items-center gap-2">
+                  <TriangleAlert className="w-5 h-5 text-yellow-500" />
+                  Awaiting Results
+                </DialogTitle>
+                <DialogDescription className="text-white/60 pt-2 text-md leading-relaxed">
+                  You have registered for the main Hackfest and are awaiting
+                  results. <br />
+                  <br />
+                  <span className="text-white/80 font-semibold">
+                    Please note:
+                  </span>{" "}
+                  if you get selected for the hackathon, you won't be able to
+                  register for any side events.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4">
+                <Button
+                  onClick={() => setModalType(null)}
+                  className="w-full bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all cursor-pointer"
+                >
+                  Got It
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modalType === "nothing" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-[#f4d35e] flex items-center gap-2">
+                  <Trophy className="w-5 h-5" />
+                  Important Notice
+                </DialogTitle>
+                <DialogDescription className="text-white/60 pt-2 text-md leading-relaxed">
+                  If you have registered for Hackfest through GitHub before,
+                  please use the <b className="text-white">same email</b> for
+                  event login to automatically sync your profile.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4">
+                <Button
+                  onClick={() => setModalType(null)}
+                  className="w-full bg-[#f4d35e] text-[#0b2545] font-bold hover:brightness-110 transition-all cursor-pointer"
+                >
+                  Understood
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

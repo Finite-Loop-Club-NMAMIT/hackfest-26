@@ -26,7 +26,8 @@ export const events = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     title: text("title").notNull(),
     description: text("description").notNull(),
-    date: timestamp("date").notNull().defaultNow(),
+    from: timestamp("from").notNull().defaultNow(),
+    to: timestamp("to").notNull().defaultNow(),
     priority: integer("priority").notNull().default(0),
     venue: text("venue").notNull(),
     deadline: timestamp("deadline").notNull().defaultNow(),
@@ -46,7 +47,8 @@ export const events = pgTable(
       .$onUpdateFn(() => new Date()),
   },
   (table) => [
-    index("event_date_idx").on(table.date),
+    index("event_from_idx").on(table.from),
+    index("event_to_idx").on(table.to),
     index("event_deadline_idx").on(table.deadline),
   ],
 );
