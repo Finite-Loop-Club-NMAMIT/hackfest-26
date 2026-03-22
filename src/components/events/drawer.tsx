@@ -137,58 +137,6 @@ export default function EventDrawer({
               ))}
             </div>
           </div>
-          {event?.organizers && event.organizers.length > 0 && (
-            <div>
-              <h3 className="lg:text-2xl md:text-xl text-[#f4d35e] lg:mb-2 mb-1">
-                Organizers
-              </h3>
-
-              <div className="grid sm:grid-cols-2 lg:gap-4 gap-4">
-                {event.organizers.map((organizer: EventOrganizer) => (
-                  <div
-                    key={organizer.id}
-                    className="rounded-2xl lg:p-4 p-2 bg-linear-to-br from-[#133c55] to-[#0f1823] border border-[#f4d35e]/30 shadow-[0_0_20px_rgba(244,211,94,0.12)]"
-                  >
-                    <div className="flex flex-col lg:gap-2 gap-1 text-purple-100">
-                      {/* Name */}
-                      <div className="flex items-center lg:gap-3 gap-2">
-                        <User className="w-5 h-5 text-[#f4d35e]" />
-                        <span className="font-semibold lg:text-lg text-md">
-                          {organizer.name ?? "TBA"}
-                        </span>
-                      </div>
-
-                      {/* Email */}
-                      {organizer.email && (
-                        <div className="flex items-center lg:gap-3 gap-2">
-                          <Mail className="w-5 h-5 text-[#f4d35e]" />
-                          <a
-                            href={`mailto:${organizer.email}`}
-                            className="hover:underline break-all"
-                          >
-                            {organizer.email}
-                          </a>
-                        </div>
-                      )}
-
-                      {/* Phone */}
-                      {organizer.phone && (
-                        <div className="flex items-center lg:gap-3 gap-2">
-                          <Phone className="w-5 h-5 text-[#f4d35e]" />
-                          <a
-                            href={`tel:${organizer.phone}`}
-                            className="hover:underline"
-                          >
-                            {organizer.phone}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
           <div className="w-full flex flex-col gap-2">
             {event?.amount !== undefined && event.amount > 0 && (
               <div className="p-3 mb-2 rounded-xl bg-linear-to-r from-[#133c55]/80 to-[#0f1823] border border-[#f4d35e]/50 text-[#f4d35e] text-sm md:text-md text-center font-semibold shadow-[0_0_15px_rgba(244,211,94,0.15)] flex items-center justify-center">
