@@ -1,7 +1,6 @@
 "use client";
 import { format } from "date-fns";
 import { AlertCircle, Loader2 } from "lucide-react";
-import Image from "next/image";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -28,8 +27,13 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { eventSchema } from "~/lib/validation/event";
-import { EventDescription } from "./create-event";
-import { getEventById, updateEvent } from "./request";
+import { EventDescription, OrganizerAssigneesField } from "./create-event";
+import {
+  getAssignableOrganizers,
+  getEventById,
+  type OrganizerOption,
+  updateEvent,
+} from "./request";
 
 export default function UpdateEventTab({
   setTab,
@@ -40,6 +44,10 @@ export default function UpdateEventTab({
 }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [organizerOptions, setOrganizerOptions] = useState<OrganizerOption[]>(
+    [],
+  );
+  const [organizersLoading, setOrganizersLoading] = useState(true);
   const [formData, setFormData] = useState<z.infer<typeof eventSchema>>({
     title: "",
     description: "",
@@ -51,10 +59,23 @@ export default function UpdateEventTab({
     type: "Solo",
     status: "Draft",
     registrationsOpen: false,
+    amount: 0,
     maxTeams: 0,
     minTeamSize: 1,
     maxTeamSize: 1,
+    organizerIds: [],
   });
+
+  useEffect(() => {
+    const loadOrganizers = async () => {
+      setOrganizersLoading(true);
+      const organizers = await getAssignableOrganizers();
+      setOrganizerOptions(organizers);
+      setOrganizersLoading(false);
+    };
+
+    void loadOrganizers();
+  }, []);
 
   useEffect(() => {
     if (!eventId) {
@@ -78,9 +99,11 @@ export default function UpdateEventTab({
             type: event.type,
             status: event.status,
             registrationsOpen: event.registrationsOpen,
+            amount: event.amount,
             maxTeams: event.maxTeams,
             minTeamSize: event.minTeamSize,
             maxTeamSize: event.maxTeamSize,
+            organizerIds: event.organizerIds ?? [],
           });
         } else {
           toast.error("Event not found");
@@ -95,7 +118,7 @@ export default function UpdateEventTab({
       }
     };
 
-    fetchEvent();
+    void fetchEvent();
   }, [eventId, setTab]);
 
   const handleInputChange = (
@@ -155,6 +178,10 @@ export default function UpdateEventTab({
   };
 
   const isFormValid = () => {
+    const organizerIds = Array.isArray(formData.organizerIds)
+      ? formData.organizerIds
+      : [];
+
     return (
       formData.title.trim() !== "" &&
       formData.description.trim() !== "" &&
@@ -165,7 +192,8 @@ export default function UpdateEventTab({
       formData.deadline !== undefined &&
       formData.maxTeams > 0 &&
       formData.minTeamSize > 0 &&
-      formData.maxTeamSize >= formData.minTeamSize
+      formData.maxTeamSize >= formData.minTeamSize &&
+      organizerIds.length > 0
     );
   };
 
@@ -180,8 +208,8 @@ export default function UpdateEventTab({
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
-            <Button onClick={() => setTab("assigned")} variant="default">
-              View Assigned Events
+            <Button onClick={() => setTab("all")} variant="default">
+              View All Events
             </Button>
           </div>
         </CardContent>
@@ -259,22 +287,11 @@ export default function UpdateEventTab({
                   folder="events"
                   label="Upload Image"
                 />
-                <span className="text-sm text-muted-foreground">or</span>
-                <Input
-                  id="image"
-                  name="image"
-                  type="url"
-                  placeholder="Paste image URL"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="flex-1"
-                />
               </div>
               {formData.image && (
                 <div className="relative mt-2 flex justify-center rounded-md border overflow-hidden">
-                  <Image
-                    height={192}
-                    width={384}
+                  {/* biome-ignore lint/performance/noImgElement: External user-provided image */}
+                  <img
                     src={formData.image}
                     alt="Event preview"
                     className="w-auto h-48 object-cover"
@@ -287,7 +304,6 @@ export default function UpdateEventTab({
             </div>
           </div>
 
-          {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>
@@ -354,7 +370,6 @@ export default function UpdateEventTab({
             </div>
           </div>
 
-          {/* Event Type and Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">
@@ -427,22 +442,39 @@ export default function UpdateEventTab({
             </div>
           </div>
 
-          {/* Team Configuration */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxTeams">
-                Maximum Teams <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="maxTeams"
-                name="maxTeams"
-                type="number"
-                min="0"
-                placeholder="Enter maximum number of teams"
-                value={formData.maxTeams || ""}
-                onChange={handleNumberChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">
+                  Amount <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  placeholder="Enter event amount"
+                  value={formData.amount || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxTeams">
+                  Maximum Teams <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="maxTeams"
+                  name="maxTeams"
+                  type="number"
+                  min="0"
+                  placeholder="Enter maximum number of teams"
+                  value={formData.maxTeams || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,6 +513,15 @@ export default function UpdateEventTab({
               </div>
             </div>
           </div>
+
+          <OrganizerAssigneesField
+            organizerIds={formData.organizerIds}
+            organizerOptions={organizerOptions}
+            organizersLoading={organizersLoading}
+            onChange={(organizerIds) =>
+              setFormData((prev) => ({ ...prev, organizerIds }))
+            }
+          />
         </CardContent>
 
         <CardFooter className="flex justify-between gap-2 mt-4">

@@ -300,7 +300,7 @@ export function TeamsTable() {
               value={filters.isCompleted}
               onValueChange={(v) => handleFilterChange("isCompleted", v)}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-35">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -314,7 +314,7 @@ export function TeamsTable() {
               value={filters.paymentStatus}
               onValueChange={(v) => handleFilterChange("paymentStatus", v)}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-35">
                 <SelectValue placeholder="Payment" />
               </SelectTrigger>
               <SelectContent>
@@ -329,7 +329,7 @@ export function TeamsTable() {
               value={filters.attended}
               onValueChange={(v) => handleFilterChange("attended", v)}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-35">
                 <SelectValue placeholder="Attended" />
               </SelectTrigger>
               <SelectContent>

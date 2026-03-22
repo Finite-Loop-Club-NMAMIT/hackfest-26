@@ -1,6 +1,6 @@
 "use client";
 import { format } from "date-fns";
-import { AlertCircle, Edit, Eye, Loader2 } from "lucide-react";
+import { AlertCircle, Edit, Eye, Loader2, Plus, X } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -29,7 +29,11 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
 import { eventSchema } from "~/lib/validation/event";
-import { createEvent } from "./request";
+import {
+  createEvent,
+  getAssignableOrganizers,
+  type OrganizerOption,
+} from "./request";
 
 const STORAGE_KEY = "create-event-draft";
 
@@ -42,6 +46,9 @@ function getDraft(): z.infer<typeof eventSchema> | null {
       if (parsedDraft.to) parsedDraft.to = new Date(parsedDraft.to);
       if (parsedDraft.deadline)
         parsedDraft.deadline = new Date(parsedDraft.deadline);
+      if (!Array.isArray(parsedDraft.organizerIds)) {
+        parsedDraft.organizerIds = [];
+      }
       return parsedDraft;
     }
   } catch (error) {
@@ -64,9 +71,11 @@ function resetForm(
     type: "Solo",
     status: "Draft",
     registrationsOpen: false,
+    amount: 0,
     maxTeams: 0,
     minTeamSize: 1,
     maxTeamSize: 1,
+    organizerIds: [],
   });
 }
 
@@ -77,6 +86,10 @@ export default function CreateEventTab({
 }) {
   const [loading, setLoading] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+  const [organizerOptions, setOrganizerOptions] = useState<OrganizerOption[]>(
+    [],
+  );
+  const [organizersLoading, setOrganizersLoading] = useState(true);
   const [formData, setFormData] = useState<z.infer<typeof eventSchema>>(
     getDraft() ?? {
       title: "",
@@ -89,11 +102,24 @@ export default function CreateEventTab({
       type: "Solo",
       status: "Draft",
       registrationsOpen: false,
+      amount: 0,
       maxTeams: 0,
       minTeamSize: 1,
       maxTeamSize: 1,
+      organizerIds: [],
     },
   );
+
+  useEffect(() => {
+    const loadOrganizers = async () => {
+      setOrganizersLoading(true);
+      const organizers = await getAssignableOrganizers();
+      setOrganizerOptions(organizers);
+      setOrganizersLoading(false);
+    };
+
+    void loadOrganizers();
+  }, []);
 
   // Load draft on mount unless formData already has values (e.g. from previous session)
   useEffect(() => {
@@ -112,9 +138,11 @@ export default function CreateEventTab({
           type: "Solo",
           status: "Draft",
           registrationsOpen: false,
+          amount: 0,
           maxTeams: 0,
           minTeamSize: 1,
           maxTeamSize: 1,
+          organizerIds: [],
         })
     ) {
       setHasDraft(true);
@@ -192,6 +220,10 @@ export default function CreateEventTab({
   };
 
   const isFormValid = () => {
+    const organizerIds = Array.isArray(formData.organizerIds)
+      ? formData.organizerIds
+      : [];
+
     return (
       formData.title.trim() !== "" &&
       formData.description.trim() !== "" &&
@@ -202,7 +234,8 @@ export default function CreateEventTab({
       formData.deadline !== undefined &&
       formData.maxTeams > 0 &&
       formData.minTeamSize > 0 &&
-      formData.maxTeamSize >= formData.minTeamSize
+      formData.maxTeamSize >= formData.minTeamSize &&
+      organizerIds.length > 0
     );
   };
 
@@ -271,16 +304,6 @@ export default function CreateEventTab({
                   }
                   folder="events"
                   label="Upload Image"
-                />
-                <span className="text-sm text-muted-foreground">or</span>
-                <Input
-                  id="image"
-                  name="image"
-                  type="url"
-                  placeholder="Paste image URL"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="flex-1"
                 />
               </div>
               {formData.image && (
@@ -441,20 +464,38 @@ export default function CreateEventTab({
 
           {/* Team Configuration */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxTeams">
-                Maximum Teams <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="maxTeams"
-                name="maxTeams"
-                type="number"
-                min="0"
-                placeholder="Enter maximum number of teams"
-                value={formData.maxTeams || ""}
-                onChange={handleNumberChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">
+                  Amount <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  placeholder="Enter event amount"
+                  value={formData.amount || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxTeams">
+                  Maximum Teams <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="maxTeams"
+                  name="maxTeams"
+                  type="number"
+                  min="0"
+                  placeholder="Enter maximum number of teams"
+                  value={formData.maxTeams || ""}
+                  onChange={handleNumberChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -493,6 +534,15 @@ export default function CreateEventTab({
               </div>
             </div>
           </div>
+
+          <OrganizerAssigneesField
+            organizerIds={formData.organizerIds}
+            organizerOptions={organizerOptions}
+            organizersLoading={organizersLoading}
+            onChange={(organizerIds) =>
+              setFormData((prev) => ({ ...prev, organizerIds }))
+            }
+          />
         </CardContent>
 
         <CardFooter className="flex justify-between gap-2 mt-4">
@@ -523,9 +573,11 @@ export default function CreateEventTab({
                       type: "Solo",
                       status: "Draft",
                       registrationsOpen: false,
+                      amount: 0,
                       maxTeams: 0,
                       minTeamSize: 1,
                       maxTeamSize: 1,
+                      organizerIds: [],
                     });
                   }
                 }}
@@ -542,6 +594,120 @@ export default function CreateEventTab({
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+export function OrganizerAssigneesField({
+  organizerIds,
+  organizerOptions,
+  organizersLoading,
+  onChange,
+}: {
+  organizerIds: string[];
+  organizerOptions: OrganizerOption[];
+  organizersLoading: boolean;
+  onChange: (organizerIds: string[]) => void;
+}) {
+  const safeOrganizerIds = Array.isArray(organizerIds) ? organizerIds : [];
+
+  const addOrganizer = () => {
+    const selected = new Set(safeOrganizerIds);
+    const nextOrganizer = organizerOptions.find((opt) => !selected.has(opt.id));
+
+    if (!nextOrganizer) {
+      toast.error("All available organizers are already selected.");
+      return;
+    }
+
+    onChange([...safeOrganizerIds, nextOrganizer.id]);
+  };
+
+  const removeOrganizerAt = (index: number) => {
+    onChange(safeOrganizerIds.filter((_, idx) => idx !== index));
+  };
+
+  const updateOrganizerAt = (index: number, organizerId: string) => {
+    const next = [...safeOrganizerIds];
+    next[index] = organizerId;
+    onChange(Array.from(new Set(next)));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label>
+          Organizers <span className="text-destructive">*</span>
+        </Label>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={addOrganizer}
+          disabled={organizersLoading || organizerOptions.length === 0}
+          aria-label="Add organizer"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {organizersLoading ? (
+        <p className="text-sm text-muted-foreground">Loading organizers...</p>
+      ) : organizerOptions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No organizer accounts with event permissions were found.
+        </p>
+      ) : safeOrganizerIds.length === 0 ? (
+        <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+          Add at least one organizer using the + button.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {safeOrganizerIds.map((organizerId, index) => {
+            const selectedByOthers = new Set(
+              safeOrganizerIds.filter((_, idx) => idx !== index),
+            );
+            const rowOptions = organizerOptions.filter(
+              (option) =>
+                option.id === organizerId || !selectedByOthers.has(option.id),
+            );
+
+            return (
+              <div className="flex items-center gap-2" key={organizerId}>
+                <Select
+                  value={organizerId}
+                  onValueChange={(value) => updateOrganizerAt(index, value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select organizer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rowOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.name} ({option.username})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removeOrganizerAt(index)}
+                  aria-label="Remove organizer"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        You can assign one or more organizers to this event.
+      </p>
+    </div>
   );
 }
 

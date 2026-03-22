@@ -101,8 +101,8 @@ export default function MarkAttendanceTab({
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
-            <Button onClick={() => setTab("assigned")} variant="default">
-              View Assigned Events
+            <Button onClick={() => setTab("all")} variant="default">
+              View All Events
             </Button>
           </div>
         </CardContent>
