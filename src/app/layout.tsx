@@ -32,10 +32,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://hackfest.dev"),
   title: {
     template: "%s | Hackfest",
-    default: "Hackfest - 36-Hour National Level Hackathon",
+    default: "Hackfest'26 - 36-Hour National Level Hackathon",
   },
   description:
-    "Hackfest is a 36-hour National Level Hackathon organised by Finite Loop Club at NMAMIT, Nitte. Win from a ₹4,00,000+ prize pool. April 17-19, 2026.",
+    "Hackfest'26 is a 36-hour National Level Hackathon organised by Finite Loop Club at NMAMIT, Nitte. Win from a ₹4,00,000+ prize pool. April 17-19, 2026.",
   keywords: [
     "Hackfest",
     "Hackfest 26",

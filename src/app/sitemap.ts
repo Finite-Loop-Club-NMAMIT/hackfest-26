@@ -24,7 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/events`,
-      lastModified: new Date("2026-02-28"),
+      lastModified: new Date("2026-03-22"),
       changeFrequency: "weekly",
       priority: 0.9,
     },
