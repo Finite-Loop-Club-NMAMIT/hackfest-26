@@ -797,6 +797,7 @@ export async function submitEventPayment(
   }
 
   const team = await findByIdandEvent(eventId, teamId);
+  const event = await findByEventId(eventId);
 
   if (!team) {
     return errorResponse(
@@ -859,6 +860,7 @@ export async function submitEventPayment(
       teamId: team.id,
       leaderName: leaderName,
       paymentScreenshotUrl: paymentScreenshotUrl,
+      eventName: event?.title || "Unknown Side Quest",
     }).catch(console.error);
   } catch (e) {
     console.error("Failed to initiate admin payment email", e);

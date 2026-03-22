@@ -1,8 +1,16 @@
-import { asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 import { auth } from "~/auth/dashboard-config";
 import db from "~/db";
 import { getSiteSettings } from "~/db/data/siteSettings";
-import { eventTeams, payment, selected, teams } from "~/db/schema";
+import {
+  eventParticipants,
+  eventTeams,
+  events,
+  payment,
+  selected,
+  teams,
+} from "~/db/schema";
+import { sendPaymentVerifiedEmail } from "~/lib/mail";
 import { isAdmin } from "~/lib/auth/permissions";
 import { AppError } from "~/lib/errors/app-error";
 
@@ -207,8 +215,8 @@ export async function togglePaymentVerification(paymentId: string) {
     where: eq(payment.id, paymentId),
     columns: { id: true, paymentStatus: true, paymentType: true },
     with: {
-      team: { columns: { id: true } },
-      eventTeam: { columns: { id: true } },
+      team: { columns: { id: true, name: true } },
+      eventTeam: { columns: { id: true, name: true, eventId: true } },
     },
   });
 
@@ -218,7 +226,15 @@ export async function togglePaymentVerification(paymentId: string) {
     });
   }
 
-  const newStatus = existing.paymentStatus === "Paid" ? "Pending" : "Paid";
+  if (existing.paymentStatus === "Paid") {
+    throw new AppError("PAYMENT_ALREADY_VERIFIED", 400, {
+      title: "Already Verified",
+      description:
+        "This payment has already been verified and cannot be reverted.",
+    });
+  }
+
+  const newStatus = "Paid";
 
   await db
     .update(payment)
@@ -241,6 +257,43 @@ export async function togglePaymentVerification(paymentId: string) {
       .update(teams)
       .set({ paymentStatus: newStatus })
       .where(eq(teams.id, existing.team.id));
+  }
+
+  try {
+    let leaderUser: { name: string | null; email: string | null } | undefined;
+    let teamName = "";
+    let eventNameStr: string | undefined = undefined;
+
+    if (existing.paymentType === "EVENT" && existing.eventTeam?.id) {
+      const leader = await db.query.eventParticipants.findFirst({
+        where: and(
+          eq(eventParticipants.teamId, existing.eventTeam.id),
+          eq(eventParticipants.isLeader, true),
+        ),
+        with: { user: true },
+      });
+      leaderUser = leader?.user;
+      teamName = existing.eventTeam.name;
+
+      if (existing.eventTeam.eventId) {
+        const eventData = await db.query.events.findFirst({
+          where: eq(events.id, existing.eventTeam.eventId),
+          columns: { title: true },
+        });
+        eventNameStr = eventData?.title;
+      }
+
+      if (leaderUser?.email) {
+        sendPaymentVerifiedEmail({
+          to: leaderUser.email,
+          leaderName: leaderUser.name || "Leader",
+          teamName,
+          eventName: eventNameStr,
+        }).catch(console.error);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to notify leader:", error);
   }
 
   return { paymentStatus: newStatus };

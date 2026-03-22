@@ -23,6 +23,17 @@ import {
   useState,
   useTransition,
 } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -255,32 +266,51 @@ export function PaymentsTable() {
           const { id, paymentStatus } = row.original;
           const isPaid = paymentStatus === "Paid";
           const isProcessing = verifyingIds.has(id);
+          if (isPaid) {
+            return (
+              <Button
+                size="sm"
+                variant="default"
+                disabled
+                className="bg-green-600 text-white min-w-[90px] gap-1 opacity-100"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Verified</span>
+              </Button>
+            );
+          }
+
           return (
-            <Button
-              size="sm"
-              variant={isPaid ? "default" : "outline"}
-              disabled={isProcessing}
-              onClick={() => void handleToggleVerify(id)}
-              className={
-                isPaid
-                  ? "bg-green-600 text-white hover:bg-destructive gap-1 min-w-[90px] group transition-colors"
-                  : "gap-1 min-w-[90px]"
-              }
-            >
-              {isPaid ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5 group-hover:hidden" />
-                  <X className="h-3.5 w-3.5 hidden group-hover:block" />
-                  <span className="group-hover:hidden">Verified</span>
-                  <span className="hidden group-hover:block">Revoke</span>
-                </>
-              ) : (
-                <>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isProcessing}
+                  className="gap-1 min-w-[90px]"
+                >
                   <Circle className="h-3.5 w-3.5" />
                   <span>Verify</span>
-                </>
-              )}
-            </Button>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Verification</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to verify this payment? This action
+                    cannot be reversed and the team leader will be notified.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => void handleToggleVerify(id)}
+                  >
+                    Verify
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           );
         },
       }),
