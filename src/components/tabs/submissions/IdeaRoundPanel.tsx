@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,11 @@ export function IdeaRoundPanel({
   const uniqueTracks = Array.from(
     new Set(allocations.map((a) => a.trackName).filter(Boolean)),
   ) as string[];
+
+  const scoredCount = useMemo(() => {
+    return allocations.filter((a) => a.scoredCriteria === a.totalCriteria).length;
+  }, [allocations]);
+  const pendingCount = allocations.length - scoredCount;
 
   const filteredAllocations = useMemo(() => {
     const result = allocations.filter((alloc) => {
@@ -180,6 +186,27 @@ export function IdeaRoundPanel({
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scored</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{scoredCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Pencil className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingCount}</div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <Select
           value={trackFilter}
