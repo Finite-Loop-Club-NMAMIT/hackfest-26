@@ -148,9 +148,11 @@ export async function getPaymentsForDashboard({
       with: {
         team: {
           columns: { id: true, name: true },
+          with: { users: { columns: { id: true } } },
         },
         eventTeam: {
           columns: { id: true, name: true },
+          with: { members: { columns: { id: true } } },
         },
         user: {
           columns: { id: true, name: true, email: true },
@@ -180,10 +182,21 @@ export async function getPaymentsForDashboard({
   const total = totalResult[0]?.total ?? 0;
 
   const processedPayments = filteredPayments.map((p) => {
-    const defaultTeam = p.paymentType === "EVENT" ? p.eventTeam : p.team;
+    let defaultTeam = null;
+    let memberCount = 0;
+
+    if (p.paymentType === "EVENT" && p.eventTeam) {
+      defaultTeam = { id: p.eventTeam.id, name: p.eventTeam.name };
+      memberCount = p.eventTeam.members?.length || 0;
+    } else if (p.team) {
+      defaultTeam = { id: p.team.id, name: p.team.name };
+      memberCount = p.team.users?.length || 0;
+    }
+
     return {
       ...p,
       team: defaultTeam,
+      memberCount,
       eventTeam: undefined,
     };
   });

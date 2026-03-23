@@ -63,6 +63,7 @@ type Payment = {
   createdAt: string;
   team: { id: string; name: string } | null;
   user: { id: string; name: string | null; email: string | null } | null;
+  memberCount: number;
 };
 
 type Pagination = {
@@ -215,6 +216,10 @@ export function PaymentsTable() {
       columnHelper.accessor((row) => row.team?.name ?? "—", {
         id: "teamName",
         header: "Team",
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("memberCount", {
+        header: "Members",
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor("paymentTransactionId", {
