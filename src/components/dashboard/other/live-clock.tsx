@@ -47,7 +47,7 @@ export function LiveClock() {
       <div className="text-lg font-medium text-muted-foreground">
         {currentTime.toLocaleDateString([], { weekday: "long" })}
       </div>
-      <div className="mt-1 text-5xl font-bold tracking-tight text-foreground">
+      <div className="mt-1 text-4xl font-bold tracking-tight text-foreground">
         {currentTime.toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
