@@ -67,7 +67,7 @@ export default async function DashboardPage() {
     (role) => role.name === "ORGANIZER",
   );
   const hasRoundTwoEvaluatorRole = dashboardUser.roles.some(
-    (role) => role.name === "ROUND_ONE_EVALUATOR",
+    (role) => role.name === "ROUND_TWO_EVALUATOR",
   );
   const canAccessDashboard =
     hasPermission(dashboardUser, "dashboard:access") ||
