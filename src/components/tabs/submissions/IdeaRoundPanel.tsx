@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { Textarea } from "~/components/ui/textarea";
 import type { IdeaAllocation } from "./types";
 
 interface IdeaRoundPanelProps {
@@ -59,6 +60,7 @@ export function IdeaRoundPanel({
   >([]);
   const [loadingCriteria, setLoadingCriteria] = useState(false);
   const [savingScores, setSavingScores] = useState(false);
+  const [comment, setComment] = useState("");
 
   const [trackFilter, setTrackFilter] = useState<string>("all");
   const [scoreFilter, setScoreFilter] = useState<string>("pending");
@@ -101,7 +103,6 @@ export function IdeaRoundPanel({
       return a.teamName.localeCompare(b.teamName);
     });
 
-    setCurrentPage(1);
     return result;
   }, [allocations, trackFilter, scoreFilter]);
 
@@ -128,6 +129,7 @@ export function IdeaRoundPanel({
       if (!res.ok) throw new Error("Failed to load criteria");
       const data = await res.json();
       setCriteria(data.criteria);
+      setComment(data.comment ?? "");
     } catch {
       toast.error("Failed to load scoring criteria");
       setScoringAssignmentId(null);
@@ -166,6 +168,7 @@ export function IdeaRoundPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assignmentId: scoringAssignmentId,
+          comment: comment.trim() || null,
           scores: criteria.map((c) => ({
             criteriaId: c.id,
             rawScore: c.rawScore,
@@ -177,6 +180,7 @@ export function IdeaRoundPanel({
 
       toast.success("Scores saved successfully");
       setScoringAssignmentId(null);
+      setComment("");
       onScoresSaved();
     } catch {
       toast.error("Failed to save scores");
@@ -211,7 +215,10 @@ export function IdeaRoundPanel({
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <Select
           value={trackFilter}
-          onValueChange={(value) => setTrackFilter(value)}
+          onValueChange={(value) => {
+            setTrackFilter(value);
+            setCurrentPage(1);
+          }}
         >
           <SelectTrigger className="h-9 w-44 text-sm font-normal">
             <SelectValue placeholder="Filter by Track" />
@@ -230,7 +237,10 @@ export function IdeaRoundPanel({
 
         <Select
           value={scoreFilter}
-          onValueChange={(value) => setScoreFilter(value)}
+          onValueChange={(value) => {
+            setScoreFilter(value);
+            setCurrentPage(1);
+          }}
         >
           <SelectTrigger className="h-9 w-44 text-sm font-normal">
             <SelectValue placeholder="Scoring Status" />
@@ -399,8 +409,8 @@ export function IdeaRoundPanel({
         open={!!scoringAssignmentId}
         onOpenChange={(open) => !open && setScoringAssignmentId(null)}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader className="flex-none">
             <DialogTitle>Score {activeAllocation?.teamName}</DialogTitle>
           </DialogHeader>
 
@@ -409,32 +419,51 @@ export function IdeaRoundPanel({
               Loading criteria...
             </div>
           ) : (
-            <div className="py-4 space-y-4">
-              {criteria.map((c) => (
-                <div
-                  key={c.id}
-                  className="grid gap-2 border-b pb-4 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-medium">
-                      {c.criteriaName}
-                    </Label>
-                    <span className="text-sm text-muted-foreground">
-                      Max: {c.maxScore}
-                    </span>
+            <>
+              <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2 -mr-2">
+                {criteria.map((c) => (
+                  <div
+                    key={c.id}
+                    className="grid gap-2 border-b pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium">
+                        {c.criteriaName}
+                      </Label>
+                      <span className="text-sm text-muted-foreground">
+                        Max: {c.maxScore}
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      max={c.maxScore}
+                      value={c.rawScore.toString()}
+                      onChange={(e) => handleScoreChange(c.id, e.target.value)}
+                      className="w-full text-lg"
+                    />
                   </div>
-                  <Input
-                    type="number"
-                    min="0"
-                    max={c.maxScore}
-                    value={c.rawScore.toString()}
-                    onChange={(e) => handleScoreChange(c.id, e.target.value)}
-                    className="w-full text-lg"
-                  />
-                </div>
-              ))}
+                ))}
 
-              <div className="pt-4 flex justify-between items-center border-t">
+                <div className="grid gap-2 pt-2">
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Comments (optional)
+                  </Label>
+                  <Textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Add your comments here..."
+                    className="resize-none text-sm"
+                    rows={3}
+                    maxLength={1000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {comment.length}/1000
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-between items-center border-t flex-none">
                 <div className="text-lg font-semibold">
                   Total: {criteria.reduce((sum, c) => sum + c.rawScore, 0)}
                   <span className="text-sm text-muted-foreground font-normal ml-1">
@@ -445,7 +474,7 @@ export function IdeaRoundPanel({
                   {savingScores ? "Saving..." : "Save Scores"}
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

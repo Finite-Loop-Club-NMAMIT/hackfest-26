@@ -1,0 +1,1 @@
+ALTER TABLE "idea_team_evaluations" ADD COLUMN "comment" text;

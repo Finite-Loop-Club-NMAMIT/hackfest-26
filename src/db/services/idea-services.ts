@@ -859,9 +859,20 @@ export async function fetchIdeaScores(
       existingScores.map((score) => [score.criteriaId, score.rawScore]),
     );
 
+    const existingEvaluation = await db.query.ideaTeamEvaluations.findFirst({
+      where: (e, { and, eq }) =>
+        and(
+          eq(e.roundId, assignment.roundId),
+          eq(e.teamId, assignment.teamId),
+          eq(e.evaluatorId, user.id),
+        ),
+      columns: { comment: true },
+    });
+
     return {
       assignmentId: assignment.id,
       roundStatus: round?.status ?? "Draft",
+      comment: existingEvaluation?.comment ?? null,
       criteria: criteria.map((item) => ({
         ...item,
         rawScore: scoreMap.get(item.id) ?? 0,
@@ -882,6 +893,7 @@ const saveScoresSchema = z.object({
       rawScore: z.number().int().min(0),
     }),
   ),
+  comment: z.string().max(1000).optional().nullable(),
 });
 
 type SaveIdeaScoresInput = z.infer<typeof saveScoresSchema>;
@@ -896,7 +908,7 @@ export async function saveIdeaScores(
       throw new AppError("Invalid input", 400);
     }
 
-    const { assignmentId, scores } = parsed.data;
+    const { assignmentId, scores, comment } = parsed.data;
 
     const assignment = await db.query.ideaRoundAssignments.findFirst({
       where: (a, { and, eq }) =>
@@ -995,6 +1007,7 @@ export async function saveIdeaScores(
         teamId: assignment.teamId,
         evaluatorId: user.id,
         rawTotalScore: totalRawScore,
+        comment: comment ?? null,
       })
       .onConflictDoUpdate({
         target: [
@@ -1002,7 +1015,7 @@ export async function saveIdeaScores(
           ideaTeamEvaluations.teamId,
           ideaTeamEvaluations.evaluatorId,
         ],
-        set: { rawTotalScore: totalRawScore },
+        set: { rawTotalScore: totalRawScore, comment: comment ?? null },
       });
 
     await addEvaluationNormalizationJob(user.id, assignment.roundId);
@@ -1336,6 +1349,7 @@ export async function fetchLeaderboardTeamDetails(
         evaluatorName: dashboardUsers.name,
         rawTotalScore: ideaTeamEvaluations.rawTotalScore,
         normalizedTotalScore: ideaTeamEvaluations.normalizedTotalScore,
+        comment: ideaTeamEvaluations.comment,
       })
       .from(ideaTeamEvaluations)
       .innerJoin(
@@ -1397,6 +1411,7 @@ export async function fetchLeaderboardTeamDetails(
         evaluatorName: ev.evaluatorName,
         rawTotalScore: ev.rawTotalScore,
         normalizedTotalScore: ev.normalizedTotalScore,
+        comment: ev.comment ?? null,
         criteriaScores,
       };
     });

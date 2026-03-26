@@ -4,6 +4,16 @@ import { ChevronLeft, ChevronRight, Eye, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useDashboardPermissions } from "~/components/dashboard/permissions-context";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -59,6 +69,7 @@ type EvaluatorBreakdown = {
   evaluatorName: string;
   rawTotalScore: number;
   normalizedTotalScore: number;
+  comment: string | null;
   criteriaScores: CriteriaScore[];
 };
 
@@ -77,6 +88,7 @@ export function LeaderboardPanel() {
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMovingTeams, setIsMovingTeams] = useState(false);
+  const [confirmMoveOpen, setConfirmMoveOpen] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [_refreshKey, setRefreshKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -460,7 +472,7 @@ export function LeaderboardPanel() {
 
         {permissions.isAdmin && (
           <Button
-            onClick={handleMoveToRound2}
+            onClick={() => setConfirmMoveOpen(true)}
             disabled={
               currentRound?.status === "Completed" ||
               isTerminalStage ||
@@ -644,6 +656,33 @@ export function LeaderboardPanel() {
         </div>
       )}
 
+      <AlertDialog open={confirmMoveOpen} onOpenChange={setConfirmMoveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move Teams to Next Round?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to move{" "}
+              <span className="font-semibold text-foreground">
+                {selectedTeamIds.length} team
+                {selectedTeamIds.length !== 1 ? "s" : ""}
+              </span>{" "}
+              to the next stage. This action cannot be easily undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmMoveOpen(false);
+                handleMoveToRound2();
+              }}
+            >
+              Confirm Move
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -727,6 +766,15 @@ export function LeaderboardPanel() {
                       </TableBody>
                     </Table>
                   </div>
+
+                  {evaluator.comment && (
+                    <div className="mt-3 px-3 py-2 rounded-md bg-muted/50 border border-muted text-sm text-muted-foreground italic whitespace-pre-wrap">
+                      <span className="not-italic font-medium text-foreground mr-1">
+                        Comment:
+                      </span>
+                      {evaluator.comment}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

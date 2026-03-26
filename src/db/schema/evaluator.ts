@@ -154,6 +154,8 @@ export const ideaTeamEvaluations = pgTable(
     normalizedTotalScore: doublePrecision("normalized_total_score")
       .notNull()
       .default(0),
+
+    comment: text("comment"),
   },
   (table) => [
     unique("unique_team_evaluation").on(
