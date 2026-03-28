@@ -25,7 +25,7 @@ const timelineEvents = [
     accentRgb: "248,113,113",
   },
   {
-    day: "28",
+    day: "30",
     month: "MAR",
     year: "2026",
     title: "The Captain's Call",

@@ -42,7 +42,7 @@ const JOURNEY_STEPS = [
   },
   {
     icon: Trophy,
-    title: "Final Shortlist - March 28",
+    title: "Final Shortlist - March 30",
     description:
       "Previous year's judges select the top 60 shortlisted teams. Results announced on March 15.",
     accent: "#10b981",
