@@ -197,7 +197,7 @@ export function TeamDetailsClient({
                   Congratulations! Your team has been selected! Please complete
                   the payment of{" "}
                   <b>{calculateTotalAmount(400, members.length)}rs</b> to
-                  confirm your participation.
+                  confirm your participation by <b>11:59 PM, April 1st, 2026.</b>
                 </p>
                 {team.leaderId === user.id ? (
                   paymentsOpen ? (
@@ -547,8 +547,8 @@ export function TeamDetailsClient({
                 </span>
                 <span
                   className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${team.isCompleted
-                      ? "bg-green-100 text-green-700 border border-green-200"
-                      : "bg-blue-100 text-blue-700 border border-blue-200"
+                    ? "bg-green-100 text-green-700 border border-green-200"
+                    : "bg-blue-100 text-blue-700 border border-blue-200"
                     }`}
                 >
                   {team.isCompleted ? "Completed" : "Incomplete"}
@@ -564,12 +564,12 @@ export function TeamDetailsClient({
                     </span>
                     <span
                       className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${team.paymentStatus === "Paid"
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : team.paymentStatus === "Refunded"
-                            ? "bg-red-100 text-red-700 border border-red-200"
-                            : hasPendingPayment
-                              ? "bg-blue-100 text-blue-700 border border-blue-200"
-                              : "bg-amber-100 text-amber-700 border border-amber-200"
+                        ? "bg-green-100 text-green-700 border border-green-200"
+                        : team.paymentStatus === "Refunded"
+                          ? "bg-red-100 text-red-700 border border-red-200"
+                          : hasPendingPayment
+                            ? "bg-blue-100 text-blue-700 border border-blue-200"
+                            : "bg-amber-100 text-amber-700 border border-amber-200"
                         }`}
                     >
                       {team.paymentStatus === "Paid"
