@@ -39,6 +39,7 @@ import {
   ideaTeamRoundScores,
   participants,
   roles,
+  selected,
   teams,
   tracks,
 } from "../schema";
@@ -1421,5 +1422,94 @@ export async function fetchLeaderboardTeamDetails(
     if (error instanceof AppError) throw error;
     console.error("Error fetching leaderboard team details:", error);
     throw new AppError("Failed to fetch leaderboard team details", 500);
+  }
+}
+
+export async function fetchAllSubmissionsDetails() {
+  try {
+    const rows = await db
+      .select({
+        teamId: teams.id,
+        teamName: teams.name,
+        collegeName: colleges.name,
+        stateName: colleges.state,
+        trackId: tracks.id,
+        trackName: tracks.name,
+        teamStage: teams.teamStage,
+        teamProgress: selected.teamProgress,
+        pptUrl: ideaSubmission.pptUrl,
+        createdAt: ideaSubmission.createdAt,
+      })
+      .from(teams)
+      .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(participants, eq(participants.id, teams.leaderId))
+      .leftJoin(colleges, eq(colleges.id, participants.collegeId))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .leftJoin(selected, eq(selected.teamId, teams.id))
+      .orderBy(desc(ideaSubmission.createdAt));
+
+    return rows;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("Error fetching all submissions details:", error);
+    throw new AppError("Failed to fetch all submissions details", 500);
+  }
+}
+
+export async function exportTeamsData(teamIds: string[]) {
+  try {
+    if (!teamIds || teamIds.length === 0) return [];
+
+    const teamsData = await db
+      .select({
+        teamId: teams.id,
+        teamName: teams.name,
+        leaderName: participants.name,
+        leaderEmail: participants.email,
+        collegeName: colleges.name,
+        stateName: colleges.state,
+        trackName: tracks.name,
+        teamStage: teams.teamStage,
+        teamProgress: selected.teamProgress,
+        pptUrl: ideaSubmission.pptUrl,
+      })
+      .from(teams)
+      .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(participants, eq(participants.id, teams.leaderId))
+      .leftJoin(colleges, eq(colleges.id, participants.collegeId))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .leftJoin(selected, eq(selected.teamId, teams.id))
+      .where(inArray(teams.id, teamIds));
+
+    const allMembers = await db
+      .select({
+        teamId: participants.teamId,
+        email: participants.email,
+      })
+      .from(participants)
+      .where(
+        and(
+          isNotNull(participants.teamId),
+          inArray(participants.teamId, teamIds),
+        ),
+      );
+
+    const emailMap = new Map<string, string[]>();
+    for (const member of allMembers) {
+      if (member.teamId && member.email) {
+        const list = emailMap.get(member.teamId) || [];
+        list.push(member.email);
+        emailMap.set(member.teamId, list);
+      }
+    }
+
+    return teamsData.map((t) => ({
+      ...t,
+      allEmails: (emailMap.get(t.teamId) || []).join(", "),
+    }));
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("Error exporting teams data:", error);
+    throw new AppError("Failed to export teams data", 500);
   }
 }

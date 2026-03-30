@@ -261,7 +261,7 @@ export default async function DashboardPage() {
                       Ask yourself:
                     </p>
                     <ul className="space-y-2">
-                      {c.questions.map((q, i) => (
+                      {c.questions.map((q, _i) => (
                         <li
                           key={q.slice(0, 30)}
                           className="flex items-start gap-2 text-sm text-muted-foreground"

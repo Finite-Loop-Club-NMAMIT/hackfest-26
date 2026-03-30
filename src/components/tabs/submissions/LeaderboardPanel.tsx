@@ -80,6 +80,7 @@ export function LeaderboardPanel() {
 
   const [selectedRoundId, setSelectedRoundId] = useState<string>("all");
   const [trackId, setTrackId] = useState("all");
+  const [stateNameFilter, setStateNameFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"normalized" | "raw" | "average">(
     "normalized",
@@ -89,6 +90,7 @@ export function LeaderboardPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMovingTeams, setIsMovingTeams] = useState(false);
   const [confirmMoveOpen, setConfirmMoveOpen] = useState(false);
+  const [confirmRoundName, setConfirmRoundName] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [_refreshKey, setRefreshKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,10 +149,23 @@ export function LeaderboardPanel() {
     );
   }, [rows]);
 
+  const uniqueStates = useMemo(() => {
+    const states = new Set<string>();
+    for (const row of rows) {
+      if (row.stateName) {
+        states.add(row.stateName);
+      }
+    }
+    return Array.from(states).sort();
+  }, [rows]);
+
   const filteredRows = useMemo(() => {
     let result = rows;
     if (trackId !== "all") {
       result = result.filter((r) => r.trackId === trackId);
+    }
+    if (stateNameFilter !== "all") {
+      result = result.filter((r) => r.stateName === stateNameFilter);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -177,12 +192,12 @@ export function LeaderboardPanel() {
         return scoreB - scoreA;
       })
       .map((row, index) => ({ ...row, rank: index + 1 }));
-  }, [rows, trackId, search, sortBy]);
+  }, [rows, trackId, stateNameFilter, search, sortBy]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset page on filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [trackId, search, sortBy, selectedRoundId]);
+  }, [trackId, stateNameFilter, search, sortBy, selectedRoundId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const paginatedRows = filteredRows.slice(
@@ -429,6 +444,25 @@ export function LeaderboardPanel() {
           </SelectContent>
         </Select>
 
+        <Select
+          value={stateNameFilter}
+          onValueChange={(value) => setStateNameFilter(value)}
+        >
+          <SelectTrigger className="h-9 w-44 text-sm font-normal">
+            <SelectValue placeholder="State" />
+          </SelectTrigger>
+          <SelectContent className="text-sm">
+            <SelectItem value="all" className="text-sm">
+              All states
+            </SelectItem>
+            {uniqueStates.map((state) => (
+              <SelectItem key={state} value={state} className="text-sm">
+                {state}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={selectedRoundId} onValueChange={setSelectedRoundId}>
           <SelectTrigger className="h-9 w-48 text-sm font-normal">
             <SelectValue placeholder="Select Round" />
@@ -474,7 +508,6 @@ export function LeaderboardPanel() {
           <Button
             onClick={() => setConfirmMoveOpen(true)}
             disabled={
-              currentRound?.status === "Completed" ||
               isTerminalStage ||
               selectedTeamIds.length === 0 ||
               isMovingTeams ||
@@ -529,6 +562,7 @@ export function LeaderboardPanel() {
               <TableHead>Team</TableHead>
               <TableHead className="text-center w-12">PPT</TableHead>
               <TableHead>College/University</TableHead>
+              <TableHead>State/City</TableHead>
               <TableHead>Track</TableHead>
               <TableHead className="text-center">Evaluators</TableHead>
               <TableHead className="text-right">Raw Total</TableHead>
@@ -576,6 +610,7 @@ export function LeaderboardPanel() {
                   )}
                 </TableCell>
                 <TableCell>{row.collegeName ?? "-"}</TableCell>
+                <TableCell>{row.stateName ?? "-"}</TableCell>
                 <TableCell>{row.trackName || "-"}</TableCell>
                 <TableCell className="text-center">
                   {row.evaluatorCount}
@@ -656,7 +691,13 @@ export function LeaderboardPanel() {
         </div>
       )}
 
-      <AlertDialog open={confirmMoveOpen} onOpenChange={setConfirmMoveOpen}>
+      <AlertDialog
+        open={confirmMoveOpen}
+        onOpenChange={(open) => {
+          setConfirmMoveOpen(open);
+          if (!open) setConfirmRoundName("");
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move Teams to Next Round?</AlertDialogTitle>
@@ -668,12 +709,40 @@ export function LeaderboardPanel() {
               </span>{" "}
               to the next stage. This action cannot be easily undone.
             </AlertDialogDescription>
+            {currentRound?.status === "Completed" && (
+              <div className="p-3 bg-red-500/10 text-red-600 rounded-md border border-red-500/20 text-sm font-medium mt-4">
+                ⚠️ Warning: The round "{currentRound?.name}" is already marked as
+                completed. Are you sure you want to move teams again?
+              </div>
+            )}
+            <div className="space-y-2 pt-4 text-left">
+              <label htmlFor="confirm" className="text-sm font-medium text-foreground">
+                Please type{" "}
+                <span className="font-bold select-all bg-muted px-1 py-0.5 rounded">
+                  {currentRound?.name}
+                </span>{" "}
+                to confirm.
+              </label>
+              <Input
+                id="confirm"
+                value={confirmRoundName}
+                onChange={(e) => setConfirmRoundName(e.target.value)}
+                placeholder="Enter round name"
+                className="w-full"
+              />
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              disabled={confirmRoundName !== currentRound?.name}
+              onClick={(e) => {
+                if (confirmRoundName !== currentRound?.name) {
+                  e.preventDefault();
+                  return;
+                }
                 setConfirmMoveOpen(false);
+                setConfirmRoundName("");
                 handleMoveToRound2();
               }}
             >

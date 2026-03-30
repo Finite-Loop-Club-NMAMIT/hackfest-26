@@ -7,6 +7,7 @@ import {
   useDashboardUser,
 } from "~/components/dashboard/permissions-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { AllSubmissions } from "./submissions/AllSubmissions";
 import { IdeaRoundPanel } from "./submissions/IdeaRoundPanel";
 import { IdeaRoundSettingsPanel } from "./submissions/IdeaRoundSettingsPanel";
 import { LeaderboardPanel } from "./submissions/LeaderboardPanel";
@@ -88,6 +89,7 @@ export function SubmissionsTab() {
             </TabsTrigger>
           ))}
           <PermissionGate beAdmin>
+            <TabsTrigger value="all">All Submissions</TabsTrigger>
             <TabsTrigger value="LEADERBOARD">Leaderboard</TabsTrigger>
             <TabsTrigger value="SETTINGS">Settings</TabsTrigger>
           </PermissionGate>
@@ -101,6 +103,12 @@ export function SubmissionsTab() {
             />
           </TabsContent>
         ))}
+
+        {permissions.beAdmin && (
+          <TabsContent value="all">
+            <AllSubmissions />
+          </TabsContent>
+        )}
 
         {permissions.beAdmin && (
           <TabsContent value="LEADERBOARD">
