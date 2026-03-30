@@ -60,6 +60,7 @@ type Payment = {
   paymentStatus: PaymentStatus;
   paymentScreenshotUrl: string | null;
   paymentTransactionId: string | null;
+  paymentType: string;
   createdAt: string;
   team: { id: string; name: string } | null;
   user: { id: string; name: string | null; email: string | null } | null;
@@ -217,6 +218,10 @@ export function PaymentsTable() {
         id: "teamName",
         header: "Team",
         cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("paymentType", {
+        header: "Type",
+        cell: (info) => <Badge variant="secondary" className="text-xs font-normal whitespace-nowrap">{info.getValue()}</Badge>,
       }),
       columnHelper.accessor("memberCount", {
         header: "Members",
