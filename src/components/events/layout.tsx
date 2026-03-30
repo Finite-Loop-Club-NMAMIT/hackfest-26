@@ -136,7 +136,7 @@ const Events = ({
         if (response.isHackathonSelected && hackfestSelected && response.resultsOut) {
           setHackfestSelected(true);
           setModalType("selected");
-        } else if (response.hasSubmittedIdea && !response.isHackathonSelected) {
+        } else if (response.hasSubmittedIdea && !response.isHackathonSelected && !response.resultsOut) {
           setModalType("awaiting");
         }
       }
