@@ -72,6 +72,7 @@ type TeamDetails = {
   user: { id: string; name: string; email: string; teamId: string | null };
   collegeName: string;
   hasPendingPayment?: boolean;
+  paymentSubmitted?: boolean;
 };
 
 export function TeamDetailsClient({
@@ -124,6 +125,7 @@ export function TeamDetailsClient({
     user,
     collegeName,
     hasPendingPayment,
+    paymentSubmitted,
   } = data;
 
   const siteSettings = Array.isArray(siteSettingsData)
@@ -159,7 +161,7 @@ export function TeamDetailsClient({
           );
 
         case "PAYMENT_PENDING":
-          if (hasPendingPayment) {
+          if (hasPendingPayment && paymentSubmitted) {
             return (
               <Card className="border-blue-200 bg-white/90 backdrop-blur-md shadow-lg">
                 <CardHeader>
@@ -544,11 +546,10 @@ export function TeamDetailsClient({
                   Status
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${
-                    team.isCompleted
+                  className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${team.isCompleted
                       ? "bg-green-100 text-green-700 border border-green-200"
                       : "bg-blue-100 text-blue-700 border border-blue-200"
-                  }`}
+                    }`}
                 >
                   {team.isCompleted ? "Completed" : "Incomplete"}
                 </span>
@@ -562,15 +563,14 @@ export function TeamDetailsClient({
                       Payment
                     </span>
                     <span
-                      className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${
-                        team.paymentStatus === "Paid"
+                      className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider shadow-sm ${team.paymentStatus === "Paid"
                           ? "bg-green-100 text-green-700 border border-green-200"
                           : team.paymentStatus === "Refunded"
                             ? "bg-red-100 text-red-700 border border-red-200"
                             : hasPendingPayment
                               ? "bg-blue-100 text-blue-700 border border-blue-200"
                               : "bg-amber-100 text-amber-700 border border-amber-200"
-                      }`}
+                        }`}
                     >
                       {team.paymentStatus === "Paid"
                         ? "Paid"

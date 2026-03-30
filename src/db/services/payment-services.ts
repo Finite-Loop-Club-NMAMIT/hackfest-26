@@ -125,6 +125,27 @@ export async function hasPendingPayment(teamId: string) {
   return existingTeam?.paymentStatus === "Pending";
 }
 
+export async function checkPayment(teamId: string) {
+  const leaderUser = await db.query.teams.findFirst({
+    where: eq(teams.id, teamId),
+    columns: { leaderId: true },
+  })
+
+  if (!leaderUser) {
+    throw new AppError("TEAM_NOT_FOUND", 404);
+  }
+
+  const existingPayment = await db.query.payment.findFirst({
+    where: eq(payment.userId, leaderUser.leaderId),
+    columns: { paymentStatus: true },
+  });
+
+  if (!existingPayment) {
+    return false;
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // Fetch payments for admin dashboard
 // ---------------------------------------------------------------------------
