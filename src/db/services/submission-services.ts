@@ -82,83 +82,83 @@ export async function promoteLeaderboardTeams(
   return { movedCount: movedRows.length };
 }
 
-export async function bulkPromoteSubmissions(
-  teamIds: string[],
-  nextStage: TeamStage,
-  user: DashboardUser,
-) {
-  const isAdminUser = isAdmin(user);
-  if (!isAdminUser) {
-    throw new AppError("Unauthorized", 403, {
-      title: "Unauthorized",
-      description: "You do not have permission to perform this action.",
-    });
-  }
-  const uniqueTeamIds = Array.from(new Set(teamIds.filter(Boolean)));
+// export async function bulkPromoteSubmissions(
+//   teamIds: string[],
+//   nextStage: TeamStage,
+//   user: DashboardUser,
+// ) {
+//   const isAdminUser = isAdmin(user);
+//   if (!isAdminUser) {
+//     throw new AppError("Unauthorized", 403, {
+//       title: "Unauthorized",
+//       description: "You do not have permission to perform this action.",
+//     });
+//   }
+//   const uniqueTeamIds = Array.from(new Set(teamIds.filter(Boolean)));
 
-  if (uniqueTeamIds.length === 0) {
-    return { movedCount: 0 };
-  }
+//   if (uniqueTeamIds.length === 0) {
+//     return { movedCount: 0 };
+//   }
 
-  const eligibleRows = await db
-    .select({ id: teams.id, teamStage: teams.teamStage })
-    .from(teams)
-    .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
-    .where(inArray(teams.id, uniqueTeamIds));
+//   const eligibleRows = await db
+//     .select({ id: teams.id, teamStage: teams.teamStage })
+//     .from(teams)
+//     .innerJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+//     .where(inArray(teams.id, uniqueTeamIds));
 
-  // Filter out teams that are already at the target stage
-  const eligibleTeamIds = eligibleRows
-    .filter((r) => r.teamStage !== nextStage)
-    .map((row) => row.id);
+//   // Filter out teams that are already at the target stage
+//   const eligibleTeamIds = eligibleRows
+//     .filter((r) => r.teamStage !== nextStage)
+//     .map((row) => row.id);
 
-  if (eligibleTeamIds.length === 0) {
-    return { movedCount: 0 };
-  }
+//   if (eligibleTeamIds.length === 0) {
+//     return { movedCount: 0 };
+//   }
 
-  let movedRows: { id: string }[] = [];
-  await db.transaction(async (tx) => {
-    // Delete from all stage tables (cleanup old stage data)
-    await tx
-      .delete(notSelected)
-      .where(inArray(notSelected.teamId, eligibleTeamIds));
-    await tx
-      .delete(semiSelected)
-      .where(inArray(semiSelected.teamId, eligibleTeamIds));
-    if (nextStage !== "SELECTED") {
-      await tx
-        .delete(selected)
-        .where(inArray(selected.teamId, eligibleTeamIds));
-    }
+//   let movedRows: { id: string }[] = [];
+//   await db.transaction(async (tx) => {
+//     // Delete from all stage tables (cleanup old stage data)
+//     await tx
+//       .delete(notSelected)
+//       .where(inArray(notSelected.teamId, eligibleTeamIds));
+//     await tx
+//       .delete(semiSelected)
+//       .where(inArray(semiSelected.teamId, eligibleTeamIds));
+//     if (nextStage !== "SELECTED") {
+//       await tx
+//         .delete(selected)
+//         .where(inArray(selected.teamId, eligibleTeamIds));
+//     }
 
-    if (nextStage === "NOT_SELECTED") {
-      await tx.insert(notSelected).values(
-        eligibleTeamIds.map((id) => ({
-          teamId: id,
-        })),
-      );
-    } else if (nextStage === "SEMI_SELECTED") {
-      await tx.insert(semiSelected).values(
-        eligibleTeamIds.map((id) => ({
-          teamId: id,
-        })),
-      );
-    } else if (nextStage === "SELECTED") {
-      await tx.insert(selected).values(
-        eligibleTeamIds.map((id) => ({
-          teamId: id,
-        })),
-      );
-    }
+//     if (nextStage === "NOT_SELECTED") {
+//       await tx.insert(notSelected).values(
+//         eligibleTeamIds.map((id) => ({
+//           teamId: id,
+//         })),
+//       );
+//     } else if (nextStage === "SEMI_SELECTED") {
+//       await tx.insert(semiSelected).values(
+//         eligibleTeamIds.map((id) => ({
+//           teamId: id,
+//         })),
+//       );
+//     } else if (nextStage === "SELECTED") {
+//       await tx.insert(selected).values(
+//         eligibleTeamIds.map((id) => ({
+//           teamId: id,
+//         })),
+//       );
+//     }
 
-    movedRows = await tx
-      .update(teams)
-      .set({ teamStage: nextStage })
-      .where(inArray(teams.id, eligibleTeamIds))
-      .returning({ id: teams.id });
-  });
+//     movedRows = await tx
+//       .update(teams)
+//       .set({ teamStage: nextStage })
+//       .where(inArray(teams.id, eligibleTeamIds))
+//       .returning({ id: teams.id });
+//   });
 
-  return { movedCount: movedRows.length };
-}
+//   return { movedCount: movedRows.length };
+// }
 
 export async function listEvaluatorAccessRoles() {
   const evaluatorPermission = await db.query.permissions.findFirst({

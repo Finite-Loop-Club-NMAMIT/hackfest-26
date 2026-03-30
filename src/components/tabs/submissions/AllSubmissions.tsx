@@ -230,28 +230,28 @@ export function AllSubmissions() {
     );
   };
 
-  const handleMove = async (
-    nextStage: "NOT_SELECTED" | "SEMI_SELECTED" | "SELECTED",
-  ) => {
-    if (selectedTeamIds.length === 0) return;
-    setIsMoving(true);
-    try {
-      const res = await fetch("/api/dashboard/submissions/bulk-move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamIds: selectedTeamIds, nextStage }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to move teams");
-      toast.success(data.message);
-      setSelectedTeamIds([]);
-      setRefreshKey((prev) => prev + 1);
-    } catch (error: any) {
-      toast.error(error.message || "Error moving teams");
-    } finally {
-      setIsMoving(false);
-    }
-  };
+  // const handleMove = async (
+  //   nextStage: "NOT_SELECTED" | "SEMI_SELECTED" | "SELECTED",
+  // ) => {
+  //   if (selectedTeamIds.length === 0) return;
+  //   setIsMoving(true);
+  //   try {
+  //     const res = await fetch("/api/dashboard/submissions/bulk-move", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ teamIds: selectedTeamIds, nextStage }),
+  //     });
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.message || "Failed to move teams");
+  //     toast.success(data.message);
+  //     setSelectedTeamIds([]);
+//     setRefreshKey((prev) => prev + 1);
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Error moving teams");
+  //   } finally {
+  //     setIsMoving(false);
+  //   }
+  // };
 
   const handleDownload = async () => {
     if (selectedTeamIds.length === 0) return;
@@ -415,7 +415,7 @@ export function AllSubmissions() {
 
         {selectedTeamIds.length > 0 && (
           <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
-            <Button
+            {/* <Button
               disabled={isMoving || isExporting}
               onClick={() => handleMove("NOT_SELECTED")}
               variant="destructive"
@@ -437,7 +437,7 @@ export function AllSubmissions() {
               className="h-9 text-sm"
             >
               Move {selectedTeamIds.length} to Selected
-            </Button>
+            </Button> */}
             <Button
               disabled={isMoving || isExporting}
               onClick={() => setDownloadDialogOpen(true)}

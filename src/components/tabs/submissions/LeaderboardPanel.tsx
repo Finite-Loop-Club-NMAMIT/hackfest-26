@@ -542,6 +542,7 @@ export function LeaderboardPanel() {
             onClick={() => setConfirmMoveOpen(true)}
             disabled={
               isTerminalStage ||
+              currentRound?.status === "Completed" ||
               selectedTeamIds.length === 0 ||
               isMovingTeams ||
               isLoading
@@ -938,15 +939,15 @@ export function LeaderboardPanel() {
                     ? statesBreakdown
                     : tracksBreakdown
                 ).length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={2}
-                      className="text-center text-muted-foreground py-4 text-sm"
-                    >
-                      No data available based on current selection.
-                    </TableCell>
-                  </TableRow>
-                )}
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="text-center text-muted-foreground py-4 text-sm"
+                      >
+                        No data available based on current selection.
+                      </TableCell>
+                    </TableRow>
+                  )}
               </TableBody>
             </Table>
           </div>
