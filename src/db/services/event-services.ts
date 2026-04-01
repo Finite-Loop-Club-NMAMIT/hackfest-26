@@ -402,6 +402,14 @@ export async function createEventTeam(
   const overlap = await checkTimeOverlap(userId, eventId);
   if (overlap) return errorResponse(overlap);
 
+  if (teamName.length > 20)
+    return errorResponse(
+      new AppError("TEAM_NAME_TOO_LONG", 400, {
+        title: "Team name too long",
+        description: "Team name must be at most 20 characters long.",
+      }),
+    );
+
   const eventTeam = await db.transaction(async (tx) => {
     const [team] = await tx
       .insert(eventTeams)

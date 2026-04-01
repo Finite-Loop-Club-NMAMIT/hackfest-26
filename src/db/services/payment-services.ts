@@ -332,3 +332,66 @@ export async function togglePaymentVerification(paymentId: string) {
 
   return { paymentStatus: newStatus };
 }
+
+export async function getPaymentStats() {
+  const totalConfirmedHackfestPaymentsResult = await db.query.payment.findMany({
+    where: and(
+      eq(payment.paymentType, "HACKFEST"),
+      eq(payment.paymentStatus, "Paid"),
+    ),
+    columns: { amount: true },
+  });
+
+  const totalConfirmedHackfestPayments =
+    totalConfirmedHackfestPaymentsResult.reduce(
+      (sum, p) => sum + parseInt(p.amount),
+      0,
+    );
+
+  const totalPendingHackfestPaymentsResult = await db.query.payment.findMany({
+    where: and(
+      eq(payment.paymentType, "HACKFEST"),
+      eq(payment.paymentStatus, "Pending"),
+    ),
+    columns: { amount: true },
+  });
+
+  const totalPendingHackfestPayments =
+    totalPendingHackfestPaymentsResult.reduce(
+      (sum, p) => sum + parseInt(p.amount),
+      0,
+    );
+
+  const totalConfirmedEventPaymentsResult = await db.query.payment.findMany({
+    where: and(
+      eq(payment.paymentType, "EVENT"),
+      eq(payment.paymentStatus, "Paid"),
+    ),
+    columns: { amount: true },
+  });
+
+  const totalConfirmedEventPayments = totalConfirmedEventPaymentsResult.reduce(
+    (sum, p) => sum + parseInt(p.amount),
+    0,
+  );
+
+  const totalPendingEventPaymentsResult = await db.query.payment.findMany({
+    where: and(
+      eq(payment.paymentType, "EVENT"),
+      eq(payment.paymentStatus, "Pending"),
+    ),
+    columns: { amount: true },
+  });
+
+  const totalPendingEventPayments = totalPendingEventPaymentsResult.reduce(
+    (sum, p) => sum + parseInt(p.amount),
+    0,
+  );
+
+  return {
+    totalConfirmedHackfestPayments,
+    totalPendingHackfestPayments,
+    totalConfirmedEventPayments,
+    totalPendingEventPayments,
+  };
+}
