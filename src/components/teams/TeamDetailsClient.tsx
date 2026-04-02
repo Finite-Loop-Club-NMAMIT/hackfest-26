@@ -198,7 +198,7 @@ export function TeamDetailsClient({
                   the payment of{" "}
                   <b>{calculateTotalAmount(400, members.length)}rs</b> to
                   confirm your participation by{" "}
-                  <b>11:59 PM, April 1st, 2026.</b>
+                  <b>11:59 PM, April 2nd, 2026.</b>
                 </p>
                 {team.leaderId === user.id ? (
                   paymentsOpen ? (

@@ -60,6 +60,7 @@ export const POST = adminProtected(async (request, _ctx, _user) => {
       "PPT URL",
       "Leader Phone",
       "Phone",
+      "Payment Status"
     ];
     const cols =
       parsed.columns && parsed.columns.length > 0
@@ -88,6 +89,7 @@ export const POST = adminProtected(async (request, _ctx, _user) => {
         else if (col === "PPT URL") rowData.push(t.pptUrl || "");
         else if (col === "Leader Phone") rowData.push(t.leaderPhone || "");
         else if (col === "Phone") rowData.push(t.allPhones || "");
+        else if (col === "Payment Status") rowData.push(t.paymentStatus || "");
         else rowData.push("");
       }
       csvContent += `${generateCsvRow(rowData)}\n`;
