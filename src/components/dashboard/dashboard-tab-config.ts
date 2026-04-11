@@ -97,4 +97,9 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     label: "Judge Setup",
     permissions: ["roles:manage"],
   },
+  {
+    id: "worker",
+    label: "Worker Management",
+    permissions: ["worker:manage"],
+  },
 ];
