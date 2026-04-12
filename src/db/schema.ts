@@ -14,4 +14,5 @@ export * from "./schema/rbac";
 export * from "./schema/site-settings";
 export * from "./schema/team";
 export * from "./schema/team-progress";
+export * from "./schema/timer";
 export * from "./schema/tracks";

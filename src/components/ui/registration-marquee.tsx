@@ -16,7 +16,8 @@ const MarqueeItem = () => (
 );
 export function RegistrationMarquee() {
   const pathname = usePathname();
-  if (pathname.startsWith("/dashboard")) return null;
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/timer"))
+    return null;
 
   return (
     <div className="relative z-50 overflow-hidden bg-linear-to-r from-emerald-950 via-emerald-900 to-emerald-950 border-b border-emerald-800/40">

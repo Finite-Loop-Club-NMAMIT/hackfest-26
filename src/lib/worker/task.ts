@@ -37,8 +37,9 @@ export type RepoProperties = {
   private: boolean;
 
   toggle_access: boolean;
-  permission: "pull" | "push" | "admin";
-  privacy: "secret" | "closed";
+  permission: "pull" | "push" | "admin" | "maintain" | "triage";
+  team_slug: string;
+  repo: string;
 
   github_repo: GithubRepo | null;
   github_team: GithubTeam | null;
@@ -187,6 +188,12 @@ class CeleryTask {
 
   public async syncGithubRepo(teamId: string, githubRepo: GithubRepo) {
     try {
+      console.log(
+        "Syncing GitHub Repo for teamId:",
+        teamId,
+        "with repo:",
+        githubRepo,
+      );
       const github = await query.github.findOne({
         where: eq(githubs.teamId, teamId),
       });

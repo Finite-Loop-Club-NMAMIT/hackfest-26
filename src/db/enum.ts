@@ -154,3 +154,11 @@ export const teamStage = pgEnum("team_stage", [
 ]);
 
 export const paymentType = pgEnum("payment_type", ["HACKFEST", "EVENT"]);
+
+export const timerStatus = pgEnum("timer_status", [
+  "IDLE",
+  "RUNNING",
+  "PAUSED",
+  "COMPLETED",
+]);
+export type timerStatusType = (typeof timerStatus.enumValues)[number]; // just found this, yeah its late but nice

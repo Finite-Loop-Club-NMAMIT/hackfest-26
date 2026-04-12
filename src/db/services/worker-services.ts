@@ -4,7 +4,6 @@ import { successResponse } from "~/lib/response/success";
 import {
   celeryTask,
   type GithubRepo,
-  type GithubTeam,
   type Member,
   type RepoProperties,
   type Team,
@@ -269,9 +268,14 @@ export async function triggerGithubRepoAutomationForTeams(
 
 export async function toggleGithubCommitStatus(enabled: boolean) {
   try {
-    const githubTeams = await db.query.githubTeams.findMany();
+    const github = await db.query.githubs.findMany({
+      with: {
+        githubTeam: true,
+        githubRepo: true,
+      },
+    });
 
-    if (githubTeams.length === 0) {
+    if (github.length === 0) {
       return errorResponse(
         new AppError("No GitHub repositories found", 404, {
           toast: true,
@@ -286,17 +290,15 @@ export async function toggleGithubCommitStatus(enabled: boolean) {
       teamProperty = {
         toggle_access: true,
         permission: "push",
-        privacy: "closed",
       };
     } else {
       teamProperty = {
-        toggle_access: false,
+        toggle_access: true,
         permission: "pull",
-        privacy: "secret",
       };
     }
 
-    const githubProperties: Array<RepoProperties> = githubTeams.map(
+    const githubProperties: Array<RepoProperties> = github.map(
       (team) =>
         ({
           toggle_visibility: false,
@@ -304,16 +306,11 @@ export async function toggleGithubCommitStatus(enabled: boolean) {
 
           toggle_access: teamProperty.toggle_access,
           permission: teamProperty.permission,
-          privacy: teamProperty.privacy,
+          team_slug: team.githubTeam.githubTeamSlug,
+          repo: team.githubRepo.githubRepoName,
 
           github_repo: null, // does not matter when toggle_visibility is false
-          github_team: {
-            id: team.githubTeamId,
-            name: team.githubTeamName,
-            slug: team.githubTeamSlug,
-            url: team.githubTeamUrl,
-            html_url: team.githubTeamHtmlUrl,
-          } as GithubTeam,
+          github_team: null,
         }) as RepoProperties,
     );
 
@@ -369,7 +366,8 @@ export async function toggleGithubRepoPrivacy(make_private: boolean) {
           // does not matter when toggle_access is false
           toggle_access: false,
           permission: "pull",
-          privacy: "closed",
+          team_slug: "",
+          repo: "",
 
           github_repo: {
             id: repo.githubRepoId,
@@ -381,6 +379,8 @@ export async function toggleGithubRepoPrivacy(make_private: boolean) {
           github_team: null, // does not matter when toggle_access is false
         }) as RepoProperties,
     );
+
+    console.log("Toggling GitHub repo privacy for repos:", githubProperties);
 
     await celeryTask.updateRepoPropertiesTask(githubProperties);
 

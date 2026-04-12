@@ -255,6 +255,14 @@ export const githubTeamRelations = relations(githubs, ({ one }) => ({
     fields: [githubs.teamId],
     references: [teams.id],
   }),
+  githubRepo: one(githubRepos, {
+    fields: [githubs.id],
+    references: [githubRepos.githubId],
+  }),
+  githubTeam: one(githubTeams, {
+    fields: [githubs.id],
+    references: [githubTeams.githubId],
+  }),
 }));
 
 export const githubTeamsRelations = relations(githubTeams, ({ one }) => ({

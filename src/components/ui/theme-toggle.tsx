@@ -9,7 +9,11 @@ export function ThemeToggle() {
   const { isNight, toggleTheme } = useDayNight();
   const pathname = usePathname();
 
-  if (pathname === "/timeline" || pathname.startsWith("/dashboard"))
+  if (
+    pathname === "/timeline" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/timer")
+  )
     return null;
 
   return (
