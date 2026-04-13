@@ -1,0 +1,1 @@
+ALTER TABLE "selected" ADD COLUMN "team_no" integer;

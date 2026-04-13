@@ -184,6 +184,9 @@ export async function getAttendedTeams() {
       },
     });
 
+    const githubEntries = await db.query.githubs.findMany();
+    const completedTeamIds = new Set(githubEntries.map((g) => g.teamId));
+
     attendedTeams.sort((a, b) => {
       const nameA = a.name.toUpperCase();
       const nameB = b.name.toUpperCase();
@@ -197,6 +200,7 @@ export async function getAttendedTeams() {
         team_id: team.id,
         team_no: i + 1,
         team_name: team.name,
+        completed: completedTeamIds.has(team.id),
         members: team.users.map(
           (user) =>
             ({

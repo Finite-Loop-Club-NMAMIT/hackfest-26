@@ -30,6 +30,7 @@ export type Team = {
   team_no: number;
   team_name: string;
   members: Array<Member>;
+  completed?: boolean;
 };
 
 export type RepoProperties = {

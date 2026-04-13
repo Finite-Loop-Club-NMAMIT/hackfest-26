@@ -55,13 +55,13 @@ const workers = [
     description: "Updates properties of GitHub repositories based on criteria",
     content: <GithubRepoAccessTab />,
   },
-  {
-    id: "top-60-notification",
-    name: "Top 60 Notification",
-    description:
-      "Sends notifications to teams when they enter the top 60 based on scores",
-    content: <Top60NotificationTab />,
-  },
+  // {
+  //   id: "top-60-notification",
+  //   name: "Top 60 Notification",
+  //   description:
+  //     "Sends notifications to teams when they enter the top 60 based on scores",
+  //   content: <Top60NotificationTab />,
+  // },
   {
     id: "github-automation",
     name: "GitHub Automation",
@@ -122,19 +122,6 @@ export function WorkerManagementTab() {
           </TabsContent>
         ))}
       </Tabs>
-
-      <Dialog>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Track</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. To confirm, please type the track ID
-              below.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter></DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -201,7 +188,7 @@ function WorkerStatsTab() {
             <div>
               <p className="text-sm text-muted-foreground">Started Tasks</p>
               <p className="text-lg font-bold text-blue-500">
-                {stats.summary.success}
+                {stats.summary.started}
               </p>
             </div>
             <div>
@@ -676,148 +663,6 @@ function TaskListTab() {
   );
 }
 
-function Top60NotificationTab() {
-  const fetchTop60Teams = useCallback(async () => {
-    return await apiFetch<SelectedTeams[]>(
-      "/api/dashboard/worker/top-60-teams",
-      {
-        method: "GET",
-      },
-    );
-  }, []);
-
-  const [top60Teams, setTop60Teams] = useState<SelectedTeams[] | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<SelectedTeams | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const loadTop60Teams = async () => {
-      const teams = await fetchTop60Teams();
-      setTop60Teams(teams);
-    };
-
-    loadTop60Teams();
-  }, [fetchTop60Teams]);
-
-  const handleViewMembers = (team: SelectedTeams) => {
-    setSelectedTeam(team);
-    setIsDialogOpen(true);
-  };
-
-  const handleNotifyLeaders = async () => {
-    await apiFetch("/api/dashboard/worker/notify-top-60-leaders", {
-      method: "POST",
-    });
-  };
-
-  const handleNotifyAll = async () => {
-    await apiFetch("/api/dashboard/worker/notify-top-60", {
-      method: "POST",
-    });
-  };
-
-  return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Top 60 Teams</CardTitle>
-          <CardDescription>
-            Displays the top 60 teams based on scores with their member details
-          </CardDescription>
-          <div className="flex flex-row gap-4 mt-4 w-full justify-start">
-            <Button onClick={handleNotifyLeaders}>Notify Leaders</Button>
-            <Button onClick={handleNotifyAll}>Notify All</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {top60Teams ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="text-left">
-                    <TableHead>Team Name</TableHead>
-                    <TableHead>Track</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {top60Teams.map((team) => (
-                    <TableRow className="text-left" key={team.id}>
-                      <TableCell className="text-left">{team.name}</TableCell>
-                      <TableCell>
-                        {team.track === "N/A" ? (
-                          <Badge variant="outline">N/A</Badge>
-                        ) : (
-                          <Badge>{team.track}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{team.members.length}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleViewMembers(team)}
-                        >
-                          View Members
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">Loading teams...</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="font-sans">
-          <DialogHeader>
-            <DialogTitle className="font-sans">
-              {selectedTeam?.name}
-            </DialogTitle>
-            <DialogDescription>
-              Track: {selectedTeam?.track} • {selectedTeam?.members.length}{" "}
-              members
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedTeam?.members.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell>{member.name}</TableCell>
-                      <TableCell className="text-sm">{member.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={member.is_leader ? "default" : "secondary"}
-                        >
-                          {member.is_leader ? "Leader" : "Member"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 function GithubAutomationTab() {
   const fetchAttendedTeams = useCallback(async () => {
     return await apiFetch<Team[]>("/api/dashboard/worker/attended", {
@@ -831,6 +676,9 @@ function GithubAutomationTab() {
   const [teamNameFilter, setTeamNameFilter] = useState("");
   const [memberNameFilter, setMemberNameFilter] = useState("");
   const [usernameFilter, setUsernameFilter] = useState("");
+  const [completionFilter, setCompletionFilter] = useState<
+    "all" | "not_completed" | "completed"
+  >("not_completed");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogTeam, setDialogTeam] = useState<Team | null>(null);
 
@@ -870,8 +718,21 @@ function GithubAutomationTab() {
         ),
       );
     }
+    if (completionFilter === "not_completed") {
+      teams = teams.filter((team) => !team.completed);
+    } else if (completionFilter === "completed") {
+      teams = teams.filter((team) => team.completed);
+    }
     setFilteredTeams(teams);
-  }, [attendedTeams, teamNameFilter, memberNameFilter, usernameFilter]);
+  }, [
+    attendedTeams,
+    teamNameFilter,
+    memberNameFilter,
+    usernameFilter,
+    completionFilter,
+  ]);
+
+  const selectableTeams = filteredTeams.filter((t) => !t.completed);
 
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeams((prev) => {
@@ -887,7 +748,7 @@ function GithubAutomationTab() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedTeams(new Set(filteredTeams.map((t) => t.team_id)));
+      setSelectedTeams(new Set(selectableTeams.map((t) => t.team_id)));
     } else {
       setSelectedTeams(new Set());
     }
@@ -907,6 +768,13 @@ function GithubAutomationTab() {
     });
   };
 
+  const completedCount = attendedTeams
+    ? attendedTeams.filter((t) => t.completed).length
+    : 0;
+  const notCompletedCount = attendedTeams
+    ? attendedTeams.filter((t) => !t.completed).length
+    : 0;
+
   return (
     <>
       <Card>
@@ -916,6 +784,33 @@ function GithubAutomationTab() {
             Filter, select, and automate GitHub repo management for attended
             teams
           </CardDescription>
+          <div className="flex flex-wrap gap-2 mt-4 w-full items-center">
+            <Button
+              variant={
+                completionFilter === "not_completed" ? "default" : "outline"
+              }
+              size="sm"
+              onClick={() => setCompletionFilter("not_completed")}
+            >
+              Not Completed ({notCompletedCount})
+            </Button>
+            <Button
+              variant={
+                completionFilter === "completed" ? "default" : "outline"
+              }
+              size="sm"
+              onClick={() => setCompletionFilter("completed")}
+            >
+              Completed ({completedCount})
+            </Button>
+            <Button
+              variant={completionFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCompletionFilter("all")}
+            >
+              All ({attendedTeams?.length ?? 0})
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-4 mt-4 w-full items-end">
             <Input
               placeholder="Filter by team name"
@@ -953,32 +848,47 @@ function GithubAutomationTab() {
                     <TableHead>
                       <Checkbox
                         checked={
-                          selectedTeams.size === filteredTeams.length &&
-                          filteredTeams.length > 0
+                          selectableTeams.length > 0 &&
+                          selectedTeams.size === selectableTeams.length
                         }
                         onCheckedChange={handleSelectAll}
                         aria-label="Select all teams"
+                        disabled={selectableTeams.length === 0}
                       />
                     </TableHead>
                     <TableHead>No.</TableHead>
                     <TableHead>Team Name</TableHead>
                     <TableHead>Members</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTeams.map((team, _idx) => (
-                    <TableRow key={team.team_id}>
+                    <TableRow
+                      key={team.team_id}
+                      className={team.completed ? "opacity-60" : ""}
+                    >
                       <TableCell>
                         <Checkbox
                           checked={selectedTeams.has(team.team_id)}
-                          onCheckedChange={() => handleSelectTeam(team.team_id)}
+                          onCheckedChange={() =>
+                            handleSelectTeam(team.team_id)
+                          }
                           aria-label={`Select team ${team.team_name}`}
+                          disabled={team.completed}
                         />
                       </TableCell>
                       <TableCell>{team.team_no}</TableCell>
                       <TableCell>{team.team_name}</TableCell>
                       <TableCell>{team.members.length}</TableCell>
+                      <TableCell>
+                        {team.completed ? (
+                          <Badge variant="success">Completed</Badge>
+                        ) : (
+                          <Badge variant="secondary">Pending</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="secondary"
@@ -1041,112 +951,312 @@ function GithubAutomationTab() {
   );
 }
 
+type ConfirmAction = {
+  title: string;
+  description: string;
+  variant: "default" | "destructive";
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+};
+
 function GithubRepoAccessTab() {
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(
+    null,
+  );
 
-  const handleCommit = async (enabled: boolean) => {
-    setIsLoading(true);
-    const response = confirm("Are you sure you want to enable commit access?");
-    if (!response) return;
-
-    await apiFetch("/api/dashboard/worker/toggle-commit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        enabled: enabled,
-      }),
-    });
-
-    setIsLoading(false);
+  const executeAction = async (action: ConfirmAction) => {
+    setConfirmAction(action);
   };
 
-  const handleRepoPrivacy = async (makePrivate: boolean) => {
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
     setIsLoading(true);
-    const response = confirm(
-      "Are you sure you want to change the repository privacy setting?",
-    );
-    if (!response) return;
-
-    await apiFetch("/api/dashboard/worker/toggle-repo-privacy", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        make_private: makePrivate,
-      }),
-    });
-
-    setIsLoading(false);
+    setConfirmAction(null);
+    try {
+      await confirmAction.onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleTogglgeDataSync = async () => {
-    setIsLoading(true);
-    const response = confirm(
-      "This will toggle the data sync for GitHub repo access. Are you sure?",
-    );
-    if (!response) return;
-
-    await apiFetch("/api/dashboard/worker/toggle-sync", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  const handleCommit = (enabled: boolean) => {
+    executeAction({
+      title: enabled ? "Enable Commit Access" : "Disable Commit Access",
+      description: enabled
+        ? "This will enable commit access for all GitHub repositories. Teams will be able to push code."
+        : "This will disable commit access for all GitHub repositories. Teams will no longer be able to push code.",
+      variant: enabled ? "default" : "destructive",
+      confirmLabel: enabled ? "Enable" : "Disable",
+      onConfirm: async () => {
+        await apiFetch("/api/dashboard/worker/toggle-commit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled }),
+        });
       },
     });
+  };
 
-    setIsLoading(false);
+  const handleRepoPrivacy = (makePrivate: boolean) => {
+    executeAction({
+      title: makePrivate
+        ? "Make Repositories Private"
+        : "Make Repositories Public",
+      description: makePrivate
+        ? "This will make all team repositories private. Only team members and organization admins will have access."
+        : "This will make all team repositories public. Anyone will be able to view the code.",
+      variant: makePrivate ? "default" : "destructive",
+      confirmLabel: makePrivate ? "Make Private" : "Make Public",
+      onConfirm: async () => {
+        await apiFetch("/api/dashboard/worker/toggle-repo-privacy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ make_private: makePrivate }),
+        });
+      },
+    });
+  };
+
+  const handleToggleDataSync = () => {
+    executeAction({
+      title: "Toggle Data Sync",
+      description:
+        "This will toggle the data sync for GitHub repo access. This synchronises team and member data with the external GitHub automation service.",
+      variant: "default",
+      confirmLabel: "Toggle Sync",
+      onConfirm: async () => {
+        await apiFetch("/api/dashboard/worker/toggle-sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    });
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>GitHub Repo Access</CardTitle>
-        <CardDescription>
-          Manage GitHub repository access for teams
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-x-4 space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        <Button
-          onClick={async () => await handleCommit(true)}
-          disabled={isLoading}
-          className="order-1"
-        >
-          Enable Commit
-        </Button>
-        <Button
-          variant={"destructive"}
-          onClick={async () => await handleCommit(false)}
-          disabled={isLoading}
-          className="md:order-3 order-2 lg:order-2"
-        >
-          Disable Commit
-        </Button>
-        <Button
-          onClick={async () => await handleRepoPrivacy(true)}
-          disabled={isLoading}
-          className="md:order-2 order-3 lg:order-3"
-        >
-          Make Repo Private
-        </Button>
-        <Button
-          variant={"destructive"}
-          onClick={async () => await handleRepoPrivacy(false)}
-          disabled={isLoading}
-          className="order-4"
-        >
-          Make Repo Public
-        </Button>
-        <Button
-          variant={"secondary"}
-          onClick={handleTogglgeDataSync}
-          disabled={isLoading}
-          className="order-5 col-span-full"
-        >
-          Toggle Data Sync
-        </Button>
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>GitHub Repo Access</CardTitle>
+          <CardDescription>
+            Manage GitHub repository access for teams
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button
+              onClick={() => handleCommit(true)}
+              disabled={isLoading}
+              className="order-1"
+            >
+              Enable Commit
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleCommit(false)}
+              disabled={isLoading}
+              className="md:order-3 order-2 lg:order-2"
+            >
+              Disable Commit
+            </Button>
+            <Button
+              onClick={() => handleRepoPrivacy(true)}
+              disabled={isLoading}
+              className="md:order-2 order-3 lg:order-3"
+            >
+              Make Repo Private
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleRepoPrivacy(false)}
+              disabled={isLoading}
+              className="order-4"
+            >
+              Make Repo Public
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleToggleDataSync}
+              disabled={isLoading}
+              className="order-5 col-span-full"
+            >
+              Toggle Data Sync
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{confirmAction?.title}</DialogTitle>
+            <DialogDescription>{confirmAction?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmAction(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={confirmAction?.variant === "destructive" ? "destructive" : "default"}
+              onClick={handleConfirm}
+            >
+              {confirmAction?.confirmLabel ?? "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
+
+// function Top60NotificationTab() {
+//   const fetchTop60Teams = useCallback(async () => {
+//     return await apiFetch<SelectedTeams[]>(
+//       "/api/dashboard/worker/top-60-teams",
+//       {
+//         method: "GET",
+//       },
+//     );
+//   }, []);
+
+//   const [top60Teams, setTop60Teams] = useState<SelectedTeams[] | null>(null);
+//   const [selectedTeam, setSelectedTeam] = useState<SelectedTeams | null>(null);
+//   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+//   useEffect(() => {
+//     const loadTop60Teams = async () => {
+//       const teams = await fetchTop60Teams();
+//       setTop60Teams(teams);
+//     };
+
+//     loadTop60Teams();
+//   }, [fetchTop60Teams]);
+
+//   const handleViewMembers = (team: SelectedTeams) => {
+//     setSelectedTeam(team);
+//     setIsDialogOpen(true);
+//   };
+
+//   const handleNotifyLeaders = async () => {
+//     await apiFetch("/api/dashboard/worker/notify-top-60-leaders", {
+//       method: "POST",
+//     });
+//   };
+
+//   const handleNotifyAll = async () => {
+//     await apiFetch("/api/dashboard/worker/notify-top-60", {
+//       method: "POST",
+//     });
+//   };
+
+//   return (
+//     <>
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Top 60 Teams</CardTitle>
+//           <CardDescription>
+//             Displays the top 60 teams based on scores with their member details
+//           </CardDescription>
+//           <div className="flex flex-row gap-4 mt-4 w-full justify-start">
+//             <Button onClick={handleNotifyLeaders}>Notify Leaders</Button>
+//             <Button onClick={handleNotifyAll}>Notify All</Button>
+//           </div>
+//         </CardHeader>
+//         <CardContent>
+//           {top60Teams ? (
+//             <div className="rounded-md border">
+//               <Table>
+//                 <TableHeader>
+//                   <TableRow className="text-left">
+//                     <TableHead>Team Name</TableHead>
+//                     <TableHead>Track</TableHead>
+//                     <TableHead>Members</TableHead>
+//                     <TableHead className="text-right">Action</TableHead>
+//                   </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                   {top60Teams.map((team) => (
+//                     <TableRow className="text-left" key={team.id}>
+//                       <TableCell className="text-left">{team.name}</TableCell>
+//                       <TableCell>
+//                         {team.track === "N/A" ? (
+//                           <Badge variant="outline">N/A</Badge>
+//                         ) : (
+//                           <Badge>{team.track}</Badge>
+//                         )}
+//                       </TableCell>
+//                       <TableCell>{team.members.length}</TableCell>
+//                       <TableCell className="text-right">
+//                         <Button
+//                           variant="secondary"
+//                           size="sm"
+//                           onClick={() => handleViewMembers(team)}
+//                         >
+//                           View Members
+//                         </Button>
+//                       </TableCell>
+//                     </TableRow>
+//                   ))}
+//                 </TableBody>
+//               </Table>
+//             </div>
+//           ) : (
+//             <p className="text-muted-foreground">Loading teams...</p>
+//           )}
+//         </CardContent>
+//       </Card>
+
+//       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+//         <DialogContent className="font-sans">
+//           <DialogHeader>
+//             <DialogTitle className="font-sans">
+//               {selectedTeam?.name}
+//             </DialogTitle>
+//             <DialogDescription>
+//               Track: {selectedTeam?.track} • {selectedTeam?.members.length}{" "}
+//               members
+//             </DialogDescription>
+//           </DialogHeader>
+//           <div className="space-y-4">
+//             <div className="rounded-md border">
+//               <Table>
+//                 <TableHeader>
+//                   <TableRow>
+//                     <TableHead>Name</TableHead>
+//                     <TableHead>Email</TableHead>
+//                     <TableHead>Role</TableHead>
+//                   </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                   {selectedTeam?.members.map((member) => (
+//                     <TableRow key={member.id}>
+//                       <TableCell>{member.name}</TableCell>
+//                       <TableCell className="text-sm">{member.email}</TableCell>
+//                       <TableCell>
+//                         <Badge
+//                           variant={member.is_leader ? "default" : "secondary"}
+//                         >
+//                           {member.is_leader ? "Leader" : "Member"}
+//                         </Badge>
+//                       </TableCell>
+//                     </TableRow>
+//                   ))}
+//                 </TableBody>
+//               </Table>
+//             </div>
+//           </div>
+//         </DialogContent>
+//       </Dialog>
+//     </>
+//   );
+// }

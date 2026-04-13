@@ -1,4 +1,4 @@
-import { pgTable, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, text } from "drizzle-orm/pg-core";
 import { teamProgressEnum } from "../enum";
 import { teams } from "./team";
 
@@ -24,6 +24,7 @@ export const selected = pgTable("selected", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  teamNo: integer("team_no"),
   teamId: text("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
