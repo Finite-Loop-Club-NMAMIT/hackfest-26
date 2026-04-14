@@ -3,11 +3,13 @@
 import {
   AlertTriangle,
   CheckCircle,
+  Lock,
   Loader2,
   Plus,
   RefreshCw,
   Search,
   Trash2,
+  Unlock,
   Users,
   X,
 } from "lucide-react";
@@ -117,6 +119,15 @@ export function DormsSubTab() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [locked, setLocked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("dorms-locked") === "true";
+  });
+
+  const toggleLocked = (val: boolean) => {
+    setLocked(val);
+    localStorage.setItem("dorms-locked", String(val));
+  };
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignResult, setAssignResult] = useState<{
     assigned: number;
@@ -333,26 +344,40 @@ export function DormsSubTab() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">
-          Assign selected teams to dorms based on participant gender
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-muted-foreground text-sm">
+            Assign selected teams to dorms based on participant gender
+          </p>
+          {locked && (
+            <span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Lock className="h-3 w-3" /> View only
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setRefreshKey((k) => k + 1)}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
+            <RefreshCw className="h-4 w-4 mr-1" />Refresh
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handleAutoAssign}
-            disabled={isAssigning || dorms.length === 0}
+            disabled={locked || isAssigning || dorms.length === 0}
           >
             {isAssigning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
             Auto-Assign
           </Button>
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Dorm
+          <Button size="sm" disabled={locked} onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />Add Dorm
+          </Button>
+          <Button
+            variant={locked ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleLocked(!locked)}
+            className={locked ? "bg-amber-500 hover:bg-amber-600 text-white border-0" : ""}
+          >
+            {locked ? <Unlock className="h-4 w-4 mr-1" /> : <Lock className="h-4 w-4 mr-1" />}
+            {locked ? "Unlock" : "Lock"}
           </Button>
         </div>
       </div>
@@ -416,8 +441,8 @@ export function DormsSubTab() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed"
-                      disabled={dorm.teamCount > 0}
-                      title={dorm.teamCount > 0 ? `Reassign ${dorm.teamCount} team(s) before deleting` : "Delete dorm"}
+                      disabled={locked || dorm.teamCount > 0}
+                      title={locked ? "Unlock to delete" : dorm.teamCount > 0 ? `Reassign ${dorm.teamCount} team(s) before deleting` : "Delete dorm"}
                       onClick={(e) => { e.stopPropagation(); setDeleteTargetId(dorm.id); }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -437,7 +462,7 @@ export function DormsSubTab() {
                         {dormTeams[dorm.id].map((t) => (
                           <div key={t.teamId} className="space-y-1.5">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold">{t.teamNo ? `#${t.teamNo} ` : ""}{t.teamName}</span>
+                              <span className="font-semibold">{t.teamNo ? `${t.teamNo}. ` : ""}{t.teamName}</span>
                               <span className="text-muted-foreground">{t.memberCount} members</span>
                             </div>
                             {t.members.length > 0 && (
@@ -569,8 +594,8 @@ export function DormsSubTab() {
                     return (
                       <TableRow
                         key={t.teamId}
-                        className="cursor-pointer hover:bg-muted/60"
-                        onClick={() => handleOpenTeamAssign(t)}
+                        className={locked ? "" : "cursor-pointer hover:bg-muted/60"}
+                        onClick={() => !locked && handleOpenTeamAssign(t)}
                       >
                         <TableCell className="font-mono text-xs">{t.teamNo ?? "—"}</TableCell>
                         <TableCell>

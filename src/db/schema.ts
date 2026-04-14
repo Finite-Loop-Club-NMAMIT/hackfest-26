@@ -18,3 +18,4 @@ export * from "./schema/timer";
 export * from "./schema/tracks";
 export * from "./schema/dorms";
 export * from "./schema/labs";
+export * from "./schema/lab-teams";

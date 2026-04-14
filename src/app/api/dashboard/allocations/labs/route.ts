@@ -1,13 +1,25 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminProtected } from "~/auth/routes-wrapper";
-import { createLab, listLabs } from "~/db/services/allocation-services";
+import {
+  createLab,
+  getSelectedTeamsForLabAllocation,
+  listLabsWithOccupancy,
+} from "~/db/services/allocation-services";
 import { errorResponse } from "~/lib/response/error";
 
-export const GET = adminProtected(async (_req: NextRequest) => {
+export const GET = adminProtected(async (req: NextRequest) => {
   try {
-    const labs = await listLabs();
-    return NextResponse.json({ labs });
+    const { searchParams } = new URL(req.url);
+    const trackId = searchParams.get("trackId") ?? undefined;
+    const collegeId = searchParams.get("collegeId") ?? undefined;
+    const status = searchParams.get("status") as "assigned" | "unassigned" | undefined;
+
+    const [labs, teams] = await Promise.all([
+      listLabsWithOccupancy(),
+      getSelectedTeamsForLabAllocation({ trackId, collegeId, status }),
+    ]);
+    return NextResponse.json({ labs, teams });
   } catch (error) {
     return errorResponse(error);
   }

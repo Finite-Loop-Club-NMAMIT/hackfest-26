@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DormsSubTab } from "./allocations/DormsSubTab";
 import { LabsSubTab } from "./allocations/LabsSubTab";
 
@@ -12,7 +12,17 @@ const SUB_TABS = [
 type SubTabId = (typeof SUB_TABS)[number]["id"];
 
 export function AllocationsTab() {
-  const [activeSubTab, setActiveSubTab] = useState<SubTabId>("dorms");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const raw = searchParams.get("alloc");
+  const activeSubTab: SubTabId = raw === "labs" ? "labs" : "dorms";
+
+  const setActiveSubTab = (id: SubTabId) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("alloc", id);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className="space-y-6">
