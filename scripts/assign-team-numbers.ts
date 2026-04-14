@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import db from "../src/db/index";
-import { selected, teams, participants } from "../src/db/schema";
+import { participants, selected, teams } from "../src/db/schema";
 
 function shuffleArray<T>(arr: T[]): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -49,7 +49,7 @@ async function assignTeamNumbers() {
     if (!collegeGroups.has(collegeKey)) {
       collegeGroups.set(collegeKey, []);
     }
-    collegeGroups.get(collegeKey)!.push({
+    collegeGroups.get(collegeKey)?.push({
       selectedId: entry.selectedId,
       teamId: entry.teamId,
       teamName: entry.teamName,
@@ -131,7 +131,7 @@ async function assignTeamNumbers() {
     if (!collegePositions.has(cid)) {
       collegePositions.set(cid, []);
     }
-    collegePositions.get(cid)!.push(i + 1);
+    collegePositions.get(cid)?.push(i + 1);
   }
 
   let totalMinGap = Infinity;

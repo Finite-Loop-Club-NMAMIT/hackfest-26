@@ -1502,6 +1502,84 @@ export async function fetchAllSubmissionsDetails() {
   }
 }
 
+export async function fetchSelectedTeamsDetails() {
+  try {
+    const rows = await db
+      .select({
+        teamId: teams.id,
+        teamName: teams.name,
+        teamNo: selected.teamNo,
+        collegeName: colleges.name,
+        stateName: colleges.state,
+        trackId: tracks.id,
+        trackName: tracks.name,
+        teamStage: teams.teamStage,
+        teamProgress: selected.teamProgress,
+        pptUrl: ideaSubmission.pptUrl,
+        createdAt: ideaSubmission.createdAt,
+      })
+      .from(selected)
+      .innerJoin(teams, eq(teams.id, selected.teamId))
+      .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(participants, eq(participants.id, teams.leaderId))
+      .leftJoin(colleges, eq(colleges.id, participants.collegeId))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .orderBy(asc(selected.teamNo));
+
+    if (rows.length === 0) return [];
+
+    const teamIds = rows.map((r) => r.teamId);
+
+    const genderRows = await db
+      .select({
+        teamId: participants.teamId,
+        gender: participants.gender,
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(participants)
+      .where(
+        and(
+          isNotNull(participants.teamId),
+          inArray(participants.teamId, teamIds),
+        ),
+      )
+      .groupBy(participants.teamId, participants.gender);
+
+    const genderMap = new Map<
+      string,
+      { Male: number; Female: number; "Prefer Not To Say": number }
+    >();
+    for (const g of genderRows) {
+      if (!g.teamId) continue;
+      if (!genderMap.has(g.teamId)) {
+        genderMap.set(g.teamId, { Male: 0, Female: 0, "Prefer Not To Say": 0 });
+      }
+      const entry = genderMap.get(g.teamId);
+      if (
+        entry &&
+        (g.gender === "Male" ||
+          g.gender === "Female" ||
+          g.gender === "Prefer Not To Say")
+      ) {
+        entry[g.gender] += g.count;
+      }
+    }
+
+    return rows.map((r) => ({
+      ...r,
+      genderCounts: genderMap.get(r.teamId) ?? {
+        Male: 0,
+        Female: 0,
+        "Prefer Not To Say": 0,
+      },
+    }));
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("Error fetching selected teams details:", error);
+    throw new AppError("Failed to fetch selected teams details", 500);
+  }
+}
+
 export async function exportTeamsData(teamIds: string[]) {
   try {
     if (!teamIds || teamIds.length === 0) return [];

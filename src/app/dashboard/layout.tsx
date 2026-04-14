@@ -45,7 +45,7 @@ export default async function DashboardLayout({
     : false;
 
   return (
-    <div className="dashboard-theme font-sans">
+    <div className="dashboard-theme font-sans select-text">
       <CommandMenu
         isAdmin={userIsAdmin}
         dashboardUser={session?.dashboardUser}

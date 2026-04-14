@@ -1,8 +1,8 @@
 import { desc, eq } from "drizzle-orm";
 import db from "~/db";
 import { AppError } from "~/lib/errors/app-error";
+import type { timerStatusType } from "../enum";
 import { announcement, timer } from "../schema/timer";
-import { timerStatusType } from "../enum";
 
 export const computeRemaining = (
   status: timerStatusType,

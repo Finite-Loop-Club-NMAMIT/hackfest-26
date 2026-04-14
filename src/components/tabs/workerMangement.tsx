@@ -21,7 +21,6 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import type { SelectedTeams } from "~/db/services/worker-services";
 import { apiFetch } from "~/lib/fetcher";
 import type { Task, TaskStats } from "~/lib/worker/dashboard";
 import type { Team } from "~/lib/worker/task";
@@ -795,9 +794,7 @@ function GithubAutomationTab() {
               Not Completed ({notCompletedCount})
             </Button>
             <Button
-              variant={
-                completionFilter === "completed" ? "default" : "outline"
-              }
+              variant={completionFilter === "completed" ? "default" : "outline"}
               size="sm"
               onClick={() => setCompletionFilter("completed")}
             >
@@ -872,9 +869,7 @@ function GithubAutomationTab() {
                       <TableCell>
                         <Checkbox
                           checked={selectedTeams.has(team.team_id)}
-                          onCheckedChange={() =>
-                            handleSelectTeam(team.team_id)
-                          }
+                          onCheckedChange={() => handleSelectTeam(team.team_id)}
                           aria-label={`Select team ${team.team_name}`}
                           disabled={team.completed}
                         />
@@ -1099,14 +1094,15 @@ function GithubRepoAccessTab() {
             <DialogDescription>{confirmAction?.description}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setConfirmAction(null)}
-            >
+            <Button variant="outline" onClick={() => setConfirmAction(null)}>
               Cancel
             </Button>
             <Button
-              variant={confirmAction?.variant === "destructive" ? "destructive" : "default"}
+              variant={
+                confirmAction?.variant === "destructive"
+                  ? "destructive"
+                  : "default"
+              }
               onClick={handleConfirm}
             >
               {confirmAction?.confirmLabel ?? "Confirm"}
@@ -1117,7 +1113,6 @@ function GithubRepoAccessTab() {
     </>
   );
 }
-
 
 // function Top60NotificationTab() {
 //   const fetchTop60Teams = useCallback(async () => {

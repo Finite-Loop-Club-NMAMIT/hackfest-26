@@ -30,6 +30,7 @@ type TeamMember = {
   id: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   github: string | null;
   isLeader: boolean;
   college?: { name: string | null } | null;
@@ -238,7 +239,7 @@ export function TeamDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto select-text">
         <DialogHeader>
           <DialogTitle className="text-2xl">{team.name}</DialogTitle>
           <DialogDescription>
@@ -335,6 +336,11 @@ export function TeamDetailDialog({
                       <p className="text-sm text-muted-foreground">
                         {member.email}
                       </p>
+                      {member.phone && (
+                        <p className="text-xs text-muted-foreground">
+                          📞 {member.phone}
+                        </p>
+                      )}
                       {member.college?.name && (
                         <p className="text-xs text-muted-foreground">
                           {member.college.name}

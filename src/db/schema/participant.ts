@@ -1,5 +1,6 @@
 import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { courseEnum, genderEnum, stateEnum } from "../enum";
+import { dormitory } from "./dorms";
 import { teams } from "./team";
 
 export const participants = pgTable(
@@ -17,6 +18,9 @@ export const participants = pgTable(
     state: stateEnum("state"),
     course: courseEnum("course"),
     gender: genderEnum("gender"),
+    dormitoryId: text("dormitory_id").references(() => dormitory.id, {
+      onDelete: "set null",
+    }),
     isRegistrationComplete: boolean("is_registration_complete")
       .notNull()
       .default(false),

@@ -1,12 +1,14 @@
 import {
   boolean,
   index,
+  integer,
   type PgColumn,
   pgTable,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { paymentStatusEnum, teamStage } from "../enum";
+import { lab } from "./labs";
 import { participants } from "./participant";
 import { payment } from "./payment";
 
@@ -25,6 +27,9 @@ export const teams = pgTable(
     attended: boolean("attended").notNull().default(false),
     teamStage: teamStage("team_stage").default("NOT_SELECTED").notNull(),
     isCompleted: boolean("is_completed").notNull().default(false),
+    labId: integer("lab_id").references(() => lab.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
