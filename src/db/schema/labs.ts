@@ -1,7 +1,7 @@
-import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { integer, pgTable, text } from "drizzle-orm/pg-core";
 
 export const lab = pgTable("lab", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),

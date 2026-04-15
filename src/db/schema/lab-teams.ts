@@ -1,11 +1,17 @@
-import { pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { lab } from "./labs";
 import { teams } from "./team";
 
 export const labTeams = pgTable(
   "lab_teams",
   {
-    labId: uuid("lab_id")
+    labId: text("lab_id")
       .notNull()
       .references(() => lab.id, { onDelete: "cascade" }),
     teamId: text("team_id")

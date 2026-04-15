@@ -28,7 +28,9 @@ export function AllocationsTab() {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Allocations</h2>
-        <p className="text-muted-foreground">Manage dorms and labs for selected teams</p>
+        <p className="text-muted-foreground">
+          Manage dorms and labs for selected teams
+        </p>
       </div>
 
       {/* Sub-tab navigation */}

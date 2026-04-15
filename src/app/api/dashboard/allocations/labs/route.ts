@@ -13,7 +13,10 @@ export const GET = adminProtected(async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const trackId = searchParams.get("trackId") ?? undefined;
     const collegeId = searchParams.get("collegeId") ?? undefined;
-    const status = searchParams.get("status") as "assigned" | "unassigned" | undefined;
+    const status = searchParams.get("status") as
+      | "assigned"
+      | "unassigned"
+      | undefined;
 
     const [labs, teams] = await Promise.all([
       listLabsWithOccupancy(),

@@ -3,8 +3,8 @@
 import {
   AlertTriangle,
   CheckCircle,
-  Lock,
   Loader2,
+  Lock,
   Plus,
   RefreshCw,
   Search,
@@ -72,20 +72,30 @@ type AllocationTeam = {
 
 const GENDER_BADGE: Record<string, string> = {
   Male: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
-  Female: "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/40 dark:text-pink-300 dark:border-pink-800",
-  "Prefer Not To Say": "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
-  Mixed: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800",
-  Unknown: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400",
+  Female:
+    "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/40 dark:text-pink-300 dark:border-pink-800",
+  "Prefer Not To Say":
+    "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
+  Mixed:
+    "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800",
+  Unknown:
+    "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400",
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  Assigned: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800",
-  "Partially Assigned": "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
-  Unassigned: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-800",
-  "Not Assignable": "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
+  Assigned:
+    "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800",
+  "Partially Assigned":
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+  Unassigned:
+    "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-800",
+  "Not Assignable":
+    "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
 };
 
-function teamStatus(t: AllocationTeam): "Assigned" | "Partially Assigned" | "Unassigned" | "Not Assignable" {
+function teamStatus(
+  t: AllocationTeam,
+): "Assigned" | "Partially Assigned" | "Unassigned" | "Not Assignable" {
   if (t.teamGender === "Unknown") return "Not Assignable";
   if (t.teamGender === "Mixed") {
     const maleOk = t.genderCounts.Male === 0 || !!t.maleDormId;
@@ -113,7 +123,9 @@ export function DormsSubTab() {
   // Dialogs
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newGender, setNewGender] = useState<"Male" | "Female" | "Prefer Not To Say">("Male");
+  const [newGender, setNewGender] = useState<
+    "Male" | "Female" | "Prefer Not To Say"
+  >("Male");
   const [isCreating, setIsCreating] = useState(false);
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -141,7 +153,18 @@ export function DormsSubTab() {
   const [manualAssigning, setManualAssigning] = useState<string | null>(null); // dormId being assigned
 
   const [expandedDorm, setExpandedDorm] = useState<string | null>(null);
-  const [dormTeams, setDormTeams] = useState<Record<string, { teamId: string | null; teamName: string; teamNo: number | null; memberCount: number; members: { id: string; name: string | null; gender: string | null }[] }[]>>({});
+  const [dormTeams, setDormTeams] = useState<
+    Record<
+      string,
+      {
+        teamId: string | null;
+        teamName: string;
+        teamNo: number | null;
+        memberCount: number;
+        members: { id: string; name: string | null; gender: string | null }[];
+      }[]
+    >
+  >({});
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: needed
   useEffect(() => {
@@ -195,12 +218,24 @@ export function DormsSubTab() {
   }, [teams, search, genderFilter, collegeFilter, statusFilter, dormFilter]);
 
   const hasActiveFilters =
-    search.trim() || genderFilter !== "all" || collegeFilter !== "all" || statusFilter !== "all" || dormFilter !== "all";
+    search.trim() ||
+    genderFilter !== "all" ||
+    collegeFilter !== "all" ||
+    statusFilter !== "all" ||
+    dormFilter !== "all";
 
-  const totalAssigned = teams.filter((t) => teamStatus(t) === "Assigned").length;
-  const totalPartial = teams.filter((t) => teamStatus(t) === "Partially Assigned").length;
-  const totalUnassigned = teams.filter((t) => teamStatus(t) === "Unassigned").length;
-  const totalNotAssignable = teams.filter((t) => teamStatus(t) === "Not Assignable").length;
+  const totalAssigned = teams.filter(
+    (t) => teamStatus(t) === "Assigned",
+  ).length;
+  const totalPartial = teams.filter(
+    (t) => teamStatus(t) === "Partially Assigned",
+  ).length;
+  const totalUnassigned = teams.filter(
+    (t) => teamStatus(t) === "Unassigned",
+  ).length;
+  const totalNotAssignable = teams.filter(
+    (t) => teamStatus(t) === "Not Assignable",
+  ).length;
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -227,7 +262,10 @@ export function DormsSubTab() {
     if (!deleteTargetId) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/dashboard/allocations/dorms/${deleteTargetId}`, { method: "DELETE" });
+      const res = await fetch(
+        `/api/dashboard/allocations/dorms/${deleteTargetId}`,
+        { method: "DELETE" },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete");
       toast.success("Dorm deleted");
@@ -243,7 +281,9 @@ export function DormsSubTab() {
   const handleAutoAssign = async () => {
     setIsAssigning(true);
     try {
-      const res = await fetch("/api/dashboard/allocations/dorms/assign", { method: "POST" });
+      const res = await fetch("/api/dashboard/allocations/dorms/assign", {
+        method: "POST",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Auto-assign failed");
       setAssignResult(data);
@@ -257,7 +297,10 @@ export function DormsSubTab() {
   };
 
   const handleExpandDorm = async (dormId: string) => {
-    if (expandedDorm === dormId) { setExpandedDorm(null); return; }
+    if (expandedDorm === dormId) {
+      setExpandedDorm(null);
+      return;
+    }
     setExpandedDorm(dormId);
     if (!dormTeams[dormId]) {
       const res = await fetch(`/api/dashboard/allocations/dorms/${dormId}`);
@@ -287,16 +330,46 @@ export function DormsSubTab() {
       const res = await fetch(`/api/dashboard/allocations/dorms/${dormId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: selectedTeam.teamId, action: "assign", ...(gender ? { gender } : {}) }),
+        body: JSON.stringify({
+          teamId: selectedTeam.teamId,
+          action: "assign",
+          ...(gender ? { gender } : {}),
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed");
-      toast.success(gender ? `${gender} members assigned` : `${selectedTeam.teamName} assigned`);
+      toast.success(
+        gender
+          ? `${gender} members assigned`
+          : `${selectedTeam.teamName} assigned`,
+      );
       setDormTeams({});
       // Optimistically update selectedTeam so dialog reflects new state immediately
-      if (gender === "Male") setSelectedTeam((prev) => prev ? { ...prev, maleDormId: dormId, maleDormName: dorms.find((d) => d.id === dormId)?.name ?? null } : prev);
-      else if (gender === "Female") setSelectedTeam((prev) => prev ? { ...prev, femaleDormId: dormId, femaleDormName: dorms.find((d) => d.id === dormId)?.name ?? null } : prev);
+      if (gender === "Male")
+        setSelectedTeam((prev) =>
+          prev
+            ? {
+                ...prev,
+                maleDormId: dormId,
+                maleDormName: dorms.find((d) => d.id === dormId)?.name ?? null,
+              }
+            : prev,
+        );
+      else if (gender === "Female")
+        setSelectedTeam((prev) =>
+          prev
+            ? {
+                ...prev,
+                femaleDormId: dormId,
+                femaleDormName:
+                  dorms.find((d) => d.id === dormId)?.name ?? null,
+              }
+            : prev,
+        );
       setRefreshKey((k) => k + 1);
-      if (!gender) { setTeamAssignOpen(false); setSelectedTeam(null); }
+      if (!gender) {
+        setTeamAssignOpen(false);
+        setSelectedTeam(null);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to assign");
     } finally {
@@ -307,7 +380,9 @@ export function DormsSubTab() {
   const handleManualUnassign = async (gender?: string) => {
     if (!selectedTeam) return;
     const dormId = gender
-      ? (gender === "Male" ? selectedTeam.maleDormId : selectedTeam.femaleDormId)
+      ? gender === "Male"
+        ? selectedTeam.maleDormId
+        : selectedTeam.femaleDormId
       : selectedTeam.assignedDormId;
     if (!dormId) return;
     const key = gender ? `unassign-${gender}` : "unassign";
@@ -316,15 +391,32 @@ export function DormsSubTab() {
       const res = await fetch(`/api/dashboard/allocations/dorms/${dormId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: selectedTeam.teamId, action: "unassign", ...(gender ? { gender } : {}) }),
+        body: JSON.stringify({
+          teamId: selectedTeam.teamId,
+          action: "unassign",
+          ...(gender ? { gender } : {}),
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed");
-      toast.success(gender ? `${gender} members unassigned` : `${selectedTeam.teamName} unassigned`);
+      toast.success(
+        gender
+          ? `${gender} members unassigned`
+          : `${selectedTeam.teamName} unassigned`,
+      );
       setDormTeams({});
-      if (gender === "Male") setSelectedTeam((prev) => prev ? { ...prev, maleDormId: null, maleDormName: null } : prev);
-      else if (gender === "Female") setSelectedTeam((prev) => prev ? { ...prev, femaleDormId: null, femaleDormName: null } : prev);
+      if (gender === "Male")
+        setSelectedTeam((prev) =>
+          prev ? { ...prev, maleDormId: null, maleDormName: null } : prev,
+        );
+      else if (gender === "Female")
+        setSelectedTeam((prev) =>
+          prev ? { ...prev, femaleDormId: null, femaleDormName: null } : prev,
+        );
       setRefreshKey((k) => k + 1);
-      if (!gender) { setTeamAssignOpen(false); setSelectedTeam(null); }
+      if (!gender) {
+        setTeamAssignOpen(false);
+        setSelectedTeam(null);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to unassign");
     } finally {
@@ -355,8 +447,13 @@ export function DormsSubTab() {
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setRefreshKey((k) => k + 1)}>
-            <RefreshCw className="h-4 w-4 mr-1" />Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRefreshKey((k) => k + 1)}
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh
           </Button>
           <Button
             variant="outline"
@@ -364,19 +461,36 @@ export function DormsSubTab() {
             onClick={handleAutoAssign}
             disabled={locked || isAssigning || dorms.length === 0}
           >
-            {isAssigning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+            {isAssigning ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <CheckCircle className="h-4 w-4 mr-1" />
+            )}
             Auto-Assign
           </Button>
-          <Button size="sm" disabled={locked} onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />Add Dorm
+          <Button
+            size="sm"
+            disabled={locked}
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Dorm
           </Button>
           <Button
             variant={locked ? "default" : "outline"}
             size="sm"
             onClick={() => toggleLocked(!locked)}
-            className={locked ? "bg-amber-500 hover:bg-amber-600 text-white border-0" : ""}
+            className={
+              locked
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                : ""
+            }
           >
-            {locked ? <Unlock className="h-4 w-4 mr-1" /> : <Lock className="h-4 w-4 mr-1" />}
+            {locked ? (
+              <Unlock className="h-4 w-4 mr-1" />
+            ) : (
+              <Lock className="h-4 w-4 mr-1" />
+            )}
             {locked ? "Unlock" : "Lock"}
           </Button>
         </div>
@@ -385,24 +499,50 @@ export function DormsSubTab() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Selected</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{teams.length}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Assigned</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Selected
+            </CardTitle>
+          </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{totalAssigned}</div>
-            {totalPartial > 0 && <p className="text-xs text-blue-500 mt-1">{totalPartial} partial (mixed)</p>}
+            <div className="text-2xl font-bold">{teams.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Unassigned</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-yellow-600">{totalUnassigned}</div></CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Assigned</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {totalAssigned}
+            </div>
+            {totalPartial > 0 && (
+              <p className="text-xs text-blue-500 mt-1">
+                {totalPartial} partial (mixed)
+              </p>
+            )}
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Not Assignable</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Unassigned</CardTitle>
+          </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{totalNotAssignable}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {totalUnassigned}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Not Assignable
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {totalNotAssignable}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Unknown gender</p>
           </CardContent>
         </Card>
@@ -422,19 +562,25 @@ export function DormsSubTab() {
                 <div
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
                   onClick={() => handleExpandDorm(dorm.id)}
-                  onKeyDown={(e) => e.key === "Enter" && handleExpandDorm(dorm.id)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleExpandDorm(dorm.id)
+                  }
                 >
                   <div className="flex items-center gap-3">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium text-sm">{dorm.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {dorm.teamCount} teams · {dorm.participantCount} participants
+                        {dorm.teamCount} teams · {dorm.participantCount}{" "}
+                        participants
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={`text-xs ${GENDER_BADGE[dorm.gender]}`}>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${GENDER_BADGE[dorm.gender]}`}
+                    >
                       {dorm.gender}
                     </Badge>
                     <Button
@@ -442,8 +588,17 @@ export function DormsSubTab() {
                       size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed"
                       disabled={locked || dorm.teamCount > 0}
-                      title={locked ? "Unlock to delete" : dorm.teamCount > 0 ? `Reassign ${dorm.teamCount} team(s) before deleting` : "Delete dorm"}
-                      onClick={(e) => { e.stopPropagation(); setDeleteTargetId(dorm.id); }}
+                      title={
+                        locked
+                          ? "Unlock to delete"
+                          : dorm.teamCount > 0
+                            ? `Reassign ${dorm.teamCount} team(s) before deleting`
+                            : "Delete dorm"
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTargetId(dorm.id);
+                      }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -453,25 +608,41 @@ export function DormsSubTab() {
                   <div className="border-t px-4 pb-3 pt-2">
                     {!dormTeams[dorm.id] ? (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                        <Loader2 className="h-3 w-3 animate-spin" />Loading...
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading...
                       </div>
                     ) : dormTeams[dorm.id].length === 0 ? (
-                      <p className="text-xs text-muted-foreground py-2">No teams assigned yet.</p>
+                      <p className="text-xs text-muted-foreground py-2">
+                        No teams assigned yet.
+                      </p>
                     ) : (
                       <div className="space-y-3">
                         {dormTeams[dorm.id].map((t) => (
                           <div key={t.teamId} className="space-y-1.5">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold">{t.teamNo ? `${t.teamNo}. ` : ""}{t.teamName}</span>
-                              <span className="text-muted-foreground">{t.memberCount} members</span>
+                              <span className="font-semibold">
+                                {t.teamNo ? `${t.teamNo}. ` : ""}
+                                {t.teamName}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {t.memberCount} members
+                              </span>
                             </div>
                             {t.members.length > 0 && (
                               <div className="ml-2 space-y-0.5">
                                 {t.members.map((m) => (
-                                  <div key={m.id} className="flex items-center justify-between text-xs py-0.5">
-                                    <span className="text-muted-foreground">{m.name ?? "—"}</span>
+                                  <div
+                                    key={m.id}
+                                    className="flex items-center justify-between text-xs py-0.5"
+                                  >
+                                    <span className="text-muted-foreground">
+                                      {m.name ?? "—"}
+                                    </span>
                                     {m.gender && (
-                                      <Badge variant="outline" className={`text-[10px] h-4 px-1.5 ${GENDER_BADGE[m.gender] ?? GENDER_BADGE.Unknown}`}>
+                                      <Badge
+                                        variant="outline"
+                                        className={`text-[10px] h-4 px-1.5 ${GENDER_BADGE[m.gender] ?? GENDER_BADGE.Unknown}`}
+                                      >
                                         {m.gender}
                                       </Badge>
                                     )}
@@ -496,11 +667,20 @@ export function DormsSubTab() {
             <h3 className="font-semibold text-sm">
               Teams{" "}
               <span className="text-muted-foreground font-normal">
-                ({filteredTeams.length}{filteredTeams.length !== teams.length ? ` of ${teams.length}` : ""})
+                ({filteredTeams.length}
+                {filteredTeams.length !== teams.length
+                  ? ` of ${teams.length}`
+                  : ""}
+                )
               </span>
             </h3>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-7 text-xs"
+              >
                 <X className="h-3 w-3 mr-1" />
                 Clear filters
               </Button>
@@ -526,7 +706,9 @@ export function DormsSubTab() {
               <SelectContent>
                 <SelectItem value="all">All Genders</SelectItem>
                 {uniqueGenders.map((g) => (
-                  <SelectItem key={g} value={g}>{g}</SelectItem>
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -538,7 +720,9 @@ export function DormsSubTab() {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="Assigned">Assigned</SelectItem>
-                <SelectItem value="Partially Assigned">Partially Assigned</SelectItem>
+                <SelectItem value="Partially Assigned">
+                  Partially Assigned
+                </SelectItem>
                 <SelectItem value="Unassigned">Unassigned</SelectItem>
                 <SelectItem value="Not Assignable">Not Assignable</SelectItem>
               </SelectContent>
@@ -551,7 +735,9 @@ export function DormsSubTab() {
               <SelectContent>
                 <SelectItem value="all">All Dorms</SelectItem>
                 {dorms.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -563,7 +749,9 @@ export function DormsSubTab() {
               <SelectContent className="max-h-60">
                 <SelectItem value="all">All Colleges</SelectItem>
                 {uniqueColleges.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -584,7 +772,10 @@ export function DormsSubTab() {
               <TableBody>
                 {filteredTeams.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-sm">
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground text-sm"
+                    >
                       No teams match the current filters.
                     </TableCell>
                   </TableRow>
@@ -594,12 +785,18 @@ export function DormsSubTab() {
                     return (
                       <TableRow
                         key={t.teamId}
-                        className={locked ? "" : "cursor-pointer hover:bg-muted/60"}
+                        className={
+                          locked ? "" : "cursor-pointer hover:bg-muted/60"
+                        }
                         onClick={() => !locked && handleOpenTeamAssign(t)}
                       >
-                        <TableCell className="font-mono text-xs">{t.teamNo ?? "—"}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {t.teamNo ?? "—"}
+                        </TableCell>
                         <TableCell>
-                          <div className="font-medium text-sm">{t.teamName}</div>
+                          <div className="font-medium text-sm">
+                            {t.teamName}
+                          </div>
                           {t.collegeName && (
                             <div className="text-xs text-muted-foreground truncate max-w-[180px]">
                               {t.collegeName}
@@ -607,26 +804,46 @@ export function DormsSubTab() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-xs ${GENDER_BADGE[t.teamGender]}`}>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${GENDER_BADGE[t.teamGender]}`}
+                          >
                             {t.teamGender}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-0.5">
-                            <Badge variant="outline" className={`text-xs ${STATUS_BADGE[status]}`}>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${STATUS_BADGE[status]}`}
+                            >
                               {status}
                             </Badge>
                             {t.teamGender === "Mixed" ? (
                               <div className="space-y-0.5">
-                                {t.maleDormName && <div className="text-[11px] text-blue-600 dark:text-blue-400">♂ {t.maleDormName}</div>}
-                                {t.femaleDormName && <div className="text-[11px] text-pink-600 dark:text-pink-400">♀ {t.femaleDormName}</div>}
+                                {t.maleDormName && (
+                                  <div className="text-[11px] text-blue-600 dark:text-blue-400">
+                                    ♂ {t.maleDormName}
+                                  </div>
+                                )}
+                                {t.femaleDormName && (
+                                  <div className="text-[11px] text-pink-600 dark:text-pink-400">
+                                    ♀ {t.femaleDormName}
+                                  </div>
+                                )}
                               </div>
                             ) : (
-                              t.assignedDormName && <div className="text-xs text-muted-foreground">{t.assignedDormName}</div>
+                              t.assignedDormName && (
+                                <div className="text-xs text-muted-foreground">
+                                  {t.assignedDormName}
+                                </div>
+                              )
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right text-sm">{t.memberCount}</TableCell>
+                        <TableCell className="text-right text-sm">
+                          {t.memberCount}
+                        </TableCell>
                       </TableRow>
                     );
                   })
@@ -638,7 +855,11 @@ export function DormsSubTab() {
           {teams.some((t) => t.teamGender === "Mixed") && (
             <div className="flex items-start gap-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md p-3">
               <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>Mixed-gender teams are skipped by auto-assign. Click a mixed team to manually assign male and female members to separate dorms.</span>
+              <span>
+                Mixed-gender teams are skipped by auto-assign. Click a mixed
+                team to manually assign male and female members to separate
+                dorms.
+              </span>
             </div>
           )}
         </div>
@@ -649,7 +870,9 @@ export function DormsSubTab() {
         <DialogContent className="sm:max-w-[380px]">
           <DialogHeader>
             <DialogTitle>Create Dorm</DialogTitle>
-            <DialogDescription>Add a new dormitory with a designated gender.</DialogDescription>
+            <DialogDescription>
+              Add a new dormitory with a designated gender.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -663,48 +886,84 @@ export function DormsSubTab() {
             </div>
             <div className="space-y-2">
               <Label>Gender</Label>
-              <Select value={newGender} onValueChange={(v) => setNewGender(v as typeof newGender)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={newGender}
+                onValueChange={(v) => setNewGender(v as typeof newGender)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Male">Male</SelectItem>
                   <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Prefer Not To Say">Prefer Not To Say</SelectItem>
+                  <SelectItem value="Prefer Not To Say">
+                    Prefer Not To Say
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={isCreating || !newName.trim()}>
-              {isCreating && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Create
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={isCreating || !newName.trim()}
+            >
+              {isCreating && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              Create
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirm */}
-      <Dialog open={!!deleteTargetId} onOpenChange={(o) => !o && setDeleteTargetId(null)}>
+      <Dialog
+        open={!!deleteTargetId}
+        onOpenChange={(o) => !o && setDeleteTargetId(null)}
+      >
         <DialogContent className="sm:max-w-[380px]">
           <DialogHeader>
             <DialogTitle>Delete Dorm</DialogTitle>
             <DialogDescription>
-              This will permanently delete the dorm. Blocked if any teams are currently assigned.
+              This will permanently delete the dorm. Blocked if any teams are
+              currently assigned.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Delete
+            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Team Assign Dialog */}
-      <Dialog open={teamAssignOpen} onOpenChange={(o) => { if (!o) { setTeamAssignOpen(false); setSelectedTeam(null); } }}>
+      <Dialog
+        open={teamAssignOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setTeamAssignOpen(false);
+            setSelectedTeam(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedTeam ? `Assign — ${selectedTeam.teamName}` : "Assign Team"}</DialogTitle>
+            <DialogTitle>
+              {selectedTeam
+                ? `Assign — ${selectedTeam.teamName}`
+                : "Assign Team"}
+            </DialogTitle>
             <DialogDescription>
               {selectedTeam?.teamGender === "Mixed"
                 ? "Mixed team: assign male and female members to separate dorms."
@@ -717,79 +976,124 @@ export function DormsSubTab() {
               {/* Team info */}
               <div className="flex flex-wrap items-center gap-2">
                 {selectedTeam.teamNo && (
-                  <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">#{selectedTeam.teamNo}</span>
+                  <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                    #{selectedTeam.teamNo}
+                  </span>
                 )}
-                <Badge variant="outline" className={`text-xs ${GENDER_BADGE[selectedTeam.teamGender]}`}>
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${GENDER_BADGE[selectedTeam.teamGender]}`}
+                >
                   {selectedTeam.teamGender}
                 </Badge>
                 {selectedTeam.genderCounts.Male > 0 && (
-                  <span className={`text-xs px-2 py-0.5 rounded border ${GENDER_BADGE.Male}`}>{selectedTeam.genderCounts.Male} Male</span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded border ${GENDER_BADGE.Male}`}
+                  >
+                    {selectedTeam.genderCounts.Male} Male
+                  </span>
                 )}
                 {selectedTeam.genderCounts.Female > 0 && (
-                  <span className={`text-xs px-2 py-0.5 rounded border ${GENDER_BADGE.Female}`}>{selectedTeam.genderCounts.Female} Female</span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded border ${GENDER_BADGE.Female}`}
+                  >
+                    {selectedTeam.genderCounts.Female} Female
+                  </span>
                 )}
               </div>
 
               {selectedTeam.teamGender === "Mixed" ? (
                 /* Mixed team: two independent sections */
                 <div className="space-y-5">
-                  {(["Male", "Female"] as const).filter((g) => selectedTeam.genderCounts[g] > 0).map((g) => {
-                    const currentDormId = g === "Male" ? selectedTeam.maleDormId : selectedTeam.femaleDormId;
-                    const currentDormName = g === "Male" ? selectedTeam.maleDormName : selectedTeam.femaleDormName;
-                    const compatibleDorms = dorms.filter((d) => d.gender === g);
-                    return (
-                      <div key={g} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className={`text-xs font-semibold uppercase tracking-wide ${g === "Male" ? "text-blue-600 dark:text-blue-400" : "text-pink-600 dark:text-pink-400"}`}>
-                            {g} Members ({selectedTeam.genderCounts[g]})
-                          </p>
-                          {currentDormName && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-muted-foreground">→ {currentDormName}</span>
-                              <button
-                                type="button"
-                                className="text-destructive hover:text-destructive text-xs flex items-center gap-0.5 disabled:opacity-50"
-                                disabled={manualAssigning !== null}
-                                onClick={() => handleManualUnassign(g)}
-                              >
-                                {manualAssigning === `unassign-${g}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-                                Unassign
-                              </button>
-                            </div>
+                  {(["Male", "Female"] as const)
+                    .filter((g) => selectedTeam.genderCounts[g] > 0)
+                    .map((g) => {
+                      const currentDormId =
+                        g === "Male"
+                          ? selectedTeam.maleDormId
+                          : selectedTeam.femaleDormId;
+                      const currentDormName =
+                        g === "Male"
+                          ? selectedTeam.maleDormName
+                          : selectedTeam.femaleDormName;
+                      const compatibleDorms = dorms.filter(
+                        (d) => d.gender === g,
+                      );
+                      return (
+                        <div key={g} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p
+                              className={`text-xs font-semibold uppercase tracking-wide ${g === "Male" ? "text-blue-600 dark:text-blue-400" : "text-pink-600 dark:text-pink-400"}`}
+                            >
+                              {g} Members ({selectedTeam.genderCounts[g]})
+                            </p>
+                            {currentDormName && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-muted-foreground">
+                                  → {currentDormName}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="text-destructive hover:text-destructive text-xs flex items-center gap-0.5 disabled:opacity-50"
+                                  disabled={manualAssigning !== null}
+                                  onClick={() => handleManualUnassign(g)}
+                                >
+                                  {manualAssigning === `unassign-${g}` ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <X className="h-3 w-3" />
+                                  )}
+                                  Unassign
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          {compatibleDorms.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">
+                              No {g.toLowerCase()} dorms created yet.
+                            </p>
+                          ) : (
+                            compatibleDorms.map((d) => {
+                              const isCurrent = d.id === currentDormId;
+                              const isAssigningThis =
+                                manualAssigning === `${d.id}-${g}`;
+                              return (
+                                <button
+                                  key={d.id}
+                                  type="button"
+                                  disabled={manualAssigning !== null}
+                                  onClick={() => handleManualAssign(d.id, g)}
+                                  className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors ${
+                                    isCurrent
+                                      ? "border-green-400 bg-green-50 dark:bg-green-900/20"
+                                      : "hover:bg-muted/60"
+                                  } disabled:opacity-50`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {isCurrent && (
+                                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                                    )}
+                                    <span className="font-medium">
+                                      {d.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <Users className="h-3 w-3" />
+                                    <span>
+                                      {d.teamCount} teams · {d.participantCount}{" "}
+                                      members
+                                    </span>
+                                    {isAssigningThis && (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })
                           )}
                         </div>
-                        {compatibleDorms.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No {g.toLowerCase()} dorms created yet.</p>
-                        ) : (
-                          compatibleDorms.map((d) => {
-                            const isCurrent = d.id === currentDormId;
-                            const isAssigningThis = manualAssigning === `${d.id}-${g}`;
-                            return (
-                              <button
-                                key={d.id}
-                                type="button"
-                                disabled={manualAssigning !== null}
-                                onClick={() => handleManualAssign(d.id, g)}
-                                className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors ${
-                                  isCurrent ? "border-green-400 bg-green-50 dark:bg-green-900/20" : "hover:bg-muted/60"
-                                } disabled:opacity-50`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  {isCurrent && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
-                                  <span className="font-medium">{d.name}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <Users className="h-3 w-3" />
-                                  <span>{d.teamCount} teams · {d.participantCount} members</span>
-                                  {isAssigningThis && <Loader2 className="h-3 w-3 animate-spin" />}
-                                </div>
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               ) : (
                 /* Non-mixed: only show compatible dorms */
@@ -797,24 +1101,36 @@ export function DormsSubTab() {
                   {selectedTeam.assignedDormName && (
                     <div className="flex items-center justify-between rounded-md border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 px-3 py-2">
                       <span className="text-xs text-green-700 dark:text-green-300">
-                        Assigned to <strong>{selectedTeam.assignedDormName}</strong>
+                        Assigned to{" "}
+                        <strong>{selectedTeam.assignedDormName}</strong>
                       </span>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive px-2"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs text-destructive hover:text-destructive px-2"
                         onClick={() => handleManualUnassign()}
                         disabled={manualAssigning !== null}
                       >
-                        {manualAssigning === "unassign" ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                        {manualAssigning === "unassign" ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
                         <span className="ml-1">Unassign</span>
                       </Button>
                     </div>
                   )}
                   {(() => {
-                    const compatibleDorms = dorms.filter((d) => d.gender === selectedTeam.teamGender);
-                    if (compatibleDorms.length === 0) return (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No {selectedTeam.teamGender.toLowerCase()} dorms created yet.
-                      </p>
+                    const compatibleDorms = dorms.filter(
+                      (d) => d.gender === selectedTeam.teamGender,
                     );
+                    if (compatibleDorms.length === 0)
+                      return (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No {selectedTeam.teamGender.toLowerCase()} dorms
+                          created yet.
+                        </p>
+                      );
                     return compatibleDorms.map((d) => {
                       const isCurrent = d.id === selectedTeam.assignedDormId;
                       const isAssigningThis = manualAssigning === d.id;
@@ -825,17 +1141,25 @@ export function DormsSubTab() {
                           disabled={manualAssigning !== null}
                           onClick={() => handleManualAssign(d.id)}
                           className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors ${
-                            isCurrent ? "border-green-400 bg-green-50 dark:bg-green-900/20" : "hover:bg-muted/60"
+                            isCurrent
+                              ? "border-green-400 bg-green-50 dark:bg-green-900/20"
+                              : "hover:bg-muted/60"
                           } disabled:opacity-50`}
                         >
                           <div className="flex items-center gap-2">
-                            {isCurrent && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
+                            {isCurrent && (
+                              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                            )}
                             <span className="font-medium">{d.name}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Users className="h-3 w-3" />
-                            <span>{d.teamCount} teams · {d.participantCount} members</span>
-                            {isAssigningThis && <Loader2 className="h-3 w-3 animate-spin" />}
+                            <span>
+                              {d.teamCount} teams · {d.participantCount} members
+                            </span>
+                            {isAssigningThis && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
                           </div>
                         </button>
                       );
@@ -847,7 +1171,15 @@ export function DormsSubTab() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setTeamAssignOpen(false); setSelectedTeam(null); }}>Close</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTeamAssignOpen(false);
+                setSelectedTeam(null);
+              }}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -855,25 +1187,39 @@ export function DormsSubTab() {
       {/* Auto-assign Result */}
       <Dialog open={assignResultOpen} onOpenChange={setAssignResultOpen}>
         <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader><DialogTitle>Auto-Assign Complete</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Auto-Assign Complete</DialogTitle>
+          </DialogHeader>
           {assignResult && (
             <div className="space-y-3 py-2">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border p-3 text-center">
-                  <div className="text-2xl font-bold text-green-600">{assignResult.assigned}</div>
-                  <div className="text-xs text-muted-foreground mt-1">Assigned</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {assignResult.assigned}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Assigned
+                  </div>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
-                  <div className="text-2xl font-bold text-red-600">{assignResult.notAssigned}</div>
-                  <div className="text-xs text-muted-foreground mt-1">Not Assigned</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {assignResult.notAssigned}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Not Assigned
+                  </div>
                 </div>
               </div>
               {assignResult.notAssignableTeams.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Could not assign (mixed gender):</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Could not assign (mixed gender):
+                  </p>
                   <div className="rounded-md border bg-muted/50 p-2 max-h-32 overflow-y-auto">
                     {assignResult.notAssignableTeams.map((name) => (
-                      <p key={name} className="text-xs py-0.5">{name}</p>
+                      <p key={name} className="text-xs py-0.5">
+                        {name}
+                      </p>
                     ))}
                   </div>
                 </div>

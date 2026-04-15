@@ -1586,6 +1586,7 @@ export async function exportTeamsData(teamIds: string[]) {
 
     const teamsData = await db
       .select({
+        teamNo: selected.teamNo,
         teamId: teams.id,
         teamName: teams.name,
         leaderName: participants.name,

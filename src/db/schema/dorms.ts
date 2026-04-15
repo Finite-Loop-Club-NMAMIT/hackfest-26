@@ -10,7 +10,7 @@ import { genderEnum } from "../enum";
 import { teams } from "./team";
 
 export const dormitory = pgTable("dormitory", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
@@ -20,10 +20,10 @@ export const dormitory = pgTable("dormitory", {
 export const dormitoryTeams = pgTable(
   "dormitory_teams",
   {
-    dormId: integer("dormitory_id")
+    dormId: text("dormitory_id")
       .notNull()
       .references(() => dormitory.id, { onDelete: "cascade" }),
-    teamId: integer("team_id")
+    teamId: text("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
     assignedAt: timestamp("assigned_at").notNull().defaultNow(),

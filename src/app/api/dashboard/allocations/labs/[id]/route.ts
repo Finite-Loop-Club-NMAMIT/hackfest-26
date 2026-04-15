@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { adminProtected } from "~/auth/routes-wrapper";
 import type { RouteContext } from "~/auth/routes-wrapper";
+import { adminProtected } from "~/auth/routes-wrapper";
 import {
   assignTeamToLab,
-  autoAssignLabs,
   deleteLab,
   getLabTeams,
   unassignTeamFromLab,
@@ -14,10 +13,6 @@ export const GET = adminProtected(
   async (_req: NextRequest, context: RouteContext<{ id: string }>) => {
     try {
       const { id } = await context.params;
-      if (id === "auto-assign") {
-        const result = await autoAssignLabs();
-        return NextResponse.json(result);
-      }
       const teams = await getLabTeams(id);
       return NextResponse.json({ teams });
     } catch (error) {
@@ -51,7 +46,10 @@ export const PATCH = adminProtected(
       const { teamId, action } = await req.json();
 
       if (!teamId || !action) {
-        return NextResponse.json({ error: "teamId and action required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "teamId and action required" },
+          { status: 400 },
+        );
       }
 
       if (action === "assign") {

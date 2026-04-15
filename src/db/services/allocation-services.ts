@@ -12,7 +12,12 @@ import {
   tracks,
 } from "~/db/schema";
 
-export type TeamGender = "Male" | "Female" | "Prefer Not To Say" | "Mixed" | "Unknown";
+export type TeamGender =
+  | "Male"
+  | "Female"
+  | "Prefer Not To Say"
+  | "Mixed"
+  | "Unknown";
 
 function resolveTeamGender(counts: {
   Male: number;
@@ -56,7 +61,10 @@ export async function getSelectedTeamsForAllocation() {
     })
     .from(participants)
     .where(
-      and(isNotNull(participants.teamId), inArray(participants.teamId, teamIds)),
+      and(
+        isNotNull(participants.teamId),
+        inArray(participants.teamId, teamIds),
+      ),
     )
     .groupBy(participants.teamId, participants.gender);
 
@@ -87,17 +95,35 @@ export async function getSelectedTeamsForAllocation() {
       dormName: dormitory.name,
     })
     .from(participants)
-    .innerJoin(dormitory, sql`${dormitory.id}::text = ${participants.dormitoryId}`)
-    .where(
-      and(isNotNull(participants.teamId), inArray(participants.teamId, teamIds), isNotNull(participants.dormitoryId)),
+    .innerJoin(
+      dormitory,
+      sql`${dormitory.id}::text = ${participants.dormitoryId}`,
     )
-    .groupBy(participants.teamId, participants.gender, participants.dormitoryId, dormitory.name);
+    .where(
+      and(
+        isNotNull(participants.teamId),
+        inArray(participants.teamId, teamIds),
+        isNotNull(participants.dormitoryId),
+      ),
+    )
+    .groupBy(
+      participants.teamId,
+      participants.gender,
+      participants.dormitoryId,
+      dormitory.name,
+    );
 
-  const dormMap = new Map<string, Record<string, { dormId: string; dormName: string }>>();
+  const dormMap = new Map<
+    string,
+    Record<string, { dormId: string; dormName: string }>
+  >();
   for (const d of dormRows) {
     if (!d.teamId || !d.gender || !d.dormId) continue;
     if (!dormMap.has(d.teamId)) dormMap.set(d.teamId, {});
-    dormMap.get(d.teamId)![d.gender] = { dormId: d.dormId, dormName: d.dormName };
+    dormMap.get(d.teamId)![d.gender] = {
+      dormId: d.dormId,
+      dormName: d.dormName,
+    };
   }
 
   return rows.map((r) => {
@@ -113,8 +139,14 @@ export async function getSelectedTeamsForAllocation() {
       ...r,
       genderCounts: counts,
       teamGender,
-      assignedDormId: teamGender !== "Mixed" ? (Object.values(assignments)[0]?.dormId ?? null) : null,
-      assignedDormName: teamGender !== "Mixed" ? (Object.values(assignments)[0]?.dormName ?? null) : null,
+      assignedDormId:
+        teamGender !== "Mixed"
+          ? (Object.values(assignments)[0]?.dormId ?? null)
+          : null,
+      assignedDormName:
+        teamGender !== "Mixed"
+          ? (Object.values(assignments)[0]?.dormName ?? null)
+          : null,
       maleDormId: assignments.Male?.dormId ?? null,
       maleDormName: assignments.Male?.dormName ?? null,
       femaleDormId: assignments.Female?.dormId ?? null,
@@ -192,16 +224,16 @@ export async function getDormTeams(dormId: string) {
     .innerJoin(teams, eq(teams.id, participants.teamId))
     .leftJoin(selected, eq(selected.teamId, teams.id))
     .where(
-      and(
-        eq(participants.dormitoryId, dormId),
-        isNotNull(participants.teamId),
-      ),
+      and(eq(participants.dormitoryId, dormId), isNotNull(participants.teamId)),
     )
     .groupBy(participants.teamId, teams.name, selected.teamNo)
     .orderBy(selected.teamNo);
 
   const teamIds = rows.map((r) => r.teamId).filter(Boolean) as string[];
-  let membersByTeam = new Map<string, { id: string; name: string | null; gender: string | null }[]>();
+  const membersByTeam = new Map<
+    string,
+    { id: string; name: string | null; gender: string | null }[]
+  >();
 
   if (teamIds.length > 0) {
     const memberRows = await db
@@ -212,11 +244,13 @@ export async function getDormTeams(dormId: string) {
         gender: participants.gender,
       })
       .from(participants)
-      .where(and(
-        isNotNull(participants.teamId),
-        inArray(participants.teamId, teamIds),
-        eq(participants.dormitoryId, dormId),
-      ));
+      .where(
+        and(
+          isNotNull(participants.teamId),
+          inArray(participants.teamId, teamIds),
+          eq(participants.dormitoryId, dormId),
+        ),
+      );
 
     for (const m of memberRows) {
       if (!m.teamId) continue;
@@ -246,18 +280,35 @@ export async function unassignTeamFromDorm(teamId: string) {
     .where(eq(participants.teamId, teamId));
 }
 
-export async function assignTeamMembersByGenderToDorm(teamId: string, gender: string, dormId: string) {
+export async function assignTeamMembersByGenderToDorm(
+  teamId: string,
+  gender: string,
+  dormId: string,
+) {
   await db
     .update(participants)
     .set({ dormitoryId: dormId })
-    .where(and(eq(participants.teamId, teamId), sql`${participants.gender}::text = ${gender}`));
+    .where(
+      and(
+        eq(participants.teamId, teamId),
+        sql`${participants.gender}::text = ${gender}`,
+      ),
+    );
 }
 
-export async function unassignTeamMembersByGender(teamId: string, gender: string) {
+export async function unassignTeamMembersByGender(
+  teamId: string,
+  gender: string,
+) {
   await db
     .update(participants)
     .set({ dormitoryId: null })
-    .where(and(eq(participants.teamId, teamId), sql`${participants.gender}::text = ${gender}`));
+    .where(
+      and(
+        eq(participants.teamId, teamId),
+        sql`${participants.gender}::text = ${gender}`,
+      ),
+    );
 }
 
 export async function autoAssignDorms() {
@@ -277,7 +328,10 @@ export async function autoAssignDorms() {
   let notAssigned = 0;
   const notAssignableTeams: string[] = [];
 
-  await db.update(participants).set({ dormitoryId: null }).where(isNotNull(participants.dormitoryId));
+  await db
+    .update(participants)
+    .set({ dormitoryId: null })
+    .where(isNotNull(participants.dormitoryId));
 
   for (const team of allTeams) {
     if (team.teamGender === "Mixed" || team.teamGender === "Unknown") {
@@ -345,7 +399,9 @@ export async function deleteLab(id: string) {
     .where(eq(labTeams.labId, id));
 
   if (count > 0) {
-    throw new Error(`Cannot delete lab: ${count} team(s) are currently assigned.`);
+    throw new Error(
+      `Cannot delete lab: ${count} team(s) are currently assigned.`,
+    );
   }
 
   const [deleted] = await db.delete(lab).where(eq(lab.id, id)).returning();
@@ -370,17 +426,36 @@ export async function getLabTeams(labId: string) {
     .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
     .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
     .where(eq(labTeams.labId, labId))
-    .groupBy(labTeams.teamId, teams.name, selected.teamNo, colleges.name, tracks.name)
+    .groupBy(
+      labTeams.teamId,
+      teams.name,
+      selected.teamNo,
+      colleges.name,
+      tracks.name,
+    )
     .orderBy(selected.teamNo);
 
   const teamIds = rows.map((r) => r.teamId);
-  const membersByTeam = new Map<string, { id: string; name: string | null; gender: string | null }[]>();
+  const membersByTeam = new Map<
+    string,
+    { id: string; name: string | null; gender: string | null }[]
+  >();
 
   if (teamIds.length > 0) {
     const memberRows = await db
-      .select({ id: participants.id, teamId: participants.teamId, name: participants.name, gender: participants.gender })
+      .select({
+        id: participants.id,
+        teamId: participants.teamId,
+        name: participants.name,
+        gender: participants.gender,
+      })
       .from(participants)
-      .where(and(isNotNull(participants.teamId), inArray(participants.teamId, teamIds)));
+      .where(
+        and(
+          isNotNull(participants.teamId),
+          inArray(participants.teamId, teamIds),
+        ),
+      );
 
     for (const m of memberRows) {
       if (!m.teamId) continue;
@@ -390,7 +465,10 @@ export async function getLabTeams(labId: string) {
     }
   }
 
-  return rows.map((r) => ({ ...r, members: membersByTeam.get(r.teamId) ?? [] }));
+  return rows.map((r) => ({
+    ...r,
+    members: membersByTeam.get(r.teamId) ?? [],
+  }));
 }
 
 export async function assignTeamToLab(teamId: string, labId: string) {
@@ -403,7 +481,9 @@ export async function assignTeamToLab(teamId: string, labId: string) {
     .where(eq(labTeams.labId, labId));
 
   if (count >= labRow.capacity) {
-    throw new Error(`Lab "${labRow.name}" is at full capacity (${labRow.capacity} teams)`);
+    throw new Error(
+      `Lab "${labRow.name}" is at full capacity (${labRow.capacity} teams)`,
+    );
   }
 
   // Remove from any existing lab first
@@ -420,8 +500,6 @@ export async function getSelectedTeamsForLabAllocation(filters?: {
   collegeId?: string;
   status?: "assigned" | "unassigned";
 }) {
-  const assignedTeamIds = (await db.select({ teamId: labTeams.teamId }).from(labTeams)).map((r) => r.teamId);
-
   const rows = await db
     .select({
       teamId: teams.id,
@@ -443,27 +521,41 @@ export async function getSelectedTeamsForLabAllocation(filters?: {
     .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
     .leftJoin(labTeams, eq(labTeams.teamId, teams.id))
     .leftJoin(lab, eq(lab.id, labTeams.labId))
-    .groupBy(teams.id, teams.name, selected.teamNo, participants.collegeId, colleges.name, ideaSubmission.trackId, tracks.name, labTeams.labId, lab.name)
+    .groupBy(
+      teams.id,
+      teams.name,
+      selected.teamNo,
+      participants.collegeId,
+      colleges.name,
+      ideaSubmission.trackId,
+      tracks.name,
+      labTeams.labId,
+      lab.name,
+    )
     .orderBy(selected.teamNo);
 
-  return rows.map((r) => ({
-    ...r,
-    assignedLabId: r.labId ?? null,
-    assignedLabName: r.labName ?? null,
-  })).filter((r) => {
-    if (filters?.trackId && r.trackId !== filters.trackId) return false;
-    if (filters?.collegeId && r.collegeId !== filters.collegeId) return false;
-    if (filters?.status === "assigned" && !r.assignedLabId) return false;
-    if (filters?.status === "unassigned" && r.assignedLabId) return false;
-    return true;
-  });
+  return rows
+    .map((r) => ({
+      ...r,
+      assignedLabId: r.labId ?? null,
+      assignedLabName: r.labName ?? null,
+    }))
+    .filter((r) => {
+      if (filters?.trackId && r.trackId !== filters.trackId) return false;
+      if (filters?.collegeId && r.collegeId !== filters.collegeId) return false;
+      if (filters?.status === "assigned" && !r.assignedLabId) return false;
+      if (filters?.status === "unassigned" && r.assignedLabId) return false;
+      return true;
+    });
 }
 
 export async function autoAssignLabs() {
   const allLabs = await listLabsWithOccupancy();
   if (allLabs.length === 0) return { assigned: 0, notAssigned: 0 };
 
-  const unassignedTeams = await getSelectedTeamsForLabAllocation({ status: "unassigned" });
+  const unassignedTeams = await getSelectedTeamsForLabAllocation({
+    status: "unassigned",
+  });
 
   let assigned = 0;
   let notAssigned = 0;
@@ -472,7 +564,10 @@ export async function autoAssignLabs() {
     // Sort labs by current occupancy ascending to load-balance
     allLabs.sort((a, b) => a.teamCount - b.teamCount);
     const target = allLabs.find((l) => l.teamCount < l.capacity);
-    if (!target) { notAssigned++; continue; }
+    if (!target) {
+      notAssigned++;
+      continue;
+    }
 
     await db.insert(labTeams).values({ labId: target.id, teamId: team.teamId });
     target.teamCount++;

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { adminProtected } from "~/auth/routes-wrapper";
 import type { RouteContext } from "~/auth/routes-wrapper";
+import { adminProtected } from "~/auth/routes-wrapper";
 import {
   assignTeamMembersByGenderToDorm,
   assignTeamToDorm,

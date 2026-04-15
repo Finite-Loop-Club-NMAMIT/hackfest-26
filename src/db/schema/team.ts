@@ -27,7 +27,7 @@ export const teams = pgTable(
     attended: boolean("attended").notNull().default(false),
     teamStage: teamStage("team_stage").default("NOT_SELECTED").notNull(),
     isCompleted: boolean("is_completed").notNull().default(false),
-    labId: integer("lab_id").references(() => lab.id, {
+    labId: text("lab_id").references(() => lab.id, {
       onDelete: "set null",
     }),
     createdAt: timestamp("created_at").notNull().defaultNow(),

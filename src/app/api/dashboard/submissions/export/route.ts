@@ -52,6 +52,7 @@ export const POST = adminProtected(async (request, _ctx, _user) => {
     const worksheet = workbook.addWorksheet("Teams Export");
 
     const columns: Partial<ExcelJS.Column>[] = [
+      { header: "Team No", key: "teamNo", width: 20 },
       { header: "Team Name", key: "teamName", width: 25 },
       { header: "Member Name", key: "memberName", width: 22 },
       { header: "Alias", key: "alias", width: 22 },
@@ -108,6 +109,7 @@ export const POST = adminProtected(async (request, _ctx, _user) => {
         const aliasValue = isAliasAvailable ? memberAlias : memberName;
 
         worksheet.addRow({
+          teamNo: team.teamNo || "",
           teamName: team.teamName || "",
           memberName: memberName,
           alias: aliasValue,

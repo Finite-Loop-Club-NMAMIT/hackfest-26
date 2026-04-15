@@ -330,6 +330,13 @@
       "when": 1776116917638,
       "tag": "0046_mixed_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1776245464312,
+      "tag": "0047_curious_nebula",
+      "breakpoints": true
     }
   ]
 }

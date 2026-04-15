@@ -2,8 +2,8 @@
 
 import { ScanLine } from "lucide-react";
 import { useState } from "react";
-import { QRScanner } from "~/components/dashboard/attendance/qr-scanner";
 import { AttendanceTable } from "~/components/dashboard/attendance/attendance-table";
+import { QRScanner } from "~/components/dashboard/attendance/qr-scanner";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -26,9 +26,7 @@ export function AttendanceTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Attendance</h2>
-          <p className="text-muted-foreground">
-            View and mark team attendance
-          </p>
+          <p className="text-muted-foreground">View and mark team attendance</p>
         </div>
         <Dialog open={scanDialogOpen} onOpenChange={setScanDialogOpen}>
           <DialogTrigger asChild>

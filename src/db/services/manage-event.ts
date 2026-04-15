@@ -13,8 +13,8 @@ import {
   eventParticipants,
   events,
   eventTeams,
-  teams,
   participants,
+  teams,
 } from "../schema";
 
 export async function markTeamAttendanceByScan(
@@ -42,7 +42,9 @@ export async function markTeamAttendanceByScan(
 
     await db.transaction(async (tx) => {
       // 1. Mark the team itself as attended, unless explicitly marked with 0 members
-      const isTeamAttended = presentParticipantIds ? presentParticipantIds.length > 0 : true;
+      const isTeamAttended = presentParticipantIds
+        ? presentParticipantIds.length > 0
+        : true;
       await tx
         .update(teams)
         .set({ attended: isTeamAttended })
@@ -69,7 +71,9 @@ export async function markTeamAttendanceByScan(
     return NextResponse.json({
       success: true,
       data: {
-        alreadyMarked: !!team.attended && (!presentParticipantIds || presentParticipantIds.length === 0),
+        alreadyMarked:
+          !!team.attended &&
+          (!presentParticipantIds || presentParticipantIds.length === 0),
         teamName: team.name,
       },
     });
@@ -87,7 +91,6 @@ export async function markTeamAttendanceByScan(
     );
   }
 }
-
 
 export type TeamDetails = {
   id: string;

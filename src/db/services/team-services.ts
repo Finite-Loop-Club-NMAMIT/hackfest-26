@@ -14,7 +14,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import db from "~/db";
 import * as userData from "~/db/data/participant";
 import * as teamData from "~/db/data/teams";
-import { notSelected, participants, teams } from "~/db/schema";
+import { notSelected, participants, selected, teams } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 
 type Team = InferSelectModel<typeof teams>;
@@ -451,4 +451,70 @@ export async function getFormStatus(teamId: string) {
   } else {
     return "IDEA_NOT_SUBMITTED";
   }
+}
+
+export async function fetchAttendanceTeams({
+  search,
+  filter,
+}: {
+  search?: string;
+  filter?: {
+    attended?: string;
+    paymentStatus?: string;
+  };
+}) {
+  const conditions: SQL[] = [];
+
+  if (search?.trim()) {
+    conditions.push(ilike(teams.name, `%${search.trim()}%`));
+  }
+
+  if (filter?.paymentStatus && filter.paymentStatus !== "all") {
+    conditions.push(
+      eq(
+        teams.paymentStatus,
+        filter.paymentStatus as "Pending" | "Paid" | "Refunded",
+      ),
+    );
+  }
+  if (filter?.attended && filter.attended !== "all") {
+    conditions.push(eq(teams.attended, filter.attended === "true"));
+  }
+
+  const memberCount = db
+    .select({
+      teamId: participants.teamId,
+      count: count().as("member_count"),
+    })
+    .from(participants)
+    .where(isNotNull(participants.teamId))
+    .groupBy(participants.teamId)
+    .as("member_counts");
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const result = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      paymentStatus: teams.paymentStatus,
+      teamStage: teams.teamStage,
+      attended: teams.attended,
+      memberCount: sql<number>`COALESCE(${memberCount.count}, 0)`.mapWith(
+        Number,
+      ),
+    })
+    .from(teams)
+    .innerJoin(selected, eq(teams.id, selected.teamId))
+    .leftJoin(memberCount, eq(teams.id, memberCount.teamId))
+    .where(whereClause)
+    .orderBy(asc(selected.teamNo));
+
+  console.log("Fetched attendance teams with filters:", {
+    search,
+    filter,
+    count: result.length,
+  });
+
+  return { teams: result };
 }
