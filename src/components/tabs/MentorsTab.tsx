@@ -901,7 +901,21 @@ function AdminMentorPanel() {
                               }
                               disabled={!canManageAssignments}
                             />
-                            <span className="truncate">{team.name}</span>
+                            <div className="w-full flex justify-between">
+                              <span className="truncate">{team.name}</span>
+                              <span>
+                                {
+                                  feedbackHistory.filter((feedback) => {
+                                    if (
+                                      feedback.teamId === team.id &&
+                                      feedback.feedback
+                                    ) {
+                                      return true;
+                                    }
+                                  }).length
+                                }
+                              </span>
+                            </div>
                           </div>
                         );
                       })}
