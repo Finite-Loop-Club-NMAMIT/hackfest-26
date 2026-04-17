@@ -70,7 +70,7 @@ export function AttendanceTable() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(25);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
   // Dialog State
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -97,7 +97,7 @@ export function AttendanceTable() {
     console.log(data);
     setTeams(data.teams);
     setIsLoading(false);
-  }, [debouncedSearch, attendedFilter, paymentFilter, refreshKey]);
+  }, [debouncedSearch, attendedFilter, paymentFilter]);
 
   useEffect(() => {
     void fetchData();
@@ -105,7 +105,7 @@ export function AttendanceTable() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, attendedFilter, paymentFilter]);
+  }, []);
 
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1);

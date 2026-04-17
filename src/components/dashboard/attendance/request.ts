@@ -26,7 +26,7 @@ export async function scanAttendance(
 
 export async function fetchTeamDetails(teamId: string) {
   try {
-    const res = await fetch("/api/dashboard/teams/" + teamId);
+    const res = await fetch(`/api/dashboard/teams/${teamId}`);
     if (!res.ok) throw new Error("Team not found");
     return await res.json();
   } catch (_error) {
@@ -76,7 +76,7 @@ export async function toggleTeamAttendance(
   attended: boolean,
 ): Promise<boolean> {
   try {
-    const res = await fetch("/api/dashboard/teams/" + teamId, {
+    const res = await fetch(`/api/dashboard/teams/${teamId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
