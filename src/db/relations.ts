@@ -11,6 +11,8 @@ import {
   events,
   eventTeams,
   ideaSubmission,
+  lab,
+  labTeams,
   participants,
   payment,
   permissions,
@@ -27,6 +29,7 @@ import {
   mentors,
 } from "./schema/mentor";
 import { notSelected, selected, semiSelected } from "./schema/team-progress";
+import { support } from "./schema/support";
 
 export const userRelations = relations(participants, ({ one, many }) => ({
   college: one(colleges, {
@@ -71,7 +74,12 @@ export const teamRelations = relations(teams, ({ many, one }) => ({
     fields: [teams.id],
     references: [ideaSubmission.teamId],
   }),
+  labTeam: one(labTeams, {
+    fields: [teams.id],
+    references: [labTeams.teamId],
+  }),
   mentorAssignments: many(mentorRoundAssignments),
+  supports: many(support),
 }));
 
 export const notSelectedRelations = relations(notSelected, ({ one }) => ({
@@ -276,5 +284,31 @@ export const githubRepoRelations = relations(githubRepos, ({ one }) => ({
   github: one(githubs, {
     fields: [githubRepos.githubId],
     references: [githubs.id],
+  }),
+}));
+
+export const labRelations = relations(lab, ({ many }) => ({
+  teams: many(labTeams),
+}));
+
+export const labTeamRelations = relations(labTeams, ({ one }) => ({
+  team: one(teams, {
+    fields: [labTeams.teamId],
+    references: [teams.id],
+  }),
+  lab: one(lab, {
+    fields: [labTeams.labId],
+    references: [lab.id],
+  }),
+}));
+
+export const supportRelations = relations(support, ({ one }) => ({
+  team: one(teams, {
+    fields: [support.teamId],
+    references: [teams.id],
+  }),
+  submitter: one(participants, {
+    fields: [support.submittedBy],
+    references: [participants.id],
   }),
 }));

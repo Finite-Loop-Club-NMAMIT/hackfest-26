@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import {
   Card,
   CardContent,
@@ -32,6 +33,7 @@ import { Textarea } from "~/components/ui/textarea";
 type MentorAllocation = {
   assignmentId: string;
   teamId: string;
+  teamNo: number;
   teamName: string;
   paymentStatus: string | null;
   roundId: string;
@@ -102,7 +104,7 @@ export function MentorTab() {
     return roundAllocations.map((allocation, index) => ({
       ...allocation,
       // TODO: Replace derived teamNumber with a stable mapped team identifier from DB.
-      teamNumber: index + 1,
+      teamNumber: allocation.teamNo,
     }));
   }, [allocations, selectedRoundId]);
 
@@ -194,13 +196,15 @@ export function MentorTab() {
 
   useEffect(() => {
     if (teamsInSelectedRound.length === 0) {
-      setSelectedTeamNumber(1);
       return;
     }
 
-    const maxTeamNumber = teamsInSelectedRound.length;
-    if (selectedTeamNumber < 1 || selectedTeamNumber > maxTeamNumber) {
-      setSelectedTeamNumber(1);
+    const isValidTeam = teamsInSelectedRound.some(
+      (t) => t.teamNumber === selectedTeamNumber,
+    );
+
+    if (!isValidTeam) {
+      setSelectedTeamNumber(teamsInSelectedRound[0].teamNumber);
     }
   }, [teamsInSelectedRound, selectedTeamNumber]);
 
@@ -265,6 +269,10 @@ export function MentorTab() {
     }
   };
 
+  const currentTeamIndex = teamsInSelectedRound.findIndex(
+    (t) => t.teamNumber === selectedTeamNumber,
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -325,12 +333,11 @@ export function MentorTab() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      setSelectedTeamNumber((prev) => Math.max(1, prev - 1))
+                      setSelectedTeamNumber(
+                        teamsInSelectedRound[currentTeamIndex - 1].teamNumber,
+                      )
                     }
-                    disabled={
-                      teamsInSelectedRound.length === 0 ||
-                      selectedTeamNumber <= 1
-                    }
+                    disabled={currentTeamIndex <= 0}
                   >
                     Prev
                   </Button>
@@ -339,13 +346,13 @@ export function MentorTab() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      setSelectedTeamNumber((prev) =>
-                        Math.min(teamsInSelectedRound.length, prev + 1),
+                      setSelectedTeamNumber(
+                        teamsInSelectedRound[currentTeamIndex + 1].teamNumber,
                       )
                     }
                     disabled={
-                      teamsInSelectedRound.length === 0 ||
-                      selectedTeamNumber >= teamsInSelectedRound.length
+                      currentTeamIndex === -1 ||
+                      currentTeamIndex >= teamsInSelectedRound.length - 1
                     }
                   >
                     Next
@@ -369,7 +376,11 @@ export function MentorTab() {
                               ? "default"
                               : "outline"
                           }
-                          className="h-7 min-w-8 px-2"
+                          className={cn(
+                            "h-7 min-w-8 px-2",
+                            team.feedbackCount > 0 &&
+                              "rounded-none border-green-600 bg-green-600 font-bold text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700",
+                          )}
                           onClick={() => setSelectedTeamNumber(team.teamNumber)}
                         >
                           {team.teamNumber}

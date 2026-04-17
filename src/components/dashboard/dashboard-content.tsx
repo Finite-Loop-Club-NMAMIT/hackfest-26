@@ -19,6 +19,7 @@ import {
   SelectionsTab,
   SettingsTab,
   SubmissionsTab,
+  SupportTab,
   TeamsTab,
   WorkerManagementTab,
 } from "../tabs";
@@ -59,6 +60,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "event-stats", content: <EventStatsTab /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
     { id: "worker", content: <WorkerManagementTab /> },
+    { id: "support", content: <SupportTab /> },
   ];
 
   const checkTabAccess = (config: (typeof dashboardFeatureTabs)[0]) => {

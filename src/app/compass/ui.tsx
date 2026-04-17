@@ -1,10 +1,11 @@
 "use client";
 
-import { Home, MapPinned, X } from "lucide-react";
+import { AlertTriangle, Home, Loader2, MapPinned, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-qr-code";
+import { apiFetch } from "~/lib/fetcher";
 
 type TimerPayload = {
   timer?: {
@@ -13,6 +14,14 @@ type TimerPayload = {
     remaining: number;
     durationSeconds: number;
   } | null;
+};
+
+export type IssuePayload = {
+  id: string;
+  description: string;
+  isResolved: boolean;
+  team_id: string;
+  submitted_by: string;
 };
 
 type CompassClientProps = {
@@ -77,7 +86,29 @@ export function CompassClient({
   const [clock, setClock] = useState(new Date());
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [activeSpotId, setActiveSpotId] = useState("checkin-desk");
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportDescription, setSupportDescription] = useState("");
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const sourceRef = useRef<EventSource | null>(null);
+
+  const handleSupportSubmit = async () => {
+    if (!supportDescription.trim() || isSubmittingSupport) return;
+    setIsSubmittingSupport(true);
+    try {
+      const res = await apiFetch<IssuePayload>("/api/compass/support", {
+        method: "POST",
+        body: JSON.stringify({ description: supportDescription.trim() }),
+      });
+      if (res?.id) {
+        setSupportDescription("");
+        setIsSupportModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Support submission error:", err);
+    } finally {
+      setIsSubmittingSupport(false);
+    }
+  };
 
   const mapSpots: MapSpot[] = useMemo(
     () => [
@@ -497,6 +528,7 @@ export function CompassClient({
 
                 <div className="mt-2 flex flex-1 items-end justify-center">
                   <button
+                    type="button"
                     onClick={() => setIsQrModalOpen(true)}
                     className="rounded-2xl bg-white p-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.35)] transition-transform hover:scale-105 active:scale-95"
                     aria-label="Enlarge QR Code"
@@ -513,7 +545,65 @@ export function CompassClient({
             </section>
           </div>
         </div>
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsSupportModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-[#ff6b6b]/40 bg-[#ff6b6b]/10 px-4 py-2 font-pirate text-lg tracking-widest text-[#ff8e8e] transition-colors hover:bg-[#ff6b6b]/20"
+          >
+            <AlertTriangle className="h-5 w-5" />
+            REPORT TECHNICAL ISSUE
+          </button>
+        </div>
       </div>
+
+      {isSupportModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#040d1d]/80 backdrop-blur-sm"
+            onClick={() => setIsSupportModalOpen(false)}
+          />
+          <section className="relative z-10 w-full max-w-sm rounded-3xl border border-[#ff6b6b]/40 bg-[#2d1212]/90 p-6 text-[#ffeded] shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-pirate text-xl tracking-widest text-[#ff6b6b]">
+                REPORT ISSUE
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsSupportModalOpen(false)}
+                className="rounded-full p-1 hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-4 text-sm text-[#ffcaca]">
+              Facing a technical snag? Describe it below and our team will
+              investigate.
+            </p>
+            <textarea
+              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm outline-none focus:border-[#ff6b6b]/50"
+              rows={4}
+              placeholder="Describe the issue..."
+              value={supportDescription}
+              onChange={(e) => setSupportDescription(e.target.value)}
+              disabled={isSubmittingSupport}
+            />
+            <button
+              type="button"
+              onClick={handleSupportSubmit}
+              disabled={isSubmittingSupport || !supportDescription.trim()}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff6b6b] py-3 font-pirate text-sm tracking-widest text-white shadow-lg active:scale-95 disabled:opacity-50"
+            >
+              {isSubmittingSupport ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "SUBMIT ISSUE"
+              )}
+            </button>
+          </section>
+        </div>
+      ) : null}
 
       {isMapOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4">

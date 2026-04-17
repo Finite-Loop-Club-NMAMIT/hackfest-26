@@ -12,5 +12,6 @@ export { RolesTab } from "./Roles";
 export { SelectionsTab } from "./SelectionsTab";
 export { SettingsTab } from "./Settings";
 export { SubmissionsTab } from "./SubmissionsTab";
+export { SupportTab } from "./SupportTab";
 export { TeamsTab } from "./TeamsTab";
 export { WorkerManagementTab } from "./workerMangement";
