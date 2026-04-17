@@ -24,6 +24,8 @@ type CompassClientProps = {
   labAssignment: string;
   announcementText: string;
   dormNote: string;
+  maleDorm?: string;
+  femaleDorm?: string;
 };
 
 type MapSpot = {
@@ -63,7 +65,10 @@ export function CompassClient({
   labAssignment,
   dormNote,
   announcementText,
+  maleDorm = "TBA",
+  femaleDorm = "TBA",
 }: CompassClientProps) {
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [timerStatus, setTimerStatus] = useState<
@@ -434,14 +439,18 @@ export function CompassClient({
                   {dormMode === "male-only" ? (
                     <div className="flex items-center justify-between">
                       <p className="font-pirate text-lg">Male Dorm</p>
-                      <p className="font-pirate text-xl">TBA</p>
+                      <p className="font-pirate text-xl text-center max-w-[150px] leading-tight">
+                        {maleDorm}
+                      </p>
                     </div>
                   ) : null}
 
                   {dormMode === "female-only" ? (
                     <div className="flex items-center justify-between">
                       <p className="font-pirate text-lg">Female Dorm</p>
-                      <p className="font-pirate text-xl">TBA</p>
+                      <p className="font-pirate text-xl text-center max-w-[150px] leading-tight">
+                        {femaleDorm}
+                      </p>
                     </div>
                   ) : null}
 
@@ -451,13 +460,17 @@ export function CompassClient({
                         <p className="font-pirate text-base text-[#dbe9ff]">
                           Male
                         </p>
-                        <p className="font-pirate text-xl leading-none">TBA</p>
+                        <p className="font-pirate text-xl leading-none">
+                          {maleDorm}
+                        </p>
                       </div>
                       <div>
                         <p className="font-pirate text-base text-[#dbe9ff]">
                           Female
                         </p>
-                        <p className="font-pirate text-xl leading-none">TBA</p>
+                        <p className="font-pirate text-xl leading-none">
+                          {femaleDorm}
+                        </p>
                       </div>
                     </div>
                   ) : null}
@@ -483,14 +496,18 @@ export function CompassClient({
                 </div>
 
                 <div className="mt-2 flex flex-1 items-end justify-center">
-                  <div className="rounded-2xl bg-white p-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.35)]">
+                  <button
+                    onClick={() => setIsQrModalOpen(true)}
+                    className="rounded-2xl bg-white p-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.35)] transition-transform hover:scale-105 active:scale-95"
+                    aria-label="Enlarge QR Code"
+                  >
                     <QRCode
                       value={teamId}
                       size={92}
                       bgColor="#ffffff"
                       fgColor="#1f2937"
                     />
-                  </div>
+                  </button>
                 </div>
               </div>
             </section>
@@ -617,6 +634,58 @@ export function CompassClient({
                   ))}
                 </div>
               </aside>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {isQrModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close QR Modal"
+            className="absolute inset-0 bg-[#040d1d]/75 backdrop-blur-sm"
+            onClick={() => setIsQrModalOpen(false)}
+          />
+
+          <section
+            className="relative z-10 w-full max-w-sm overflow-hidden rounded-[24px] border border-[#f2d7a4]/[0.45] bg-[#6e4a29]/[0.25] p-5 text-center text-[#fff6e8] shadow-[0_20px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,243,220,0.28)] backdrop-blur-[16px] backdrop-saturate-[130%]"
+            style={{
+              WebkitBackdropFilter: "blur(16px) saturate(135%)",
+              backdropFilter: "blur(16px) saturate(135%)",
+            }}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(160deg,rgba(255,236,197,0.2),rgba(223,176,112,0.08)_42%,rgba(118,77,39,0.12)_74%,rgba(52,30,14,0.18))]" />
+
+            <button
+              type="button"
+              onClick={() => setIsQrModalOpen(false)}
+              className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 z-20 transition-colors"
+              aria-label="Close QR popup"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="relative z-10">
+              <p className="font-pirate text-lg tracking-[0.1em] text-[#ffecc7] mb-2">
+                TEAM QR
+              </p>
+              <h2 className="font-pirate text-3xl mb-6 truncate px-4">
+                {teamName}
+              </h2>
+
+              <div className="mx-auto bg-white p-4 rounded-3xl inline-block shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
+                <QRCode
+                  value={teamId}
+                  size={240}
+                  bgColor="#ffffff"
+                  fgColor="#1f2937"
+                />
+              </div>
+
+              <p className="mt-8 text-sm text-[#efd5ab] opacity-80">
+                Show this code for check-in and meals.
+              </p>
             </div>
           </section>
         </div>
