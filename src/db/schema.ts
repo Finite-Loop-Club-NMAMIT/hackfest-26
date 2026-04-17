@@ -15,6 +15,7 @@ export * from "./schema/participant";
 export * from "./schema/payment";
 export * from "./schema/rbac";
 export * from "./schema/site-settings";
+export * from "./schema/support";
 export * from "./schema/team";
 export * from "./schema/team-progress";
 export * from "./schema/timer";

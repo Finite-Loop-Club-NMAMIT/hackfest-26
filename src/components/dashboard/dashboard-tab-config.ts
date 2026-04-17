@@ -102,4 +102,9 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     label: "Worker Management",
     permissions: ["worker:manage"],
   },
+  {
+    id: "support",
+    label: "Support",
+    permissions: ["admin:access"],
+  },
 ];

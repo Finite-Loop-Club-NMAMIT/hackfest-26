@@ -227,3 +227,92 @@ style="opacity:0.8;">
     console.error("Failed to send payment verification email:", emailError);
   }
 }
+
+export async function sendSupportIssueEmail({
+  teamName,
+  teamNo,
+  submitterName,
+  description,
+  labName,
+}: {
+  teamName: string;
+  teamNo: number | null;
+  submitterName: string;
+  description: string;
+  labName: string | null;
+}) {
+  const SMTP_HOST = process.env.SMTP_HOST;
+  const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+  const SMTP_USER = process.env.SMTP_USER;
+  const SMTP_PASS = process.env.SMTP_PASS;
+
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    console.error("Missing SMTP credentials. Cannot send support issue email.");
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+
+  const teamLabel =
+    teamNo !== null
+      ? `#${String(teamNo).padStart(2, "0")} ${teamName}`
+      : teamName;
+  const timestamp = new Date().toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
+
+  const mailOptions = {
+    from: SMTP_USER || '"Hackfest Team" <noreply@hackfest.dev>',
+    to: "bn2345890@gmail.com",
+    subject: `🚨 Support Issue: ${teamLabel}`,
+    html: `
+      <h2 style="color:#dc2626;">New Support Ticket</h2>
+      <p>A participant has reported a technical issue.</p>
+
+      <table style="border-collapse:collapse; margin:16px 0;">
+        <tr>
+          <td style="padding:6px 12px; font-weight:bold; color:#374151;">Team</td>
+          <td style="padding:6px 12px;">${teamLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px; font-weight:bold; color:#374151;">Lab</td>
+          <td style="padding:6px 12px;">${labName ?? "Not assigned"}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px; font-weight:bold; color:#374151;">Reported By</td>
+          <td style="padding:6px 12px;">${submitterName}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px; font-weight:bold; color:#374151;">Time</td>
+          <td style="padding:6px 12px;">${timestamp}</td>
+        </tr>
+      </table>
+
+      <h3 style="color:#374151;">Issue Description</h3>
+      <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; white-space:pre-wrap; font-size:14px; color:#1f2937;">
+${description}
+      </div>
+
+      <p style="margin-top:20px; font-size:13px; color:#9ca3af;">
+        Please resolve this via the <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://hackfest.dev"}/dashboard">Support Dashboard</a>.
+      </p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Support issue email sent for team:", teamName);
+  } catch (emailError) {
+    console.error("Failed to send support issue email:", emailError);
+  }
+}
