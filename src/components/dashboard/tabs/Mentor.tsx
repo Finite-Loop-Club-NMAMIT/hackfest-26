@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import {
   Card,
   CardContent,
@@ -375,7 +376,11 @@ export function MentorTab() {
                               ? "default"
                               : "outline"
                           }
-                          className="h-7 min-w-8 px-2"
+                          className={cn(
+                            "h-7 min-w-8 px-2",
+                            team.feedbackCount > 0 &&
+                              "rounded-none border-green-600 bg-green-600 font-bold text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700",
+                          )}
                           onClick={() => setSelectedTeamNumber(team.teamNumber)}
                         >
                           {team.teamNumber}
