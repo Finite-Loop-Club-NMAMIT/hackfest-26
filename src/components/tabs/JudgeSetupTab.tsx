@@ -91,6 +91,14 @@ type JudgeScoreDetail = {
   }>;
 };
 
+function getPercentageColor(percentage: number) {
+  if (percentage >= 80) return "text-green-600";
+  if (percentage >= 60) return "text-blue-600";
+  if (percentage >= 40) return "text-yellow-600";
+  if (percentage >= 20) return "text-orange-600";
+  return "text-red-600";
+}
+
 export function JudgeSetupTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingRound, setIsCreatingRound] = useState(false);
@@ -127,6 +135,15 @@ export function JudgeSetupTab() {
   const [labs, setLabs] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedTrackId, setSelectedTrackId] = useState("");
   const [selectedLabId, setSelectedLabId] = useState("");
+  const [judgeScoreHistory, setJudgeScoreHistory] = useState<
+    Array<{
+      teamId: string | null;
+      id: string;
+      criteriaId: string;
+      rawScore: number;
+      roundAssignmentId: string;
+    }>
+  >([]);
 
   const filteredTeams = useMemo(() => {
     return allTeams.filter((team) => {
@@ -199,11 +216,19 @@ export function JudgeSetupTab() {
       judgeUsers: JudgeUser[];
       teams: TeamOption[];
       assignedTeamIds: string[];
+      history: Array<{
+        teamId: string | null;
+        id: string;
+        criteriaId: string;
+        rawScore: number;
+        roundAssignmentId: string;
+      }>;
     };
 
     setJudgeUsers(data.judgeUsers);
     setAllTeams(data.teams);
     setSelectedTeamIds(data.assignedTeamIds || []);
+    setJudgeScoreHistory(data.history || []);
 
     if (!selectedJudgeUserId && data.judgeUsers.length > 0) {
       setSelectedJudgeUserId(data.judgeUsers[0].id);
@@ -765,7 +790,6 @@ export function JudgeSetupTab() {
               </div>
 
               <div className="grid grid-cols-2 space-x-1">
-                {/* TODO */}
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Lab</p>
                   <Select
@@ -833,7 +857,21 @@ export function JudgeSetupTab() {
                               }
                               disabled={!canManageAssignments}
                             />
-                            <span>{team.name}</span>
+                            <div className="w-full flex justify-between items-center">
+                              <span>{team.name}</span>
+                              <span>
+                                {
+                                  judgeScoreHistory.filter((h) => {
+                                    if (
+                                      team.id === h.teamId &&
+                                      h.teamId === team.id
+                                    ) {
+                                      return true;
+                                    }
+                                  }).length
+                                }
+                              </span>
+                            </div>
                           </label>
                         );
                       })}
@@ -947,7 +985,11 @@ export function JudgeSetupTab() {
                           </TableCell>
                           <TableCell>{row.totalRawScore}</TableCell>
                           <TableCell>{row.maxPossibleScore}</TableCell>
-                          <TableCell>{row.percentage}%</TableCell>
+                          <TableCell
+                            className={`font-medium ${getPercentageColor(row.percentage)}`}
+                          >
+                            {row.percentage}%
+                          </TableCell>
                           <TableCell>{row.judgeCount}</TableCell>
                           <TableCell>{row.scoreEntries}</TableCell>
                           <TableCell className="text-right">

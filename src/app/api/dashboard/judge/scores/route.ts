@@ -24,7 +24,7 @@ const saveScoresSchema = z.object({
 });
 
 export const GET = permissionProtected(
-  ["submission:score"],
+  ["judge:score"],
   async (request, _context, user) => {
     try {
       const { searchParams } = new URL(request.url);
@@ -107,7 +107,7 @@ export const GET = permissionProtected(
 );
 
 export const POST = permissionProtected(
-  ["submission:score"],
+  ["judge:score"],
   async (request, _context, user) => {
     try {
       const body = await request.json();

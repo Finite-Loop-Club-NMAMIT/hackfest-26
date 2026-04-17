@@ -88,7 +88,8 @@ export const GET = adminProtected(async (req: NextRequest) => {
       }
     }
 
-    // const judgeAssignments = await db.query.judgeRoundAssignments.findMany();
+    const judgeAssignments = await db.query.judgeRoundAssignments.findMany();
+    const judgeScore = await db.query.judgeScores.findMany();
 
     return NextResponse.json(
       {
@@ -101,7 +102,13 @@ export const GET = adminProtected(async (req: NextRequest) => {
             labTeams.find((labTeam) => labTeam.teamId === team.id)?.labId || "",
         })),
         assignedTeamIds,
-        // history: judgeAssignments,
+        history: judgeScore.map((score) => ({
+          ...score,
+          teamId:
+            judgeAssignments.find(
+              (assignment) => assignment.id === score.roundAssignmentId,
+            )?.teamId ?? null,
+        })),
       },
       { status: 200 },
     );

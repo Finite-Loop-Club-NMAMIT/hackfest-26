@@ -13,7 +13,7 @@ import {
 } from "~/db/schema";
 
 export const GET = permissionProtected(
-  ["submission:score"],
+  ["judge:score"],
   async (_request, _context, user) => {
     try {
       const judge = await db.query.judges.findFirst({
