@@ -394,7 +394,12 @@ export function AttendanceTable() {
                     {(currentPage - 1) * pageSize + index + 1}
                   </TableCell>
                   <TableCell className="font-medium">{team.name}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate" title={team.collegeName || "Unknown"}>{team.collegeName || "-"}</TableCell>
+                  <TableCell
+                    className="text-muted-foreground text-sm max-w-[200px] truncate"
+                    title={team.collegeName || "Unknown"}
+                  >
+                    {team.collegeName || "-"}
+                  </TableCell>
                   <TableCell>{team.memberCount}</TableCell>
                   <TableCell>
                     {team.paymentStatus ? (
@@ -472,6 +477,7 @@ export function AttendanceTable() {
                     {team.memberCount} Members
                   </div>
                 </div>
+
                 <Badge
                   variant="outline"
                   className="text-[10px] font-normal leading-tight whitespace-nowrap"
@@ -479,7 +485,12 @@ export function AttendanceTable() {
                   {team.teamStage.replace(/_/g, " ")}
                 </Badge>
               </div>
-
+              <div>
+                <div className="font-semibold text-base">{team.name}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {team.collegeName}
+                </div>
+              </div>
               <div className="flex items-center gap-2 mb-4">
                 {team.paymentStatus ? (
                   <Badge

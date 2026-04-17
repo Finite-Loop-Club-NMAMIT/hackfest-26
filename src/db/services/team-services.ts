@@ -16,6 +16,7 @@ import db from "~/db";
 import * as userData from "~/db/data/participant";
 import * as teamData from "~/db/data/teams";
 import {
+  colleges,
   dormitory,
   lab,
   labTeams,
@@ -23,7 +24,6 @@ import {
   participants,
   selected,
   teams,
-  colleges,
 } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 import { errorResponse } from "~/lib/response/error";
