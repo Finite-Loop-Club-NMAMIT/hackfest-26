@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { apiFetch } from "~/lib/fetcher";
 
 type JudgeRound = {
   id: string;
@@ -59,6 +60,8 @@ type JudgeUser = {
 type TeamOption = {
   id: string;
   name: string;
+  trackId: string;
+  labId: string;
 };
 
 type LeaderboardRow = {
@@ -119,6 +122,23 @@ export function JudgeSetupTab() {
   const [newRoundName, setNewRoundName] = useState("");
   const [newCriteriaName, setNewCriteriaName] = useState("");
   const [newCriteriaMaxScore, setNewCriteriaMaxScore] = useState("10");
+
+  const [tracks, setTracks] = useState<Array<{ id: string; name: string }>>([]);
+  const [labs, setLabs] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState("");
+  const [selectedLabId, setSelectedLabId] = useState("");
+
+  const filteredTeams = useMemo(() => {
+    return allTeams.filter((team) => {
+      if (selectedTrackId && team.trackId !== selectedTrackId) {
+        return false;
+      }
+      if (selectedLabId && team.labId !== selectedLabId) {
+        return false;
+      }
+      return true;
+    });
+  }, [allTeams, selectedTrackId, selectedLabId]);
 
   const selectedRound = useMemo(
     () => rounds.find((round) => round.id === selectedRoundId),
@@ -220,12 +240,31 @@ export function JudgeSetupTab() {
     setLeaderboardRows(data.rows || []);
   };
 
+  const fetchLabs = async () => {
+    const result = await apiFetch<Array<{ id: string; name: string }>>(
+      "/api/dashboard/allocations?get=labs",
+    );
+
+    setLabs(result);
+  };
+
+  const fetchTracks = async () => {
+    const response = await fetch("/api/tracks");
+    if (!response.ok) {
+      toast.error("Failed to load tracks");
+      return;
+    }
+
+    const data = await response.json();
+    setTracks(data as Array<{ id: string; name: string }>);
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial dashboard setup fetch
   useEffect(() => {
     const run = async () => {
       try {
         setIsLoading(true);
-        await fetchRounds();
+        await Promise.all([fetchRounds(), fetchTracks(), fetchLabs()]);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to load judge setup",
@@ -490,6 +529,14 @@ export function JudgeSetupTab() {
     }
   };
 
+  const handleSelectVisible = () => {
+    if (selectedTeamIds.length === filteredTeams.length) {
+      setSelectedTeamIds([]);
+    } else {
+      setSelectedTeamIds(filteredTeams.map((team) => team.id));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -717,6 +764,46 @@ export function JudgeSetupTab() {
                 </Select>
               </div>
 
+              <div className="grid grid-cols-2 space-x-1">
+                {/* TODO */}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Lab</p>
+                  <Select
+                    value={selectedLabId}
+                    onValueChange={setSelectedLabId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select lab" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {labs.map((lab) => (
+                        <SelectItem key={lab.id} value={lab.id}>
+                          {lab.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Track</p>
+                  <Select
+                    value={selectedTrackId}
+                    onValueChange={setSelectedTrackId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select track" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tracks.map((track) => (
+                        <SelectItem key={track.id} value={track.id}>
+                          {track.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {isLoadingAssignments ? (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -724,13 +811,13 @@ export function JudgeSetupTab() {
                 </div>
               ) : (
                 <div className="max-h-56 overflow-y-auto rounded-md border p-3">
-                  {allTeams.length === 0 ? (
+                  {filteredTeams.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No teams available.
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {allTeams.map((team) => {
+                      {filteredTeams.map((team) => {
                         const checked = selectedTeamIds.includes(team.id);
                         return (
                           <label
@@ -755,23 +842,30 @@ export function JudgeSetupTab() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex justify-start flex-col items-start gap-2">
                 <p className="text-xs text-muted-foreground">
                   {selectedJudgeUser
                     ? `${selectedTeamIds.length} teams selected for ${selectedJudgeUser.name}`
                     : "Select a judge user"}
                 </p>
-                <Button
-                  onClick={handleSaveAssignments}
-                  disabled={
-                    !selectedRoundId ||
-                    !selectedJudgeUserId ||
-                    isSavingAssignments ||
-                    !canManageAssignments
-                  }
-                >
-                  {isSavingAssignments ? "Saving..." : "Save Allocation"}
-                </Button>
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <Button variant={"outline"} onClick={handleSelectVisible}>
+                    {selectedTeamIds.length === filteredTeams.length
+                      ? "Deselect All"
+                      : "Select Visible"}
+                  </Button>
+                  <Button
+                    onClick={handleSaveAssignments}
+                    disabled={
+                      !selectedRoundId ||
+                      !selectedJudgeUserId ||
+                      isSavingAssignments ||
+                      !canManageAssignments
+                    }
+                  >
+                    {isSavingAssignments ? "Saving..." : "Save Allocation"}
+                  </Button>
+                </div>
               </div>
 
               {!canManageAssignments && selectedRound ? (

@@ -107,9 +107,13 @@ export function UsersTable() {
     });
   }, [users, searchQuery, roleFilter]);
 
+  // Reset page number when filters or search query change
   useEffect(() => {
+    if (searchQuery && roleFilter && pageSize) {
+      console.log("just for dependency");
+    }
     setCurrentPage(1);
-  }, []);
+  }, [searchQuery, roleFilter, pageSize]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredUsers.length / pageSize)),

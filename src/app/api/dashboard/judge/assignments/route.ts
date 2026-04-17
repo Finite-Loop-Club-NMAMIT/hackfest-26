@@ -10,6 +10,7 @@ import {
   judges,
   roles,
   teams,
+  tracks,
 } from "~/db/schema";
 
 const updateAssignmentsSchema = z.object({
@@ -46,10 +47,24 @@ export const GET = adminProtected(async (req: NextRequest) => {
       new Map(judgeUsers.map((user) => [user.id, user])).values(),
     );
 
-    const allTeams = await db
-      .select({ id: teams.id, name: teams.name })
-      .from(teams)
-      .orderBy(asc(teams.name));
+    const allTeams = await db.query.teams.findMany({
+      with: {
+        ideaSubmission: {
+          columns: {
+            id: true,
+          },
+          with: {
+            track: {
+              columns: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const labTeams = await db.query.labTeams.findMany();
 
     let assignedTeamIds: string[] = [];
 
@@ -73,11 +88,20 @@ export const GET = adminProtected(async (req: NextRequest) => {
       }
     }
 
+    // const judgeAssignments = await db.query.judgeRoundAssignments.findMany();
+
     return NextResponse.json(
       {
         judgeUsers: uniqueJudgeUsers,
-        teams: allTeams,
+        teams: allTeams.map((team) => ({
+          id: team.id,
+          name: team.name,
+          trackId: team.ideaSubmission?.track.id || "",
+          labId:
+            labTeams.find((labTeam) => labTeam.teamId === team.id)?.labId || "",
+        })),
         assignedTeamIds,
+        // history: judgeAssignments,
       },
       { status: 200 },
     );
