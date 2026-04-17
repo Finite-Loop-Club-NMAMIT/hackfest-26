@@ -2,12 +2,7 @@ export const events = [
   {
     day: 1,
     title: "Check-in",
-    time: "10-11AM",
-  },
-  {
-    day: 1,
-    title: "Onboarding",
-    time: "11AM-12PM",
+    time: "10-12PM",
   },
   {
     day: 1,
@@ -17,7 +12,7 @@ export const events = [
   {
     day: 1,
     title: "Inaugural",
-    time: "1-4PM",
+    time: "2-4PM",
   },
   {
     day: 1,

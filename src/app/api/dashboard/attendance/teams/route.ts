@@ -3,7 +3,7 @@ import { fetchAttendanceTeams } from "~/db/services/team-services";
 import { successResponse } from "~/lib/response/success";
 
 export const GET = permissionProtected(
-  ["team:view_all"],
+  ["attendance:mark"],
   async (request: Request, _context: RouteContext) => {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || undefined;
@@ -13,7 +13,7 @@ export const GET = permissionProtected(
       attended: searchParams.get("attended") || undefined,
     };
 
-    const { teams } = await fetchAttendanceTeams({
+    const { teams, stats } = await fetchAttendanceTeams({
       search,
       filter,
     });
@@ -24,6 +24,6 @@ export const GET = permissionProtected(
       teamCount: teams.length,
     });
 
-    return successResponse({ teams });
+    return successResponse({ teams, stats });
   },
 );
