@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, Loader2 } from "lucide-react";
+import { Download, Eye, Loader2 } from "lucide-react";
+
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
@@ -593,6 +594,15 @@ export function JudgeSetupTab() {
     }
   };
 
+  const handleExportAllocations = () => {
+    const params = new URLSearchParams();
+    if (selectedRoundId) params.set("judgeRoundId", selectedRoundId);
+    window.open(
+      `/api/dashboard/judge/assignments/export?${params.toString()}`,
+      "_blank",
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -956,17 +966,27 @@ export function JudgeSetupTab() {
                       ? "Ranking based on cumulative scores across all rounds."
                       : "Ranking for the selected round based on judge scores."}
                   </CardDescription>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleNormalizeRound}
-                    disabled={!selectedRoundId || isNormalizing}
-                  >
-                    {isNormalizing && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {isNormalizing ? "Processing..." : "Normalize & Aggregate"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleExportAllocations}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleNormalizeRound}
+                      disabled={!selectedRoundId || isNormalizing}
+                    >
+                      {isNormalizing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isNormalizing ? "Processing..." : "Normalize & Aggregate"}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
