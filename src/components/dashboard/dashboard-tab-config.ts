@@ -107,4 +107,14 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     label: "Judge",
     permissions: ["judge:score"],
   },
+  {
+    id: "panel-setup",
+    label: "Panel Setup",
+    permissions: ["roles:manage"],
+  },
+  {
+    id: "panel",
+    label: "Panel",
+    permissions: ["panel:score"],
+  },
 ];

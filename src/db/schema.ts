@@ -11,6 +11,7 @@ export * from "./schema/judge";
 export * from "./schema/lab-teams";
 export * from "./schema/labs";
 export * from "./schema/mentor";
+export * from "./schema/panel";
 export * from "./schema/participant";
 export * from "./schema/payment";
 export * from "./schema/rbac";

@@ -5,6 +5,8 @@ export { JudgeSetupTab } from "./JudgeSetupTab";
 export { JudgeTab } from "./JudgeTab";
 export { MealsTab } from "./Meals";
 export { MentorsTab } from "./MentorsTab";
+export { PanelTab } from "./Panel";
+export { PanelSetupTab } from "./PanelSetupTab";
 export { ParticipantsTab } from "./ParticipantsTab";
 export { PaymentsTab } from "./PaymentsTab";
 export { ResultsTab } from "./Results";

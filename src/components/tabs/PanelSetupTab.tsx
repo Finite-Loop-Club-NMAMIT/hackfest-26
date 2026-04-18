@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2, MessageSquare } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -39,20 +39,20 @@ import {
 } from "~/components/ui/table";
 import { apiFetch } from "~/lib/fetcher";
 
-type JudgeRound = {
+type PanelRound = {
   id: string;
   name: string;
   status: "Draft" | "Active" | "Completed";
 };
 
-type JudgeCriteria = {
+type PanelCriteria = {
   id: string;
-  judgeRoundId: string;
+  panelRoundId: string;
   criteriaName: string;
   maxScore: number;
 };
 
-type JudgeUser = {
+type PanelistUser = {
   id: string;
   name: string;
   username: string;
@@ -73,14 +73,15 @@ type LeaderboardRow = {
   normalizedTotalScore: number;
   maxPossibleScore: number;
   percentage: number;
-  judgeCount: number;
+  panelistCount: number;
+  judgeNormalizedTotal: number;
 };
 
-type JudgeScoreDetail = {
-  judgeId: string;
-  judgeUserId: string;
-  judgeName: string;
-  judgeUsername: string;
+type PanelistScoreDetail = {
+  panelistId: string;
+  panelistUserId: string;
+  panelistName: string;
+  panelistUsername: string;
   assignmentId: string;
   totalRawScore: number;
   totalMaxScore: number;
@@ -92,15 +93,7 @@ type JudgeScoreDetail = {
   }>;
 };
 
-function getPercentageColor(percentage: number) {
-  if (percentage >= 80) return "text-green-600";
-  if (percentage >= 60) return "text-blue-600";
-  if (percentage >= 40) return "text-yellow-600";
-  if (percentage >= 20) return "text-orange-600";
-  return "text-red-600";
-}
-
-export function JudgeSetupTab() {
+export function PanelSetupTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingRound, setIsCreatingRound] = useState(false);
   const [isCreatingCriteria, setIsCreatingCriteria] = useState(false);
@@ -111,20 +104,33 @@ export function JudgeSetupTab() {
   const [isNormalizing, setIsNormalizing] = useState(false);
   const [isLoadingScoreDetails, setIsLoadingScoreDetails] = useState(false);
   const [isScoreDetailsOpen, setIsScoreDetailsOpen] = useState(false);
+  const [isFeedbacksOpen, setIsFeedbacksOpen] = useState(false);
+  const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
+  const [feedbackTeam, setFeedbackTeam] = useState<LeaderboardRow | null>(null);
+  const [mentorFeedbacks, setMentorFeedbacks] = useState<
+    Array<{
+      assignmentId: string;
+      mentorName: string;
+      mentorUsername: string;
+      mentorRoundName: string;
+      mentorRoundStatus: string;
+      feedback: string | null;
+    }>
+  >([]);
 
-  const [rounds, setRounds] = useState<JudgeRound[]>([]);
-  const [criteria, setCriteria] = useState<JudgeCriteria[]>([]);
-  const [judgeUsers, setJudgeUsers] = useState<JudgeUser[]>([]);
+  const [rounds, setRounds] = useState<PanelRound[]>([]);
+  const [criteria, setCriteria] = useState<PanelCriteria[]>([]);
+  const [panelistUsers, setPanelistUsers] = useState<PanelistUser[]>([]);
   const [allTeams, setAllTeams] = useState<TeamOption[]>([]);
-  const [selectedJudgeUserId, setSelectedJudgeUserId] = useState("");
+  const [selectedPanelistUserId, setSelectedPanelistUserId] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [leaderboardRows, setLeaderboardRows] = useState<LeaderboardRow[]>([]);
   const [selectedLeaderboardTeam, setSelectedLeaderboardTeam] =
     useState<LeaderboardRow | null>(null);
-  const [judgeScoreDetails, setJudgeScoreDetails] = useState<
-    JudgeScoreDetail[]
+  const [panelistScoreDetails, setPanelistScoreDetails] = useState<
+    PanelistScoreDetail[]
   >([]);
-  const [maxPerJudge, setMaxPerJudge] = useState(0);
+  const [maxPerPanelist, setMaxPerPanelist] = useState(0);
   const [selectedRoundId, setSelectedRoundId] = useState("");
   const [showCumulativeLeaderboard, setShowCumulativeLeaderboard] =
     useState(false);
@@ -137,7 +143,7 @@ export function JudgeSetupTab() {
   const [labs, setLabs] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedTrackId, setSelectedTrackId] = useState("");
   const [selectedLabId, setSelectedLabId] = useState("");
-  const [judgeScoreHistory, setJudgeScoreHistory] = useState<
+  const [panelScoreHistory, setPanelScoreHistory] = useState<
     Array<{
       teamId: string | null;
       id: string;
@@ -163,17 +169,20 @@ export function JudgeSetupTab() {
     () => rounds.find((round) => round.id === selectedRoundId),
     [rounds, selectedRoundId],
   );
-  const selectedJudgeUser = useMemo(
-    () => judgeUsers.find((judgeUser) => judgeUser.id === selectedJudgeUserId),
-    [judgeUsers, selectedJudgeUserId],
+  const selectedPanelistUser = useMemo(
+    () =>
+      panelistUsers.find(
+        (panelistUser) => panelistUser.id === selectedPanelistUserId,
+      ),
+    [panelistUsers, selectedPanelistUserId],
   );
   const canEditSelectedRound = selectedRound?.status === "Draft";
   const canManageAssignments = selectedRound?.status !== "Completed";
 
   const fetchRounds = async () => {
-    const res = await fetch("/api/dashboard/judge/rounds");
-    if (!res.ok) throw new Error("Failed to load judge rounds");
-    const data = (await res.json()) as JudgeRound[];
+    const res = await fetch("/api/dashboard/panel/rounds");
+    if (!res.ok) throw new Error("Failed to load panel rounds");
+    const data = (await res.json()) as PanelRound[];
     setRounds(data);
     if (data.length > 0 && !selectedRoundId) {
       setSelectedRoundId(data[0].id);
@@ -186,36 +195,36 @@ export function JudgeSetupTab() {
       return;
     }
     const res = await fetch(
-      `/api/dashboard/judge/criteria?judgeRoundId=${encodeURIComponent(roundId)}`,
+      `/api/dashboard/panel/criteria?panelRoundId=${encodeURIComponent(roundId)}`,
     );
     if (!res.ok) throw new Error("Failed to load criteria");
-    const data = (await res.json()) as JudgeCriteria[];
+    const data = (await res.json()) as PanelCriteria[];
     setCriteria(data);
   };
 
-  const fetchAssignments = async (roundId: string, judgeUserId?: string) => {
+  const fetchAssignments = async (roundId: string, panelistUserId?: string) => {
     if (!roundId) {
-      setJudgeUsers([]);
+      setPanelistUsers([]);
       setAllTeams([]);
       setSelectedTeamIds([]);
       return;
     }
 
-    const params = new URLSearchParams({ judgeRoundId: roundId });
-    if (judgeUserId) {
-      params.set("judgeUserId", judgeUserId);
+    const params = new URLSearchParams({ panelRoundId: roundId });
+    if (panelistUserId) {
+      params.set("panelistUserId", panelistUserId);
     }
 
     setIsLoadingAssignments(true);
     const res = await fetch(
-      `/api/dashboard/judge/assignments?${params.toString()}`,
+      `/api/dashboard/panel/assignments?${params.toString()}`,
     );
     setIsLoadingAssignments(false);
 
-    if (!res.ok) throw new Error("Failed to load judge assignments");
+    if (!res.ok) throw new Error("Failed to load panel assignments");
 
     const data = (await res.json()) as {
-      judgeUsers: JudgeUser[];
+      panelistUsers: PanelistUser[];
       teams: TeamOption[];
       assignedTeamIds: string[];
       history: Array<{
@@ -227,30 +236,29 @@ export function JudgeSetupTab() {
       }>;
     };
 
-    setJudgeUsers(data.judgeUsers);
+    setPanelistUsers(data.panelistUsers);
     setAllTeams(data.teams);
     setSelectedTeamIds(data.assignedTeamIds || []);
-    setJudgeScoreHistory(data.history || []);
+    setPanelScoreHistory(data.history || []);
 
-    if (!selectedJudgeUserId && data.judgeUsers.length > 0) {
-      setSelectedJudgeUserId(data.judgeUsers[0].id);
+    if (!selectedPanelistUserId && data.panelistUsers.length > 0) {
+      setSelectedPanelistUserId(data.panelistUsers[0].id);
     }
   };
 
-  const fetchLeaderboard = async (roundId: string, cumulative = false) => {
+  const fetchLeaderboard = async (roundId: string) => {
     if (!roundId) {
       setLeaderboardRows([]);
-      setMaxPerJudge(0);
+      setMaxPerPanelist(0);
       return;
     }
 
     setIsLoadingLeaderboard(true);
     const params = new URLSearchParams({
-      judgeRoundId: roundId,
-      cumulative: cumulative ? "true" : "false",
+      panelRoundId: roundId,
     });
     const res = await fetch(
-      `/api/dashboard/judge/leaderboard?${params.toString()}`,
+      `/api/dashboard/panel/leaderboard?${params.toString()}`,
     );
     setIsLoadingLeaderboard(false);
 
@@ -259,11 +267,11 @@ export function JudgeSetupTab() {
     }
 
     const data = (await res.json()) as {
-      maxPerJudge: number;
+      maxPerPanelist: number;
       rows: LeaderboardRow[];
     };
 
-    setMaxPerJudge(data.maxPerJudge || 0);
+    setMaxPerPanelist(data.maxPerPanelist || 0);
     setLeaderboardRows(data.rows || []);
   };
 
@@ -294,7 +302,7 @@ export function JudgeSetupTab() {
         await Promise.all([fetchRounds(), fetchTracks(), fetchLabs()]);
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load judge setup",
+          error instanceof Error ? error.message : "Failed to load panel setup",
         );
       } finally {
         setIsLoading(false);
@@ -317,11 +325,11 @@ export function JudgeSetupTab() {
     run();
   }, [selectedRoundId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: leaderboard should refresh when round or cumulative mode changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: leaderboard should refresh when round changes
   useEffect(() => {
     const run = async () => {
       try {
-        await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
+        await fetchLeaderboard(selectedRoundId);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to load leaderboard",
@@ -329,26 +337,26 @@ export function JudgeSetupTab() {
       }
     };
     run();
-  }, [selectedRoundId, showCumulativeLeaderboard]);
+  }, [selectedRoundId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: dedicated assignment loader for round/judge selection
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dedicated assignment loader for round/panelist selection
   useEffect(() => {
     const run = async () => {
       try {
         await fetchAssignments(
           selectedRoundId,
-          selectedJudgeUserId || undefined,
+          selectedPanelistUserId || undefined,
         );
       } catch (error) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to load judge allocations",
+            : "Failed to load panel allocations",
         );
       }
     };
     run();
-  }, [selectedRoundId, selectedJudgeUserId]);
+  }, [selectedRoundId, selectedPanelistUserId]);
 
   const handleCreateRound = async () => {
     if (!newRoundName.trim()) {
@@ -358,7 +366,7 @@ export function JudgeSetupTab() {
 
     try {
       setIsCreatingRound(true);
-      const res = await fetch("/api/dashboard/judge/rounds", {
+      const res = await fetch("/api/dashboard/panel/rounds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newRoundName.trim() }),
@@ -369,13 +377,13 @@ export function JudgeSetupTab() {
         throw new Error(data.message || "Failed to create round");
       }
 
-      const created = (await res.json()) as JudgeRound;
+      const created = (await res.json()) as PanelRound;
       setRounds((prev) =>
         [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
       );
       setSelectedRoundId(created.id);
       setNewRoundName("");
-      toast.success("Judge round created");
+      toast.success("Panel round created");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create round",
@@ -387,7 +395,7 @@ export function JudgeSetupTab() {
 
   const handleCreateCriteria = async () => {
     if (!selectedRoundId) {
-      toast.error("Select a judge round first");
+      toast.error("Select a panel round first");
       return;
     }
     if (!newCriteriaName.trim()) {
@@ -403,11 +411,11 @@ export function JudgeSetupTab() {
 
     try {
       setIsCreatingCriteria(true);
-      const res = await fetch("/api/dashboard/judge/criteria", {
+      const res = await fetch("/api/dashboard/panel/criteria", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          judgeRoundId: selectedRoundId,
+          panelRoundId: selectedRoundId,
           criteriaName: newCriteriaName.trim(),
           maxScore,
         }),
@@ -418,7 +426,7 @@ export function JudgeSetupTab() {
         throw new Error(data.message || "Failed to create criteria");
       }
 
-      const created = (await res.json()) as JudgeCriteria;
+      const created = (await res.json()) as PanelCriteria;
       setCriteria((prev) =>
         [...prev, created].sort((a, b) =>
           a.criteriaName.localeCompare(b.criteriaName),
@@ -440,13 +448,13 @@ export function JudgeSetupTab() {
     status: "Draft" | "Active" | "Completed",
   ) => {
     if (!selectedRound) {
-      toast.error("Select a judge round first");
+      toast.error("Select a panel round first");
       return;
     }
 
     try {
       setIsUpdatingRoundStatus(true);
-      const res = await fetch("/api/dashboard/judge/rounds", {
+      const res = await fetch("/api/dashboard/panel/rounds", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: selectedRound.id, status }),
@@ -457,7 +465,7 @@ export function JudgeSetupTab() {
         throw new Error(data.message || "Failed to update round status");
       }
 
-      const updated = (await res.json()) as JudgeRound;
+      const updated = (await res.json()) as PanelRound;
       setRounds((prev) =>
         prev.map((round) => (round.id === updated.id ? updated : round)),
       );
@@ -485,23 +493,23 @@ export function JudgeSetupTab() {
 
   const handleSaveAssignments = async () => {
     if (!selectedRoundId) {
-      toast.error("Select a judge round first");
+      toast.error("Select a panel round first");
       return;
     }
 
-    if (!selectedJudgeUserId) {
-      toast.error("Select a judge user first");
+    if (!selectedPanelistUserId) {
+      toast.error("Select a panelist user first");
       return;
     }
 
     try {
       setIsSavingAssignments(true);
-      const res = await fetch("/api/dashboard/judge/assignments", {
+      const res = await fetch("/api/dashboard/panel/assignments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          judgeRoundId: selectedRoundId,
-          judgeUserId: selectedJudgeUserId,
+          panelRoundId: selectedRoundId,
+          panelistUserId: selectedPanelistUserId,
           teamIds: selectedTeamIds,
         }),
       });
@@ -512,8 +520,8 @@ export function JudgeSetupTab() {
       }
 
       toast.success("Team allocations updated");
-      await fetchAssignments(selectedRoundId, selectedJudgeUserId);
-      await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
+      await fetchAssignments(selectedRoundId, selectedPanelistUserId);
+      await fetchLeaderboard(selectedRoundId);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -527,13 +535,13 @@ export function JudgeSetupTab() {
 
   const handleNormalizeRound = async () => {
     if (!selectedRoundId) {
-      toast.error("Select a judge round first");
+      toast.error("Select a panel round first");
       return;
     }
 
     try {
       setIsNormalizing(true);
-      const res = await fetch("/api/dashboard/judge/normalize", {
+      const res = await fetch("/api/dashboard/panel/normalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roundId: selectedRoundId }),
@@ -545,7 +553,7 @@ export function JudgeSetupTab() {
       }
 
       toast.success("Scores normalized and aggregated successfully");
-      await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
+      await fetchLeaderboard(selectedRoundId);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to normalize scores",
@@ -564,25 +572,65 @@ export function JudgeSetupTab() {
       setIsScoreDetailsOpen(true);
 
       const res = await fetch(
-        `/api/dashboard/judge/leaderboard/details?judgeRoundId=${encodeURIComponent(selectedRoundId)}&teamId=${encodeURIComponent(teamRow.teamId)}`,
+        `/api/dashboard/panel/leaderboard/details?panelRoundId=${encodeURIComponent(selectedRoundId)}&teamId=${encodeURIComponent(teamRow.teamId)}`,
       );
 
       if (!res.ok) {
         const data = (await res.json()) as { message?: string };
-        throw new Error(data.message || "Failed to load judge score details");
+        throw new Error(
+          data.message || "Failed to load panelist score details",
+        );
       }
 
-      const data = (await res.json()) as { judges: JudgeScoreDetail[] };
-      setJudgeScoreDetails(data.judges || []);
+      const data = (await res.json()) as {
+        panelists: PanelistScoreDetail[];
+      };
+      setPanelistScoreDetails(data.panelists || []);
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to load judge score details",
+          : "Failed to load panelist score details",
       );
       setIsScoreDetailsOpen(false);
     } finally {
       setIsLoadingScoreDetails(false);
+    }
+  };
+
+  const handleOpenFeedbacks = async (teamRow: LeaderboardRow) => {
+    try {
+      setIsLoadingFeedbacks(true);
+      setFeedbackTeam(teamRow);
+      setIsFeedbacksOpen(true);
+
+      const res = await fetch(
+        `/api/dashboard/mentor/history?teamId=${encodeURIComponent(teamRow.teamId)}`,
+      );
+
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        throw new Error(data.message || "Failed to load mentor feedbacks");
+      }
+
+      const data = (await res.json()) as Array<{
+        assignmentId: string;
+        mentorName: string;
+        mentorUsername: string;
+        mentorRoundName: string;
+        mentorRoundStatus: string;
+        feedback: string | null;
+      }>;
+      setMentorFeedbacks(data.filter((f) => f.feedback?.trim()));
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to load mentor feedbacks",
+      );
+      setIsFeedbacksOpen(false);
+    } finally {
+      setIsLoadingFeedbacks(false);
     }
   };
 
@@ -594,35 +642,26 @@ export function JudgeSetupTab() {
     }
   };
 
-  const handleExportAllocations = () => {
-    const params = new URLSearchParams();
-    if (selectedRoundId) params.set("judgeRoundId", selectedRoundId);
-    window.open(
-      `/api/dashboard/judge/assignments/export?${params.toString()}`,
-      "_blank",
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Judge Setup</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Panel Setup</h2>
         <p className="text-muted-foreground">
-          Create judge rounds and configure criteria with max point allocation.
+          Create panel rounds and configure criteria with max point allocation.
         </p>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center rounded-md border p-8">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading judge setup...
+          Loading panel setup...
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
           <Card>
             <CardContent className="space-y-4">
               <div>
-                <CardTitle className="mb-2">Create Judge Round</CardTitle>
+                <CardTitle className="mb-2">Create Panel Round</CardTitle>
                 <CardDescription>
                   Create a round first, then add scoring criteria to it.
                 </CardDescription>
@@ -665,12 +704,12 @@ export function JudgeSetupTab() {
               <div>
                 <CardTitle className="mb-2">Create Criteria</CardTitle>
                 <CardDescription>
-                  Add criteria and max score for the selected judge round.
+                  Add criteria and max score for the selected panel round.
                 </CardDescription>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Judge round</p>
+                <p className="text-sm text-muted-foreground">Panel round</p>
                 <Select
                   value={selectedRoundId}
                   onValueChange={setSelectedRoundId}
@@ -805,25 +844,25 @@ export function JudgeSetupTab() {
           <Card>
             <CardContent className="space-y-4">
               <div>
-                <CardTitle className="mb-2">Judge Team Allocation</CardTitle>
+                <CardTitle className="mb-2">Panelist Team Allocation</CardTitle>
                 <CardDescription>
-                  Select teams allocated to each judge user for this round.
+                  Select teams allocated to each panelist user for this round.
                 </CardDescription>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Judge user</p>
+                <p className="text-sm text-muted-foreground">Panelist user</p>
                 <Select
-                  value={selectedJudgeUserId}
-                  onValueChange={setSelectedJudgeUserId}
+                  value={selectedPanelistUserId}
+                  onValueChange={setSelectedPanelistUserId}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select judge user" />
+                    <SelectValue placeholder="Select panelist user" />
                   </SelectTrigger>
                   <SelectContent>
-                    {judgeUsers.map((judgeUser) => (
-                      <SelectItem key={judgeUser.id} value={judgeUser.id}>
-                        {judgeUser.name} ({judgeUser.username})
+                    {panelistUsers.map((panelistUser) => (
+                      <SelectItem key={panelistUser.id} value={panelistUser.id}>
+                        {panelistUser.name} ({panelistUser.username})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -887,11 +926,11 @@ export function JudgeSetupTab() {
                         return (
                           <label
                             key={team.id}
-                            htmlFor={`team-${team.id}`}
+                            htmlFor={`panel-team-${team.id}`}
                             className="flex cursor-pointer items-center gap-2 text-sm"
                           >
                             <Checkbox
-                              id={`team-${team.id}`}
+                              id={`panel-team-${team.id}`}
                               checked={checked}
                               onCheckedChange={(value) =>
                                 toggleTeamSelection(team.id, value === true)
@@ -902,7 +941,7 @@ export function JudgeSetupTab() {
                               <span>{team.name}</span>
                               <span>
                                 {
-                                  judgeScoreHistory.filter((h) => {
+                                  panelScoreHistory.filter((h) => {
                                     if (
                                       team.id === h.teamId &&
                                       h.teamId === team.id
@@ -924,9 +963,9 @@ export function JudgeSetupTab() {
 
               <div className="flex justify-start flex-col items-start gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {selectedJudgeUser
-                    ? `${selectedTeamIds.length} teams selected for ${selectedJudgeUser.name}`
-                    : "Select a judge user"}
+                  {selectedPanelistUser
+                    ? `${selectedTeamIds.length} teams selected for ${selectedPanelistUser.name}`
+                    : "Select a panelist user"}
                 </p>
                 <div className="grid grid-cols-2 gap-2 w-full">
                   <Button variant={"outline"} onClick={handleSelectVisible}>
@@ -938,7 +977,7 @@ export function JudgeSetupTab() {
                     onClick={handleSaveAssignments}
                     disabled={
                       !selectedRoundId ||
-                      !selectedJudgeUserId ||
+                      !selectedPanelistUserId ||
                       isSavingAssignments ||
                       !canManageAssignments
                     }
@@ -962,19 +1001,11 @@ export function JudgeSetupTab() {
                 <CardTitle className="mb-2">Leaderboard</CardTitle>
                 <div className="flex justify-between items-start gap-4">
                   <CardDescription>
-                    {showCumulativeLeaderboard
-                      ? "Ranking based on cumulative scores across all rounds."
-                      : "Ranking for the selected round based on judge scores."}
+                    Ranking for the selected round based on panel scores. Judge
+                    Z-Score column shows cumulative normalized score from all
+                    judge rounds.
                   </CardDescription>
                   <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleExportAllocations}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export PDF
-                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -992,31 +1023,8 @@ export function JudgeSetupTab() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                <div>
-                  <p className="text-sm font-medium">Cumulative View</p>
-                  <p className="text-xs text-muted-foreground">
-                    Toggle to show total score across all rounds.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isLoadingLeaderboard ? (
-                    <span className="text-xs text-muted-foreground">
-                      Updating...
-                    </span>
-                  ) : null}
-                  <Switch
-                    checked={showCumulativeLeaderboard}
-                    onCheckedChange={setShowCumulativeLeaderboard}
-                    aria-label="Toggle cumulative leaderboard"
-                  />
-                </div>
-              </div>
-
               <div className="text-xs text-muted-foreground">
-                {showCumulativeLeaderboard
-                  ? "Showing cumulative total score across all rounds"
-                  : `Max score per judge for this round: ${maxPerJudge}`}
+                Max score per panelist for this round: {maxPerPanelist}
               </div>
 
               {leaderboardRows.length === 0 && isLoadingLeaderboard ? (
@@ -1037,10 +1045,10 @@ export function JudgeSetupTab() {
                         <TableHead>Team</TableHead>
                         <TableHead>Raw Total</TableHead>
                         <TableHead>Max Possible</TableHead>
-                        {/* <TableHead>Percentage</TableHead> */}
-                        <TableHead>Judges</TableHead>
-                        <TableHead>Z-Score</TableHead>
-                        <TableHead className="text-right">View</TableHead>
+                        <TableHead>Panelists</TableHead>
+                        <TableHead>Panel Z-Score</TableHead>
+                        <TableHead>Judge Z-Score</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1052,25 +1060,36 @@ export function JudgeSetupTab() {
                           </TableCell>
                           <TableCell>{row.rawTotalScore}</TableCell>
                           <TableCell>{row.maxPossibleScore}</TableCell>
-                          {/* <TableCell
-                            className={`font-medium ${getPercentageColor(row.percentage)}`}
-                          >
-                            {row.percentage}%
-                          </TableCell> */}
-                          <TableCell>{row.judgeCount}</TableCell>
+                          <TableCell>{row.panelistCount}</TableCell>
                           <TableCell className="font-medium">
                             {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +
                               (row.normalizedTotalScore || 0).toFixed(3)}
                           </TableCell>
+                          <TableCell className="font-medium">
+                            {((row.judgeNormalizedTotal || 0) >= 0 ? "+" : "") +
+                              (row.judgeNormalizedTotal || 0).toFixed(3)}
+                          </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => handleOpenScoreDetails(row)}
-                              aria-label={`View judge scores for ${row.teamName}`}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => handleOpenScoreDetails(row)}
+                                aria-label={`View panelist scores for ${row.teamName}`}
+                                title="View Scores"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => handleOpenFeedbacks(row)}
+                                aria-label={`View mentor feedbacks for ${row.teamName}`}
+                                title="View Feedbacks"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1087,14 +1106,14 @@ export function JudgeSetupTab() {
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Judge Score Breakdown
+              Panelist Score Breakdown
               {selectedLeaderboardTeam
                 ? ` - ${selectedLeaderboardTeam.teamName}`
                 : ""}
             </DialogTitle>
             <DialogDescription>
-              Detailed criteria-wise score given by each judge for the selected
-              team.
+              Detailed criteria-wise score given by each panelist for the
+              selected team.
             </DialogDescription>
           </DialogHeader>
 
@@ -1103,28 +1122,29 @@ export function JudgeSetupTab() {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading score details...
             </div>
-          ) : judgeScoreDetails.length === 0 ? (
+          ) : panelistScoreDetails.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No judge score details found for this team.
+              No panelist score details found for this team.
             </p>
           ) : (
             <div className="space-y-4">
-              {judgeScoreDetails.map((judgeDetail) => (
+              {panelistScoreDetails.map((panelistDetail) => (
                 <div
-                  key={judgeDetail.assignmentId}
+                  key={panelistDetail.assignmentId}
                   className="rounded-md border"
                 >
                   <div className="flex items-center justify-between border-b px-4 py-3">
                     <div>
                       <p className="text-sm font-semibold">
-                        {judgeDetail.judgeName}
+                        {panelistDetail.panelistName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        @{judgeDetail.judgeUsername}
+                        @{panelistDetail.panelistUsername}
                       </p>
                     </div>
                     <Badge variant="secondary">
-                      {judgeDetail.totalRawScore} / {judgeDetail.totalMaxScore}
+                      {panelistDetail.totalRawScore} /{" "}
+                      {panelistDetail.totalMaxScore}
                     </Badge>
                   </div>
 
@@ -1138,9 +1158,9 @@ export function JudgeSetupTab() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {judgeDetail.criteriaScores.map((criterion) => (
+                        {panelistDetail.criteriaScores.map((criterion) => (
                           <TableRow
-                            key={`${judgeDetail.assignmentId}-${criterion.criteriaId}`}
+                            key={`${panelistDetail.assignmentId}-${criterion.criteriaId}`}
                           >
                             <TableCell>{criterion.criteriaName}</TableCell>
                             <TableCell className="text-right">
@@ -1153,6 +1173,56 @@ export function JudgeSetupTab() {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFeedbacksOpen} onOpenChange={setIsFeedbacksOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Mentor Feedbacks
+              {feedbackTeam ? ` - ${feedbackTeam.teamName}` : ""}
+            </DialogTitle>
+            <DialogDescription>
+              All mentor feedback across rounds for this team.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingFeedbacks ? (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading feedbacks...
+            </div>
+          ) : mentorFeedbacks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No mentor feedbacks found for this team.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {mentorFeedbacks.map((fb, idx) => (
+                <div
+                  key={`${fb.assignmentId}-${idx}`}
+                  className="rounded-md border"
+                >
+                  <div className="flex items-center justify-between border-b px-4 py-2">
+                    <div>
+                      <p className="text-sm font-semibold">{fb.mentorName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        @{fb.mentorUsername}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{fb.mentorRoundName}</Badge>
+                      <Badge variant="secondary">{fb.mentorRoundStatus}</Badge>
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-sm whitespace-pre-wrap">{fb.feedback}</p>
                   </div>
                 </div>
               ))}

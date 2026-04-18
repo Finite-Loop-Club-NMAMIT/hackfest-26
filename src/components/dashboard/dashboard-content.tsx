@@ -13,6 +13,8 @@ import {
   JudgeTab,
   MealsTab,
   MentorsTab,
+  PanelSetupTab,
+  PanelTab,
   ParticipantsTab,
   PaymentsTab,
   ResultsTab,
@@ -39,6 +41,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
   const isMentor = userRoles.includes("MENTOR");
   const isJudge =
     userRoles.includes("JUDGE") || userRoles.includes("FINAL_JUDGE");
+  const isPanelist = userRoles.includes("PANELIST");
 
   const baseTabs = [
     { id: "quickboard", content: <QuickboardTab /> },
@@ -60,6 +63,8 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "event-stats", content: <EventStatsTab /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
     { id: "judge", content: <JudgeTab /> },
+    { id: "panel-setup", content: <PanelSetupTab /> },
+    { id: "panel", content: <PanelTab /> },
     { id: "worker", content: <WorkerManagementTab /> },
   ];
 
