@@ -14,7 +14,7 @@ export const GET = permissionProtected(
       const rows = await getMentorFeedbackHistory({
         teamId,
         mentorRoundId,
-        dashboardUserId: isAdmin(user) ? undefined : user.id,
+        dashboardUserId: (isAdmin(user) || teamId) ? undefined : user.id,
       });
 
       return NextResponse.json(rows, { status: 200 });

@@ -25,7 +25,11 @@ export type DashboardPermissions = {
 };
 
 type DashboardUser = {
+  id: string;
+  name: string;
+  username: string;
   roles: Array<{
+    id: string;
     name: string;
     permissions: Array<{ key: string }>;
   }>;

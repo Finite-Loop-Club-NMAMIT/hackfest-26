@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { useDashboardUser } from "~/components/dashboard/permissions-context";
 import {
   Card,
   CardContent,
@@ -67,6 +68,7 @@ type FeedbackPayload = {
 };
 
 export function MentorTab() {
+  const dashboardUser = useDashboardUser();
   const [isLoading, setIsLoading] = useState(true);
   const [allocations, setAllocations] = useState<MentorAllocation[]>([]);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -119,12 +121,34 @@ export function MentorTab() {
   const previousRoundHistory = useMemo(() => {
     if (!selectedAllocation) return [];
 
-    return teamHistory.filter(
+    const validHistory = teamHistory.filter(
       (row) =>
         row.assignmentId !== selectedAllocation.assignmentId &&
         Boolean(row.feedback?.trim()),
     );
-  }, [selectedAllocation, teamHistory]);
+
+    const mentorMap = new Map<string, string>();
+    let mentorCount = 1;
+
+    return validHistory.map((row) => {
+      let displayName = "";
+      // If we had their username vs others, we can mark "You"
+      // But since we just use their dashboard details, we check the username
+      if (row.mentorUsername === dashboardUser.username) {
+        displayName = "You";
+      } else {
+        if (!mentorMap.has(row.mentorUsername)) {
+          mentorMap.set(row.mentorUsername, `Mentor ${mentorCount++}`);
+        }
+        displayName = mentorMap.get(row.mentorUsername)!;
+      }
+
+      return {
+        ...row,
+        displayName,
+      };
+    });
+  }, [selectedAllocation, teamHistory, dashboardUser.username]);
 
   const fetchAllocations = async () => {
     const res = await fetch("/api/dashboard/mentor/my-allocations");
@@ -427,7 +451,7 @@ export function MentorTab() {
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">
-                      Your Previous Feedback For This Team
+                      All Previous Feedback For This Team
                     </p>
                     {isLoadingFeedback ? (
                       <div className="flex items-center text-sm text-muted-foreground">
@@ -436,30 +460,34 @@ export function MentorTab() {
                       </div>
                     ) : previousRoundHistory.length === 0 ? (
                       <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                        No previous round feedback from you is available.
+                        No previous round feedback from any mentor is available.
                       </div>
                     ) : (
-                      <div className="rounded-md border">
+                      <div className="rounded-md border overflow-x-auto w-full">
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Round</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Feedback</TableHead>
+                              <TableHead className="whitespace-nowrap">Mentor</TableHead>
+                              <TableHead className="whitespace-nowrap">Round</TableHead>
+                              <TableHead className="whitespace-nowrap">Status</TableHead>
+                              <TableHead className="min-w-[200px]">Feedback</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {previousRoundHistory.map((row, index) => (
                               <TableRow key={`${row.assignmentId}-${index}`}>
-                                <TableCell className="font-medium">
+                                <TableCell className="font-medium whitespace-nowrap">
+                                  {row.displayName}
+                                </TableCell>
+                                <TableCell className="font-medium whitespace-nowrap">
                                   {row.mentorRoundName}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="whitespace-nowrap">
                                   <Badge variant="secondary">
                                     {row.mentorRoundStatus}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="max-w-85 whitespace-pre-wrap text-sm">
+                                <TableCell className="whitespace-pre-wrap text-sm min-w-[200px]">
                                   {row.feedback}
                                 </TableCell>
                               </TableRow>
