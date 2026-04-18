@@ -201,18 +201,27 @@ export function JudgeTab() {
     run();
   }, [loadTeamScores, selectedAllocation]);
 
-  const updateCriterionScore = (criteriaId: string, value: string) => {
+  const updateCriterionScore = (
+    criteriaId: string,
+    value: string,
+    maxScore: number,
+  ) => {
     if (!scorePayload) return;
 
-    const parsed = value === "" ? 0 : Number(value);
+    if (value !== "" && !/^\d+$/.test(value)) return;
+
+    const parsed = value === "" ? null : parseInt(value, 10);
+
+    if (parsed !== null && parsed > maxScore) {
+      toast.error(`Score cannot exceed ${maxScore}`);
+      return;
+    }
+
     setScorePayload({
       ...scorePayload,
       criteria: scorePayload.criteria.map((criterion) =>
         criterion.id === criteriaId
-          ? {
-              ...criterion,
-              rawScore: Number.isFinite(parsed) ? parsed : criterion.rawScore,
-            }
+          ? { ...criterion, rawScore: parsed }
           : criterion,
       ),
     });
@@ -257,7 +266,6 @@ export function JudgeTab() {
       toast.success("Scores saved successfully");
       await fetchAllocations();
 
-      // Reload current team to get updated criteria count reflection
       if (selectedAllocation) {
         await loadTeamScores(selectedAllocation);
       }
@@ -529,15 +537,19 @@ export function JudgeTab() {
                               </div>
                               <div className="sm:col-span-2">
                                 <Input
-                                  type="number"
-                                  min={0}
-                                  max={criterion.maxScore}
-                                  step={1}
-                                  value={criterion.rawScore ?? ""}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={
+                                    criterion.rawScore === null
+                                      ? ""
+                                      : String(criterion.rawScore)
+                                  }
                                   onChange={(e) =>
                                     updateCriterionScore(
                                       criterion.id,
                                       e.target.value,
+                                      criterion.maxScore,
                                     )
                                   }
                                   disabled={
