@@ -26,6 +26,12 @@ import {
   mentorRounds,
   mentors,
 } from "./schema/mentor";
+import {
+  panelists,
+  panelRoundAssignments,
+  panelRounds,
+  panelScores,
+} from "./schema/panel";
 import { notSelected, selected, semiSelected } from "./schema/team-progress";
 
 export const userRelations = relations(participants, ({ one, many }) => ({
@@ -276,5 +282,43 @@ export const githubRepoRelations = relations(githubRepos, ({ one }) => ({
   github: one(githubs, {
     fields: [githubRepos.githubId],
     references: [githubs.id],
+  }),
+}));
+
+export const panelistRelations = relations(panelists, ({ one, many }) => ({
+  dashboardUser: one(dashboardUsers, {
+    fields: [panelists.dashboardUserId],
+    references: [dashboardUsers.id],
+  }),
+  assignments: many(panelRoundAssignments),
+}));
+
+export const panelRoundRelations = relations(panelRounds, ({ many }) => ({
+  assignments: many(panelRoundAssignments),
+}));
+
+export const panelRoundAssignmentRelations = relations(
+  panelRoundAssignments,
+  ({ one, many }) => ({
+    panelist: one(panelists, {
+      fields: [panelRoundAssignments.panelistId],
+      references: [panelists.id],
+    }),
+    team: one(teams, {
+      fields: [panelRoundAssignments.teamId],
+      references: [teams.id],
+    }),
+    panelRound: one(panelRounds, {
+      fields: [panelRoundAssignments.panelRoundId],
+      references: [panelRounds.id],
+    }),
+    scores: many(panelScores),
+  }),
+);
+
+export const panelScoreRelations = relations(panelScores, ({ one }) => ({
+  assignment: one(panelRoundAssignments, {
+    fields: [panelScores.roundAssignmentId],
+    references: [panelRoundAssignments.id],
   }),
 }));
