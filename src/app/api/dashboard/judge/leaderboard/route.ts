@@ -4,8 +4,7 @@ import { adminProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
 import {
   judgeCriterias,
-  judgeRoundAssignments,
-  judgeScores,
+  teamRoundScores,
   teams,
 } from "~/db/schema";
 
@@ -30,6 +29,19 @@ export const GET = adminProtected(async (req: NextRequest) => {
       );
     }
 
+    // Use normalized scores from teamRoundScores for proper z-score aggregation
+    const aggregatedScores = await db
+      .select({
+        teamId: teamRoundScores.teamId,
+        teamName: teams.name,
+        rawTotalScore: teamRoundScores.rawTotalScore,
+        normalizedTotalScore: teamRoundScores.normalizedTotalScore,
+        judgeCount: teamRoundScores.judgeCount,
+      })
+      .from(teamRoundScores)
+      .innerJoin(teams, eq(teams.id, teamRoundScores.teamId))
+      .where(eq(teamRoundScores.roundId, judgeRoundId));
+
     const criteriaTotals = await db
       .select({
         judgeRoundId: judgeCriterias.judgeRoundId,
@@ -46,110 +58,30 @@ export const GET = adminProtected(async (req: NextRequest) => {
     );
     const maxPerJudge = maxScoreByRoundId.get(judgeRoundId) ?? 0;
 
-    const assignments = await db
-      .select({
-        assignmentId: judgeRoundAssignments.id,
-        teamId: judgeRoundAssignments.teamId,
-        teamName: teams.name,
-        judgeId: judgeRoundAssignments.judgeId,
-        roundId: judgeRoundAssignments.judgeRoundId,
-      })
-      .from(judgeRoundAssignments)
-      .innerJoin(teams, eq(teams.id, judgeRoundAssignments.teamId))
-      .where(
-        cumulative
-          ? undefined
-          : eq(judgeRoundAssignments.judgeRoundId, judgeRoundId),
-      );
-
-    const assignmentIds = assignments.map(
-      (assignment) => assignment.assignmentId,
-    );
-
-    const scoreRows =
-      assignmentIds.length === 0
-        ? []
-        : await db
-            .select({
-              assignmentId: judgeScores.roundAssignmentId,
-              rawScore: judgeScores.rawScore,
-            })
-            .from(judgeScores)
-            .where(
-              sql`${judgeScores.roundAssignmentId} in (${sql.join(
-                assignmentIds.map((id) => sql`${id}`),
-                sql`, `,
-              )})`,
-            );
-
-    const scoreSumByAssignmentId = new Map<string, number>();
-    const scoreEntriesByAssignmentId = new Map<string, number>();
-
-    for (const row of scoreRows) {
-      scoreSumByAssignmentId.set(
-        row.assignmentId,
-        (scoreSumByAssignmentId.get(row.assignmentId) ?? 0) + row.rawScore,
-      );
-      scoreEntriesByAssignmentId.set(
-        row.assignmentId,
-        (scoreEntriesByAssignmentId.get(row.assignmentId) ?? 0) + 1,
-      );
-    }
-
-    const aggregateByTeamId = new Map<
-      string,
-      {
-        teamId: string;
-        teamName: string;
-        totalRawScore: number;
-        maxPossibleScore: number;
-        judgeIds: Set<string>;
-        scoreEntries: number;
-      }
-    >();
-
-    for (const assignment of assignments) {
-      const existing = aggregateByTeamId.get(assignment.teamId) ?? {
-        teamId: assignment.teamId,
-        teamName: assignment.teamName,
-        totalRawScore: 0,
-        maxPossibleScore: 0,
-        judgeIds: new Set<string>(),
-        scoreEntries: 0,
-      };
-
-      existing.totalRawScore +=
-        scoreSumByAssignmentId.get(assignment.assignmentId) ?? 0;
-      existing.maxPossibleScore +=
-        maxScoreByRoundId.get(assignment.roundId) ?? 0;
-      existing.judgeIds.add(assignment.judgeId);
-      existing.scoreEntries +=
-        scoreEntriesByAssignmentId.get(assignment.assignmentId) ?? 0;
-
-      aggregateByTeamId.set(assignment.teamId, existing);
-    }
-
-    const leaderboard = Array.from(aggregateByTeamId.values())
+    const leaderboard = aggregatedScores
+      .filter((row) => row.normalizedTotalScore !== null)
       .map((row) => {
-        const judgeCount = row.judgeIds.size;
+        const maxPossibleScore = maxPerJudge * (row.judgeCount || 1);
         const percentage =
-          row.maxPossibleScore > 0
+          maxPossibleScore > 0
             ? Number(
-                ((row.totalRawScore / row.maxPossibleScore) * 100).toFixed(2),
+                (((row.rawTotalScore ?? 0) / maxPossibleScore) * 100).toFixed(
+                  2,
+                ),
               )
             : 0;
 
         return {
           teamId: row.teamId,
           teamName: row.teamName,
-          totalRawScore: row.totalRawScore,
-          maxPossibleScore: row.maxPossibleScore,
+          rawTotalScore: row.rawTotalScore ?? 0,
+          normalizedTotalScore: row.normalizedTotalScore ?? 0,
+          maxPossibleScore,
           percentage,
-          judgeCount,
-          scoreEntries: row.scoreEntries,
+          judgeCount: row.judgeCount,
         };
       })
-      .sort((a, b) => b.totalRawScore - a.totalRawScore)
+      .sort((a, b) => b.normalizedTotalScore - a.normalizedTotalScore)
       .map((row, index) => ({
         rank: index + 1,
         ...row,

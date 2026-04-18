@@ -912,6 +912,7 @@ function AdminMentorPanel() {
                                     ) {
                                       return true;
                                     }
+                                    return false
                                   }).length
                                 }
                               </span>

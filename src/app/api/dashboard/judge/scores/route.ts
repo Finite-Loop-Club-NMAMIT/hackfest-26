@@ -9,7 +9,7 @@ import {
   judgeScores,
 } from "~/db/schema";
 import {
-  addAggregationJob,
+  // addAggregationJob,
   addNormalizationJob,
 } from "~/lib/queue/normalization";
 
@@ -91,7 +91,7 @@ export const GET = permissionProtected(
           roundStatus: round?.status ?? "Draft",
           criteria: criteria.map((item) => ({
             ...item,
-            rawScore: scoreMap.get(item.id) ?? 0,
+            rawScore: scoreMap.get(item.id) ?? null,
           })),
         },
         { status: 200 },
@@ -197,37 +197,52 @@ export const POST = permissionProtected(
         }
       }
 
-      for (const score of scores) {
-        await db
-          .insert(judgeScores)
-          .values({
-            roundAssignmentId: assignment.id,
-            criteriaId: score.criteriaId,
-            rawScore: score.rawScore,
-          })
-          .onConflictDoUpdate({
-            target: [judgeScores.roundAssignmentId, judgeScores.criteriaId],
-            set: { rawScore: score.rawScore },
-          });
+      // Wrap all database operations in a transaction for atomicity
+      let totalRawScore = 0;
+      await db.transaction(async (tx) => {
+        // 1. Insert/update all scores
+        for (const score of scores) {
+          await tx
+            .insert(judgeScores)
+            .values({
+              roundAssignmentId: assignment.id,
+              criteriaId: score.criteriaId,
+              rawScore: score.rawScore,
+            })
+            .onConflictDoUpdate({
+              target: [judgeScores.roundAssignmentId, judgeScores.criteriaId],
+              set: { rawScore: score.rawScore },
+            });
+        }
+
+        // 2. Calculate total score within transaction
+        const updatedScores = await tx
+          .select({ rawScore: judgeScores.rawScore })
+          .from(judgeScores)
+          .where(eq(judgeScores.roundAssignmentId, assignment.id));
+
+        totalRawScore = updatedScores.reduce(
+          (sum, item) => sum + (item.rawScore ?? 0),
+          0,
+        );
+
+        // 3. Update total score within transaction
+        await tx
+          .update(judgeRoundAssignments)
+          .set({ rawTotalScore: totalRawScore })
+          .where(eq(judgeRoundAssignments.id, assignment.id));
+      });
+
+      console.log("Scores saved successfully, total raw score:", totalRawScore);
+      // 4. Queue normalization and aggregation jobs AFTER transaction commits
+      try {
+        console.log("Queuing normalization job for judge:", judge.id, "round:", assignment.judgeRoundId);
+        await addNormalizationJob(judge.id, assignment.judgeRoundId);
+        // await addAggregationJob(assignment.judgeRoundId);
+      } catch (queueError) {
+        console.error("Failed to queue normalization jobs:", queueError);
+        // Continue - scores were saved successfully
       }
-
-      const updatedScores = await db
-        .select({ rawScore: judgeScores.rawScore })
-        .from(judgeScores)
-        .where(eq(judgeScores.roundAssignmentId, assignment.id));
-
-      const totalRawScore = updatedScores.reduce(
-        (sum, item) => sum + item.rawScore,
-        0,
-      );
-
-      await db
-        .update(judgeRoundAssignments)
-        .set({ rawTotalScore: totalRawScore })
-        .where(eq(judgeRoundAssignments.id, assignment.id));
-
-      await addNormalizationJob(judge.id, assignment.judgeRoundId);
-      await addAggregationJob(assignment.judgeRoundId);
 
       return NextResponse.json(
         { message: "Scores saved successfully", totalRawScore },

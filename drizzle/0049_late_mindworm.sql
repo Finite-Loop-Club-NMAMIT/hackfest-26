@@ -1,0 +1,2 @@
+ALTER TABLE "team_round_scores" ADD CONSTRAINT "team_round_scores_team_id_team_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."team"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_round_scores" ADD CONSTRAINT "team_round_scores_round_id_judge_rounds_id_fk" FOREIGN KEY ("round_id") REFERENCES "public"."judge_rounds"("id") ON DELETE cascade ON UPDATE no action;

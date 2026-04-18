@@ -41,6 +41,8 @@ export const GET = adminProtected(async (req: NextRequest) => {
         judgeUserId: dashboardUsers.id,
         judgeName: dashboardUsers.name,
         judgeUsername: dashboardUsers.username,
+        rawTotalScore: judgeRoundAssignments.rawTotalScore,
+        normalizedTotalScore: judgeRoundAssignments.normalizedTotalScore,
       })
       .from(judgeRoundAssignments)
       .innerJoin(judges, eq(judges.id, judgeRoundAssignments.judgeId))
@@ -90,7 +92,9 @@ export const GET = adminProtected(async (req: NextRequest) => {
 
     const scoreMap = new Map<string, number>();
     for (const score of scoreRows) {
-      scoreMap.set(`${score.assignmentId}:${score.criteriaId}`, score.rawScore);
+      if (score.rawScore !== null) {
+        scoreMap.set(`${score.assignmentId}:${score.criteriaId}`, score.rawScore);
+      }
     }
 
     const judgesWithScores = assignments.map((assignment) => {
@@ -105,10 +109,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
         };
       });
 
-      const totalRawScore = criteriaScores.reduce(
-        (sum, item) => sum + item.rawScore,
-        0,
-      );
+      const totalRawScore = assignment.rawTotalScore ?? 0;
       const totalMaxScore = criteriaScores.reduce(
         (sum, item) => sum + item.maxScore,
         0,
@@ -122,6 +123,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
         assignmentId: assignment.assignmentId,
         totalRawScore,
         totalMaxScore,
+        normalizedTotalScore: assignment.normalizedTotalScore ?? 0,
         criteriaScores,
       };
     });

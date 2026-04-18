@@ -43,7 +43,7 @@ type ScoreCriterion = {
   id: string;
   criteriaName: string;
   maxScore: number;
-  rawScore: number;
+  rawScore: number | null;
 };
 
 type ScoreDialogPayload = {
@@ -147,11 +147,12 @@ export function JudgeTab() {
     if (!scoreDialogPayload) return;
 
     for (const criterion of scoreDialogPayload.criteria) {
-      if (!Number.isInteger(criterion.rawScore) || criterion.rawScore < 0) {
+      const score = criterion.rawScore ?? 0;
+      if (!Number.isInteger(score) || score < 0) {
         toast.error("Scores must be non-negative integers");
         return;
       }
-      if (criterion.rawScore > criterion.maxScore) {
+      if (score > criterion.maxScore) {
         toast.error(
           `${criterion.criteriaName} score cannot exceed ${criterion.maxScore}`,
         );
@@ -168,7 +169,7 @@ export function JudgeTab() {
           assignmentId: scoreDialogPayload.assignmentId,
           scores: scoreDialogPayload.criteria.map((criterion) => ({
             criteriaId: criterion.id,
-            rawScore: criterion.rawScore,
+            rawScore: criterion.rawScore ?? 0,
           })),
         }),
       });
@@ -381,7 +382,7 @@ export function JudgeTab() {
                           min={0}
                           max={criterion.maxScore}
                           step={1}
-                          value={criterion.rawScore}
+                          value={criterion.rawScore ?? ""}
                           onChange={(e) =>
                             updateCriterionScore(criterion.id, e.target.value)
                           }

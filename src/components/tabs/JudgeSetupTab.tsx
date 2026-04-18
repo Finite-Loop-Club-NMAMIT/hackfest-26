@@ -68,11 +68,11 @@ type LeaderboardRow = {
   rank: number;
   teamId: string;
   teamName: string;
-  totalRawScore: number;
+  rawTotalScore: number;
+  normalizedTotalScore: number;
   maxPossibleScore: number;
   percentage: number;
   judgeCount: number;
-  scoreEntries: number;
 };
 
 type JudgeScoreDetail = {
@@ -868,6 +868,7 @@ export function JudgeSetupTab() {
                                     ) {
                                       return true;
                                     }
+                                    return false
                                   }).length
                                 }
                               </span>
@@ -968,11 +969,11 @@ export function JudgeSetupTab() {
                       <TableRow>
                         <TableHead>Rank</TableHead>
                         <TableHead>Team</TableHead>
-                        <TableHead>Total Score</TableHead>
+                        <TableHead>Raw Total</TableHead>
                         <TableHead>Max Possible</TableHead>
                         <TableHead>Percentage</TableHead>
                         <TableHead>Judges</TableHead>
-                        <TableHead>Score Entries</TableHead>
+                        <TableHead>Z-Score</TableHead>
                         <TableHead className="text-right">View</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -983,7 +984,7 @@ export function JudgeSetupTab() {
                           <TableCell className="font-medium">
                             {row.teamName}
                           </TableCell>
-                          <TableCell>{row.totalRawScore}</TableCell>
+                          <TableCell>{row.rawTotalScore}</TableCell>
                           <TableCell>{row.maxPossibleScore}</TableCell>
                           <TableCell
                             className={`font-medium ${getPercentageColor(row.percentage)}`}
@@ -991,7 +992,10 @@ export function JudgeSetupTab() {
                             {row.percentage}%
                           </TableCell>
                           <TableCell>{row.judgeCount}</TableCell>
-                          <TableCell>{row.scoreEntries}</TableCell>
+                          <TableCell className="font-medium">
+                            {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +
+                              (row.normalizedTotalScore || 0).toFixed(3)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="icon-sm"
