@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import Redis from "ioredis";
 import {
   aggregateIdeaTeamScores,
@@ -27,11 +27,29 @@ const connection = new Redis(REDIS_URL, { maxRetriesPerRequest: null });
 
 let worker: Worker | null = null;
 
+export async function addAggregationJob(judgeRoundId: string) {
+  const jobId = `aggregate-${judgeRoundId}`;
+  await new Queue(QUEUE_NAME, { connection }).add(
+    AGGREGATE_SCORES_JOB_NAME,
+    { judgeRoundId },
+    {
+      jobId,
+      removeOnComplete: true,
+      removeOnFail: 50,
+      attempts: 3,
+      backoff: { type: "exponential", delay: 1000 },
+      delay: 2000, // 2 second delay to allow normalization to complete
+    },
+  );
+}
+
 async function startWorker() {
   try {
     worker = new Worker(
       QUEUE_NAME,
       async (job) => {
+        console.log(`[normalization] Received job of type ${job.name}`);
+
         if (job.name === JUDGE_NORMALIZE_JOB_NAME) {
           const { judgeId, judgeRoundId } = job.data as {
             judgeId: string;

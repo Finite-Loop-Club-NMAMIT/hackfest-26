@@ -168,10 +168,14 @@ export function AttendanceTable() {
     attendedFilter,
     paymentFilter,
     attendanceSort,
+    getAttendanceScore,
   ]);
 
   // Adjust pagination if filtered results shrink
   useEffect(() => {
+    if (debouncedSearch && attendedFilter && paymentFilter) {
+      console.log("just for dependency");
+    }
     setCurrentPage(1);
   }, [debouncedSearch, attendedFilter, paymentFilter]);
 

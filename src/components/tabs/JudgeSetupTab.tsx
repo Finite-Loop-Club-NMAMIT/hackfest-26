@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, Loader2 } from "lucide-react";
+import { Download, Eye, Loader2 } from "lucide-react";
+
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
@@ -36,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { apiFetch } from "~/lib/fetcher";
 
 type JudgeRound = {
   id: string;
@@ -59,17 +61,19 @@ type JudgeUser = {
 type TeamOption = {
   id: string;
   name: string;
+  trackId: string;
+  labId: string;
 };
 
 type LeaderboardRow = {
   rank: number;
   teamId: string;
   teamName: string;
-  totalRawScore: number;
+  rawTotalScore: number;
+  normalizedTotalScore: number;
   maxPossibleScore: number;
   percentage: number;
   judgeCount: number;
-  scoreEntries: number;
 };
 
 type JudgeScoreDetail = {
@@ -88,6 +92,14 @@ type JudgeScoreDetail = {
   }>;
 };
 
+function getPercentageColor(percentage: number) {
+  if (percentage >= 80) return "text-green-600";
+  if (percentage >= 60) return "text-blue-600";
+  if (percentage >= 40) return "text-yellow-600";
+  if (percentage >= 20) return "text-orange-600";
+  return "text-red-600";
+}
+
 export function JudgeSetupTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingRound, setIsCreatingRound] = useState(false);
@@ -96,6 +108,7 @@ export function JudgeSetupTab() {
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   const [isSavingAssignments, setIsSavingAssignments] = useState(false);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  const [isNormalizing, setIsNormalizing] = useState(false);
   const [isLoadingScoreDetails, setIsLoadingScoreDetails] = useState(false);
   const [isScoreDetailsOpen, setIsScoreDetailsOpen] = useState(false);
 
@@ -119,6 +132,32 @@ export function JudgeSetupTab() {
   const [newRoundName, setNewRoundName] = useState("");
   const [newCriteriaName, setNewCriteriaName] = useState("");
   const [newCriteriaMaxScore, setNewCriteriaMaxScore] = useState("10");
+
+  const [tracks, setTracks] = useState<Array<{ id: string; name: string }>>([]);
+  const [labs, setLabs] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState("");
+  const [selectedLabId, setSelectedLabId] = useState("");
+  const [judgeScoreHistory, setJudgeScoreHistory] = useState<
+    Array<{
+      teamId: string | null;
+      id: string;
+      criteriaId: string;
+      rawScore: number;
+      roundAssignmentId: string;
+    }>
+  >([]);
+
+  const filteredTeams = useMemo(() => {
+    return allTeams.filter((team) => {
+      if (selectedTrackId && team.trackId !== selectedTrackId) {
+        return false;
+      }
+      if (selectedLabId && team.labId !== selectedLabId) {
+        return false;
+      }
+      return true;
+    });
+  }, [allTeams, selectedTrackId, selectedLabId]);
 
   const selectedRound = useMemo(
     () => rounds.find((round) => round.id === selectedRoundId),
@@ -179,11 +218,19 @@ export function JudgeSetupTab() {
       judgeUsers: JudgeUser[];
       teams: TeamOption[];
       assignedTeamIds: string[];
+      history: Array<{
+        teamId: string | null;
+        id: string;
+        criteriaId: string;
+        rawScore: number;
+        roundAssignmentId: string;
+      }>;
     };
 
     setJudgeUsers(data.judgeUsers);
     setAllTeams(data.teams);
     setSelectedTeamIds(data.assignedTeamIds || []);
+    setJudgeScoreHistory(data.history || []);
 
     if (!selectedJudgeUserId && data.judgeUsers.length > 0) {
       setSelectedJudgeUserId(data.judgeUsers[0].id);
@@ -220,12 +267,31 @@ export function JudgeSetupTab() {
     setLeaderboardRows(data.rows || []);
   };
 
+  const fetchLabs = async () => {
+    const result = await apiFetch<Array<{ id: string; name: string }>>(
+      "/api/dashboard/allocations?get=labs",
+    );
+
+    setLabs(result);
+  };
+
+  const fetchTracks = async () => {
+    const response = await fetch("/api/tracks");
+    if (!response.ok) {
+      toast.error("Failed to load tracks");
+      return;
+    }
+
+    const data = await response.json();
+    setTracks(data as Array<{ id: string; name: string }>);
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial dashboard setup fetch
   useEffect(() => {
     const run = async () => {
       try {
         setIsLoading(true);
-        await fetchRounds();
+        await Promise.all([fetchRounds(), fetchTracks(), fetchLabs()]);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to load judge setup",
@@ -459,6 +525,36 @@ export function JudgeSetupTab() {
     }
   };
 
+  const handleNormalizeRound = async () => {
+    if (!selectedRoundId) {
+      toast.error("Select a judge round first");
+      return;
+    }
+
+    try {
+      setIsNormalizing(true);
+      const res = await fetch("/api/dashboard/judge/normalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roundId: selectedRoundId }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        throw new Error(data.message || "Failed to normalize scores");
+      }
+
+      toast.success("Scores normalized and aggregated successfully");
+      await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to normalize scores",
+      );
+    } finally {
+      setIsNormalizing(false);
+    }
+  };
+
   const handleOpenScoreDetails = async (teamRow: LeaderboardRow) => {
     if (!selectedRoundId) return;
 
@@ -488,6 +584,23 @@ export function JudgeSetupTab() {
     } finally {
       setIsLoadingScoreDetails(false);
     }
+  };
+
+  const handleSelectVisible = () => {
+    if (selectedTeamIds.length === filteredTeams.length) {
+      setSelectedTeamIds([]);
+    } else {
+      setSelectedTeamIds(filteredTeams.map((team) => team.id));
+    }
+  };
+
+  const handleExportAllocations = () => {
+    const params = new URLSearchParams();
+    if (selectedRoundId) params.set("judgeRoundId", selectedRoundId);
+    window.open(
+      `/api/dashboard/judge/assignments/export?${params.toString()}`,
+      "_blank",
+    );
   };
 
   return (
@@ -717,6 +830,45 @@ export function JudgeSetupTab() {
                 </Select>
               </div>
 
+              <div className="grid grid-cols-2 space-x-1">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Lab</p>
+                  <Select
+                    value={selectedLabId}
+                    onValueChange={setSelectedLabId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select lab" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {labs.map((lab) => (
+                        <SelectItem key={lab.id} value={lab.id}>
+                          {lab.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Track</p>
+                  <Select
+                    value={selectedTrackId}
+                    onValueChange={setSelectedTrackId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select track" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tracks.map((track) => (
+                        <SelectItem key={track.id} value={track.id}>
+                          {track.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {isLoadingAssignments ? (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -724,13 +876,13 @@ export function JudgeSetupTab() {
                 </div>
               ) : (
                 <div className="max-h-56 overflow-y-auto rounded-md border p-3">
-                  {allTeams.length === 0 ? (
+                  {filteredTeams.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No teams available.
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {allTeams.map((team) => {
+                      {filteredTeams.map((team) => {
                         const checked = selectedTeamIds.includes(team.id);
                         return (
                           <label
@@ -746,7 +898,22 @@ export function JudgeSetupTab() {
                               }
                               disabled={!canManageAssignments}
                             />
-                            <span>{team.name}</span>
+                            <div className="w-full flex justify-between items-center">
+                              <span>{team.name}</span>
+                              <span>
+                                {
+                                  judgeScoreHistory.filter((h) => {
+                                    if (
+                                      team.id === h.teamId &&
+                                      h.teamId === team.id
+                                    ) {
+                                      return true;
+                                    }
+                                    return false;
+                                  }).length
+                                }
+                              </span>
+                            </div>
                           </label>
                         );
                       })}
@@ -755,23 +922,30 @@ export function JudgeSetupTab() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex justify-start flex-col items-start gap-2">
                 <p className="text-xs text-muted-foreground">
                   {selectedJudgeUser
                     ? `${selectedTeamIds.length} teams selected for ${selectedJudgeUser.name}`
                     : "Select a judge user"}
                 </p>
-                <Button
-                  onClick={handleSaveAssignments}
-                  disabled={
-                    !selectedRoundId ||
-                    !selectedJudgeUserId ||
-                    isSavingAssignments ||
-                    !canManageAssignments
-                  }
-                >
-                  {isSavingAssignments ? "Saving..." : "Save Allocation"}
-                </Button>
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <Button variant={"outline"} onClick={handleSelectVisible}>
+                    {selectedTeamIds.length === filteredTeams.length
+                      ? "Deselect All"
+                      : "Select Visible"}
+                  </Button>
+                  <Button
+                    onClick={handleSaveAssignments}
+                    disabled={
+                      !selectedRoundId ||
+                      !selectedJudgeUserId ||
+                      isSavingAssignments ||
+                      !canManageAssignments
+                    }
+                  >
+                    {isSavingAssignments ? "Saving..." : "Save Allocation"}
+                  </Button>
+                </div>
               </div>
 
               {!canManageAssignments && selectedRound ? (
@@ -786,11 +960,34 @@ export function JudgeSetupTab() {
             <CardContent className="space-y-4">
               <div>
                 <CardTitle className="mb-2">Leaderboard</CardTitle>
-                <CardDescription>
-                  {showCumulativeLeaderboard
-                    ? "Ranking based on cumulative scores across all rounds."
-                    : "Ranking for the selected round based on judge scores."}
-                </CardDescription>
+                <div className="flex justify-between items-start gap-4">
+                  <CardDescription>
+                    {showCumulativeLeaderboard
+                      ? "Ranking based on cumulative scores across all rounds."
+                      : "Ranking for the selected round based on judge scores."}
+                  </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleExportAllocations}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleNormalizeRound}
+                      disabled={!selectedRoundId || isNormalizing}
+                    >
+                      {isNormalizing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {isNormalizing ? "Processing..." : "Normalize & Aggregate"}
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
@@ -836,11 +1033,11 @@ export function JudgeSetupTab() {
                       <TableRow>
                         <TableHead>Rank</TableHead>
                         <TableHead>Team</TableHead>
-                        <TableHead>Total Score</TableHead>
+                        <TableHead>Raw Total</TableHead>
                         <TableHead>Max Possible</TableHead>
-                        <TableHead>Percentage</TableHead>
+                        {/* <TableHead>Percentage</TableHead> */}
                         <TableHead>Judges</TableHead>
-                        <TableHead>Score Entries</TableHead>
+                        <TableHead>Z-Score</TableHead>
                         <TableHead className="text-right">View</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -851,11 +1048,18 @@ export function JudgeSetupTab() {
                           <TableCell className="font-medium">
                             {row.teamName}
                           </TableCell>
-                          <TableCell>{row.totalRawScore}</TableCell>
+                          <TableCell>{row.rawTotalScore}</TableCell>
                           <TableCell>{row.maxPossibleScore}</TableCell>
-                          <TableCell>{row.percentage}%</TableCell>
+                          {/* <TableCell
+                            className={`font-medium ${getPercentageColor(row.percentage)}`}
+                          >
+                            {row.percentage}%
+                          </TableCell> */}
                           <TableCell>{row.judgeCount}</TableCell>
-                          <TableCell>{row.scoreEntries}</TableCell>
+                          <TableCell className="font-medium">
+                            {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +
+                              (row.normalizedTotalScore || 0).toFixed(3)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="icon-sm"

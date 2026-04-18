@@ -10,6 +10,7 @@ import {
   AttendanceTab,
   DashboardUsersTab,
   JudgeSetupTab,
+  JudgeTab,
   MealsTab,
   MentorsTab,
   ParticipantsTab,
@@ -58,6 +59,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "events", content: <ManageEventsTab session={session} /> },
     { id: "event-stats", content: <EventStatsTab /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
+    { id: "judge", content: <JudgeTab /> },
     { id: "worker", content: <WorkerManagementTab /> },
   ];
 

@@ -47,7 +47,7 @@ export async function addAggregationJob(judgeRoundId: string) {
       removeOnFail: 50,
       attempts: 3,
       backoff: { type: "exponential", delay: 1000 },
-      delay: 5000,
+      delay: 10000, // 10 second delay to allow normalization to complete
     },
   );
 }

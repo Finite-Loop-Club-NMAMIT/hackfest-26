@@ -6,10 +6,14 @@ import db from "~/db";
 import {
   dashboardUserRoles,
   dashboardUsers,
+  ideaSubmission,
   judgeRoundAssignments,
   judges,
+  labTeams,
   roles,
+  selected,
   teams,
+  tracks,
 } from "~/db/schema";
 
 const updateAssignmentsSchema = z.object({
@@ -47,9 +51,17 @@ export const GET = adminProtected(async (req: NextRequest) => {
     );
 
     const allTeams = await db
-      .select({ id: teams.id, name: teams.name })
+      .select({
+        id: teams.id,
+        name: teams.name,
+        trackId: tracks.id,
+        labId: labTeams.labId,
+      })
       .from(teams)
-      .orderBy(asc(teams.name));
+      .innerJoin(selected, eq(selected.teamId, teams.id))
+      .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .leftJoin(labTeams, eq(labTeams.teamId, teams.id));
 
     let assignedTeamIds: string[] = [];
 
@@ -73,11 +85,26 @@ export const GET = adminProtected(async (req: NextRequest) => {
       }
     }
 
+    const judgeAssignments = await db.query.judgeRoundAssignments.findMany();
+    const judgeScore = await db.query.judgeScores.findMany();
+
     return NextResponse.json(
       {
         judgeUsers: uniqueJudgeUsers,
-        teams: allTeams,
+        teams: allTeams.map((team) => ({
+          id: team.id,
+          name: team.name,
+          trackId: team.trackId || "",
+          labId: team.labId || "",
+        })),
         assignedTeamIds,
+        history: judgeScore.map((score) => ({
+          ...score,
+          teamId:
+            judgeAssignments.find(
+              (assignment) => assignment.id === score.roundAssignmentId,
+            )?.teamId ?? null,
+        })),
       },
       { status: 200 },
     );

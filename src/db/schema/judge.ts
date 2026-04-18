@@ -52,10 +52,8 @@ export const judgeRoundAssignments = pgTable(
       .notNull()
       .references(() => judgeRounds.id, { onDelete: "cascade" }),
 
-    rawTotalScore: integer("raw_total_score").notNull().default(0),
-    normalizedTotalScore: doublePrecision("normalized_total_score")
-      .notNull()
-      .default(0),
+    rawTotalScore: integer("raw_total_score"),
+    normalizedTotalScore: doublePrecision("normalized_total_score"),
   },
   (table) => [
     unique("judge_round_team_assignment_unique").on(
@@ -86,7 +84,7 @@ export const judgeScores = pgTable(
       .notNull()
       .references(() => judgeCriterias.id, { onDelete: "cascade" }),
 
-    rawScore: integer("raw_score").notNull().default(0),
+    rawScore: integer("raw_score"),
   },
   (table) => [
     unique("judge_score_assignment_criteria_unique").on(
@@ -120,13 +118,15 @@ export const teamRoundScores = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
 
-    teamId: text("team_id").notNull(),
-    roundId: text("round_id").notNull(),
-
-    rawTotalScore: integer("raw_total_score").notNull().default(0),
-    normalizedTotalScore: doublePrecision("normalized_total_score")
+    teamId: text("team_id")
       .notNull()
-      .default(0),
+      .references(() => teams.id, { onDelete: "cascade" }),
+    roundId: text("round_id")
+      .notNull()
+      .references(() => judgeRounds.id, { onDelete: "cascade" }),
+
+    rawTotalScore: integer("raw_total_score"),
+    normalizedTotalScore: doublePrecision("normalized_total_score"),
     judgeCount: integer("judge_count").notNull().default(0),
   },
   (table) => [

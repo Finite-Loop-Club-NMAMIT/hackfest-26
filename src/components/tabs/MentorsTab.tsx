@@ -49,6 +49,7 @@ type MentorUser = {
 type TeamOption = {
   id: string;
   name: string;
+  trackId: string;
 };
 
 type MentorHistoryRow = {
@@ -900,7 +901,22 @@ function AdminMentorPanel() {
                               }
                               disabled={!canManageAssignments}
                             />
-                            <span className="truncate">{team.name}</span>
+                            <div className="w-full flex justify-between">
+                              <span className="truncate">{team.name}</span>
+                              <span>
+                                {
+                                  feedbackHistory.filter((feedback) => {
+                                    if (
+                                      feedback.teamId === team.id &&
+                                      feedback.feedback
+                                    ) {
+                                      return true;
+                                    }
+                                    return false;
+                                  }).length
+                                }
+                              </span>
+                            </div>
                           </div>
                         );
                       })}

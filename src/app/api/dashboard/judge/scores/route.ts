@@ -8,10 +8,6 @@ import {
   judgeRoundAssignments,
   judgeScores,
 } from "~/db/schema";
-import {
-  addAggregationJob,
-  addNormalizationJob,
-} from "~/lib/queue/normalization";
 
 const saveScoresSchema = z.object({
   assignmentId: z.string().min(1, "Assignment ID is required"),
@@ -24,7 +20,7 @@ const saveScoresSchema = z.object({
 });
 
 export const GET = permissionProtected(
-  ["submission:score"],
+  ["judge:score"],
   async (request, _context, user) => {
     try {
       const { searchParams } = new URL(request.url);
@@ -91,7 +87,7 @@ export const GET = permissionProtected(
           roundStatus: round?.status ?? "Draft",
           criteria: criteria.map((item) => ({
             ...item,
-            rawScore: scoreMap.get(item.id) ?? 0,
+            rawScore: scoreMap.get(item.id) ?? null,
           })),
         },
         { status: 200 },
@@ -107,7 +103,7 @@ export const GET = permissionProtected(
 );
 
 export const POST = permissionProtected(
-  ["submission:score"],
+  ["judge:score"],
   async (request, _context, user) => {
     try {
       const body = await request.json();
@@ -197,37 +193,43 @@ export const POST = permissionProtected(
         }
       }
 
-      for (const score of scores) {
-        await db
-          .insert(judgeScores)
-          .values({
-            roundAssignmentId: assignment.id,
-            criteriaId: score.criteriaId,
-            rawScore: score.rawScore,
-          })
-          .onConflictDoUpdate({
-            target: [judgeScores.roundAssignmentId, judgeScores.criteriaId],
-            set: { rawScore: score.rawScore },
-          });
-      }
+      // Wrap all database operations in a transaction for atomicity
+      let totalRawScore = 0;
+      await db.transaction(async (tx) => {
+        // 1. Insert/update all scores
+        for (const score of scores) {
+          await tx
+            .insert(judgeScores)
+            .values({
+              roundAssignmentId: assignment.id,
+              criteriaId: score.criteriaId,
+              rawScore: score.rawScore,
+            })
+            .onConflictDoUpdate({
+              target: [judgeScores.roundAssignmentId, judgeScores.criteriaId],
+              set: { rawScore: score.rawScore },
+            });
+        }
 
-      const updatedScores = await db
-        .select({ rawScore: judgeScores.rawScore })
-        .from(judgeScores)
-        .where(eq(judgeScores.roundAssignmentId, assignment.id));
+        // 2. Calculate total score within transaction
+        const updatedScores = await tx
+          .select({ rawScore: judgeScores.rawScore })
+          .from(judgeScores)
+          .where(eq(judgeScores.roundAssignmentId, assignment.id));
 
-      const totalRawScore = updatedScores.reduce(
-        (sum, item) => sum + item.rawScore,
-        0,
-      );
+        totalRawScore = updatedScores.reduce(
+          (sum, item) => sum + (item.rawScore ?? 0),
+          0,
+        );
 
-      await db
-        .update(judgeRoundAssignments)
-        .set({ rawTotalScore: totalRawScore })
-        .where(eq(judgeRoundAssignments.id, assignment.id));
+        // 3. Update total score within transaction
+        await tx
+          .update(judgeRoundAssignments)
+          .set({ rawTotalScore: totalRawScore })
+          .where(eq(judgeRoundAssignments.id, assignment.id));
+      });
 
-      await addNormalizationJob(judge.id, assignment.judgeRoundId);
-      await addAggregationJob(assignment.judgeRoundId);
+      console.log("Scores saved successfully, total raw score:", totalRawScore);
 
       return NextResponse.json(
         { message: "Scores saved successfully", totalRawScore },
