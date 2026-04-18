@@ -29,7 +29,7 @@ let worker: Worker | null = null;
 
 export async function addAggregationJob(judgeRoundId: string) {
   const jobId = `aggregate-${judgeRoundId}`;
-  await (new Queue(QUEUE_NAME, { connection })).add(
+  await new Queue(QUEUE_NAME, { connection }).add(
     AGGREGATE_SCORES_JOB_NAME,
     { judgeRoundId },
     {

@@ -107,6 +107,7 @@ export function JudgeSetupTab() {
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   const [isSavingAssignments, setIsSavingAssignments] = useState(false);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  const [isNormalizing, setIsNormalizing] = useState(false);
   const [isLoadingScoreDetails, setIsLoadingScoreDetails] = useState(false);
   const [isScoreDetailsOpen, setIsScoreDetailsOpen] = useState(false);
 
@@ -523,6 +524,36 @@ export function JudgeSetupTab() {
     }
   };
 
+  const handleNormalizeRound = async () => {
+    if (!selectedRoundId) {
+      toast.error("Select a judge round first");
+      return;
+    }
+
+    try {
+      setIsNormalizing(true);
+      const res = await fetch("/api/dashboard/judge/normalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roundId: selectedRoundId }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        throw new Error(data.message || "Failed to normalize scores");
+      }
+
+      toast.success("Scores normalized and aggregated successfully");
+      await fetchLeaderboard(selectedRoundId, showCumulativeLeaderboard);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to normalize scores",
+      );
+    } finally {
+      setIsNormalizing(false);
+    }
+  };
+
   const handleOpenScoreDetails = async (teamRow: LeaderboardRow) => {
     if (!selectedRoundId) return;
 
@@ -868,7 +899,7 @@ export function JudgeSetupTab() {
                                     ) {
                                       return true;
                                     }
-                                    return false
+                                    return false;
                                   }).length
                                 }
                               </span>
@@ -919,11 +950,24 @@ export function JudgeSetupTab() {
             <CardContent className="space-y-4">
               <div>
                 <CardTitle className="mb-2">Leaderboard</CardTitle>
-                <CardDescription>
-                  {showCumulativeLeaderboard
-                    ? "Ranking based on cumulative scores across all rounds."
-                    : "Ranking for the selected round based on judge scores."}
-                </CardDescription>
+                <div className="flex justify-between items-start gap-4">
+                  <CardDescription>
+                    {showCumulativeLeaderboard
+                      ? "Ranking based on cumulative scores across all rounds."
+                      : "Ranking for the selected round based on judge scores."}
+                  </CardDescription>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleNormalizeRound}
+                    disabled={!selectedRoundId || isNormalizing}
+                  >
+                    {isNormalizing && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {isNormalizing ? "Processing..." : "Normalize & Aggregate"}
+                  </Button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
@@ -971,7 +1015,7 @@ export function JudgeSetupTab() {
                         <TableHead>Team</TableHead>
                         <TableHead>Raw Total</TableHead>
                         <TableHead>Max Possible</TableHead>
-                        <TableHead>Percentage</TableHead>
+                        {/* <TableHead>Percentage</TableHead> */}
                         <TableHead>Judges</TableHead>
                         <TableHead>Z-Score</TableHead>
                         <TableHead className="text-right">View</TableHead>
@@ -986,11 +1030,11 @@ export function JudgeSetupTab() {
                           </TableCell>
                           <TableCell>{row.rawTotalScore}</TableCell>
                           <TableCell>{row.maxPossibleScore}</TableCell>
-                          <TableCell
+                          {/* <TableCell
                             className={`font-medium ${getPercentageColor(row.percentage)}`}
                           >
                             {row.percentage}%
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell>{row.judgeCount}</TableCell>
                           <TableCell className="font-medium">
                             {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +

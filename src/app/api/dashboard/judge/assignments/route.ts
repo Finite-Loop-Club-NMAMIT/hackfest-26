@@ -6,9 +6,12 @@ import db from "~/db";
 import {
   dashboardUserRoles,
   dashboardUsers,
+  ideaSubmission,
   judgeRoundAssignments,
   judges,
+  labTeams,
   roles,
+  selected,
   teams,
   tracks,
 } from "~/db/schema";
@@ -47,24 +50,18 @@ export const GET = adminProtected(async (req: NextRequest) => {
       new Map(judgeUsers.map((user) => [user.id, user])).values(),
     );
 
-    const allTeams = await db.query.teams.findMany({
-      with: {
-        ideaSubmission: {
-          columns: {
-            id: true,
-          },
-          with: {
-            track: {
-              columns: {
-                id: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const labTeams = await db.query.labTeams.findMany();
+    const allTeams = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        trackId: tracks.id,
+        labId: labTeams.labId,
+      })
+      .from(teams)
+      .innerJoin(selected, eq(selected.teamId, teams.id))
+      .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, teams.id))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
+      .leftJoin(labTeams, eq(labTeams.teamId, teams.id));
 
     let assignedTeamIds: string[] = [];
 
@@ -97,9 +94,8 @@ export const GET = adminProtected(async (req: NextRequest) => {
         teams: allTeams.map((team) => ({
           id: team.id,
           name: team.name,
-          trackId: team.ideaSubmission?.track.id || "",
-          labId:
-            labTeams.find((labTeam) => labTeam.teamId === team.id)?.labId || "",
+          trackId: team.trackId || "",
+          labId: team.labId || "",
         })),
         assignedTeamIds,
         history: judgeScore.map((score) => ({

@@ -1,30 +1,31 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { cn } from "~/lib/utils";
 
 type Allocation = {
   assignmentId: string;
   teamId: string;
+  teamNo: number | null;
   teamName: string;
   teamStage: string;
   paymentStatus: string | null;
@@ -46,30 +47,58 @@ type ScoreCriterion = {
   rawScore: number | null;
 };
 
-type ScoreDialogPayload = {
+type ScorePayload = {
   assignmentId: string;
   roundStatus: "Draft" | "Active" | "Completed";
   criteria: ScoreCriterion[];
 };
 
-function formatEnumLabel(value: string | null | undefined) {
-  if (!value) return "-";
-  return value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function JudgeTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
-  const [isScoreDialogOpen, setIsScoreDialogOpen] = useState(false);
   const [isLoadingScores, setIsLoadingScores] = useState(false);
   const [isSavingScores, setIsSavingScores] = useState(false);
-  const [selectedAllocation, setSelectedAllocation] =
-    useState<Allocation | null>(null);
-  const [scoreDialogPayload, setScoreDialogPayload] =
-    useState<ScoreDialogPayload | null>(null);
+  const [selectedRoundId, setSelectedRoundId] = useState("");
+  const [selectedTeamNumber, setSelectedTeamNumber] = useState(1);
+  const [scorePayload, setScorePayload] = useState<ScorePayload | null>(null);
+
+  const roundOptions = useMemo(() => {
+    const uniqueRounds = new Map<
+      string,
+      { id: string; name: string; status: Allocation["roundStatus"] }
+    >();
+
+    for (const allocation of allocations) {
+      if (!uniqueRounds.has(allocation.roundId)) {
+        uniqueRounds.set(allocation.roundId, {
+          id: allocation.roundId,
+          name: allocation.roundName,
+          status: allocation.roundStatus,
+        });
+      }
+    }
+
+    return Array.from(uniqueRounds.values());
+  }, [allocations]);
+
+  const teamsInSelectedRound = useMemo(() => {
+    const roundAllocations = allocations.filter(
+      (allocation) => allocation.roundId === selectedRoundId,
+    );
+
+    return roundAllocations.map((allocation, index) => ({
+      ...allocation,
+      teamNumber: allocation.teamNo ?? index + 1,
+    }));
+  }, [allocations, selectedRoundId]);
+
+  const selectedAllocation = useMemo(() => {
+    return (
+      teamsInSelectedRound.find(
+        (allocation) => allocation.teamNumber === selectedTeamNumber,
+      ) ?? null
+    );
+  }, [teamsInSelectedRound, selectedTeamNumber]);
 
   const fetchAllocations = async () => {
     const res = await fetch("/api/dashboard/judge/my-allocations");
@@ -81,6 +110,38 @@ export function JudgeTab() {
     const data = (await res.json()) as Allocation[];
     setAllocations(data);
   };
+
+  const loadTeamScores = useCallback(
+    async (allocation: typeof selectedAllocation) => {
+      if (!allocation) return;
+
+      setIsLoadingScores(true);
+
+      try {
+        const res = await fetch(
+          `/api/dashboard/judge/scores?assignmentId=${encodeURIComponent(allocation.assignmentId)}`,
+        );
+
+        if (!res.ok) {
+          const data = (await res.json()) as { message?: string };
+          throw new Error(data.message || "Failed to load score criteria");
+        }
+
+        const payload = (await res.json()) as ScorePayload;
+        setScorePayload(payload);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load score criteria",
+        );
+        setScorePayload(null);
+      } finally {
+        setIsLoadingScores(false);
+      }
+    },
+    [],
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial fetch
   useEffect(() => {
@@ -95,44 +156,58 @@ export function JudgeTab() {
     run();
   }, []);
 
-  const openScoreDialog = async (allocation: Allocation) => {
-    try {
-      setSelectedAllocation(allocation);
-      setIsScoreDialogOpen(true);
-      setIsLoadingScores(true);
+  useEffect(() => {
+    if (roundOptions.length === 0) {
+      setSelectedRoundId("");
+      return;
+    }
 
-      const res = await fetch(
-        `/api/dashboard/judge/scores?assignmentId=${encodeURIComponent(allocation.assignmentId)}`,
-      );
+    if (!roundOptions.some((round) => round.id === selectedRoundId)) {
+      setSelectedRoundId(roundOptions[0]?.id ?? "");
+    }
+  }, [roundOptions, selectedRoundId]);
 
-      if (!res.ok) {
-        const data = (await res.json()) as { message?: string };
-        throw new Error(data.message || "Failed to load score criteria");
+  useEffect(() => {
+    if (teamsInSelectedRound.length === 0) {
+      return;
+    }
+
+    const isValidTeam = teamsInSelectedRound.some(
+      (t) => t.teamNumber === selectedTeamNumber,
+    );
+
+    if (!isValidTeam) {
+      setSelectedTeamNumber(teamsInSelectedRound[0].teamNumber);
+    }
+  }, [teamsInSelectedRound, selectedTeamNumber]);
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedAllocation) {
+        setScorePayload(null);
+        return;
       }
 
-      const payload = (await res.json()) as ScoreDialogPayload;
-      setScoreDialogPayload(payload);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to load score criteria",
-      );
-      setIsScoreDialogOpen(false);
-      setSelectedAllocation(null);
-      setScoreDialogPayload(null);
-    } finally {
-      setIsLoadingScores(false);
-    }
-  };
+      try {
+        await loadTeamScores(selectedAllocation);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load scores",
+        );
+        setScorePayload(null);
+      }
+    };
+
+    run();
+  }, [loadTeamScores, selectedAllocation]);
 
   const updateCriterionScore = (criteriaId: string, value: string) => {
-    if (!scoreDialogPayload) return;
+    if (!scorePayload) return;
 
     const parsed = value === "" ? 0 : Number(value);
-    setScoreDialogPayload({
-      ...scoreDialogPayload,
-      criteria: scoreDialogPayload.criteria.map((criterion) =>
+    setScorePayload({
+      ...scorePayload,
+      criteria: scorePayload.criteria.map((criterion) =>
         criterion.id === criteriaId
           ? {
               ...criterion,
@@ -144,9 +219,9 @@ export function JudgeTab() {
   };
 
   const handleSaveScores = async () => {
-    if (!scoreDialogPayload) return;
+    if (!scorePayload) return;
 
-    for (const criterion of scoreDialogPayload.criteria) {
+    for (const criterion of scorePayload.criteria) {
       const score = criterion.rawScore ?? 0;
       if (!Number.isInteger(score) || score < 0) {
         toast.error("Scores must be non-negative integers");
@@ -166,8 +241,8 @@ export function JudgeTab() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assignmentId: scoreDialogPayload.assignmentId,
-          scores: scoreDialogPayload.criteria.map((criterion) => ({
+          assignmentId: scorePayload.assignmentId,
+          scores: scorePayload.criteria.map((criterion) => ({
             criteriaId: criterion.id,
             rawScore: criterion.rawScore ?? 0,
           })),
@@ -179,9 +254,13 @@ export function JudgeTab() {
         throw new Error(data.message || "Failed to save scores");
       }
 
-      toast.success("Scores saved");
+      toast.success("Scores saved successfully");
       await fetchAllocations();
-      setIsScoreDialogOpen(false);
+
+      // Reload current team to get updated criteria count reflection
+      if (selectedAllocation) {
+        await loadTeamScores(selectedAllocation);
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to save scores",
@@ -191,46 +270,17 @@ export function JudgeTab() {
     }
   };
 
-  const grouped = useMemo(() => {
-    const statusPriority: Record<Allocation["roundStatus"], number> = {
-      Active: 0,
-      Draft: 1,
-      Completed: 2,
-    };
-
-    const map = new Map<string, Allocation[]>();
-    for (const item of allocations) {
-      const key = `${item.roundId}|${item.roundName}|${item.roundStatus}`;
-      const existing = map.get(key) ?? [];
-      existing.push(item);
-      map.set(key, existing);
-    }
-
-    return Array.from(map.entries())
-      .map(([key, items]) => {
-        const [roundId, roundName, roundStatus] = key.split("|");
-        const typedStatus = roundStatus as Allocation["roundStatus"];
-        return {
-          roundId,
-          roundName,
-          roundStatus: typedStatus,
-          items: items.sort((a, b) => a.teamName.localeCompare(b.teamName)),
-        };
-      })
-      .sort((a, b) => {
-        const byStatus =
-          statusPriority[a.roundStatus] - statusPriority[b.roundStatus];
-        if (byStatus !== 0) return byStatus;
-        return a.roundName.localeCompare(b.roundName);
-      });
-  }, [allocations]);
+  const currentTeamIndex = teamsInSelectedRound.findIndex(
+    (t) => t.teamNumber === selectedTeamNumber,
+  );
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Scoring</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Judging Interface</h2>
         <p className="text-muted-foreground">
-          Teams allocated to you for judge scoring.
+          Review allocated teams by round, switch using team number, and submit
+          scores in a single workspace.
         </p>
       </div>
 
@@ -239,185 +289,287 @@ export function JudgeTab() {
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading assigned teams...
         </div>
-      ) : grouped.length === 0 ? (
+      ) : roundOptions.length === 0 ? (
         <div className="rounded-md border p-4 text-sm text-muted-foreground">
-          No teams are allocated to your judge account yet. Ask admin to assign
-          teams in Judge Setup.
+          No teams are allocated to your judge account yet.
         </div>
       ) : (
         <div className="space-y-6">
-          {grouped.map((group) => (
-            <div key={group.roundId} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">{group.roundName}</h3>
-                <Badge variant="secondary">{group.roundStatus}</Badge>
-              </div>
-
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Team</TableHead>
-                      <TableHead>Track</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Submission</TableHead>
-                      <TableHead>Criteria</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.items.map((item) => (
-                      <TableRow key={item.assignmentId}>
-                        <TableCell className="font-medium">
-                          {item.teamName}
-                        </TableCell>
-                        <TableCell>{item.trackName ?? "-"}</TableCell>
-                        <TableCell>{formatEnumLabel(item.teamStage)}</TableCell>
-                        <TableCell>
-                          {item.pptUrl ? (
-                            <a
-                              href={item.pptUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="underline underline-offset-4"
-                            >
-                              View PPT
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground">
-                              Not submitted
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {item.scoredCriteria}/{item.totalCriteria}
-                        </TableCell>
-                        <TableCell>
-                          {item.totalRawScore}/{item.totalMaxScore}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openScoreDialog(item)}
-                            disabled={item.roundStatus === "Completed"}
-                          >
-                            {item.scoredCriteria > 0
-                              ? "Edit Score"
-                              : "Enter Score"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Round</CardTitle>
+                <CardDescription>Select which round to judge.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={selectedRoundId}
+                  onValueChange={setSelectedRoundId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select round" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roundOptions.map((round) => (
+                      <SelectItem key={round.id} value={round.id}>
+                        {round.name} ({round.status})
+                      </SelectItem>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
-      <Dialog
-        open={isScoreDialogOpen}
-        onOpenChange={(open) => {
-          setIsScoreDialogOpen(open);
-          if (!open) {
-            setSelectedAllocation(null);
-            setScoreDialogPayload(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedAllocation?.teamName
-                ? `Score Team: ${selectedAllocation.teamName}`
-                : "Score Team"}
-            </DialogTitle>
-            <DialogDescription>
-              Enter criteria-wise scores for this team.
-            </DialogDescription>
-          </DialogHeader>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  Team IDs ({selectedTeamNumber})
+                </CardTitle>
+                <CardDescription>Pick a team number directly.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedTeamNumber(
+                        teamsInSelectedRound[currentTeamIndex - 1].teamNumber,
+                      )
+                    }
+                    disabled={currentTeamIndex <= 0}
+                  >
+                    Prev
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedTeamNumber(
+                        teamsInSelectedRound[currentTeamIndex + 1].teamNumber,
+                      )
+                    }
+                    disabled={
+                      currentTeamIndex === -1 ||
+                      currentTeamIndex >= teamsInSelectedRound.length - 1
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
 
-          {isLoadingScores ? (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading criteria...
+                <div className="rounded-md border p-2">
+                  <div className="flex max-w-full flex-wrap gap-1">
+                    {teamsInSelectedRound.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        No teams in this round
+                      </span>
+                    ) : (
+                      teamsInSelectedRound.map((team) => (
+                        <Button
+                          key={team.assignmentId}
+                          type="button"
+                          size="sm"
+                          variant={
+                            team.teamNumber === selectedTeamNumber
+                              ? "default"
+                              : "outline"
+                          }
+                          className={cn(
+                            "h-7 min-w-8 px-2",
+                            team.scoredCriteria > 0 &&
+                              "rounded-none border-green-600 bg-green-600 font-bold text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700",
+                          )}
+                          onClick={() => setSelectedTeamNumber(team.teamNumber)}
+                        >
+                          {team.teamNumber}
+                        </Button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {selectedAllocation ? (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground mr-1">
+                      Team {selectedAllocation.teamNumber}:
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {selectedAllocation.teamName}
+                    </span>
+                    {selectedAllocation.trackName && (
+                      <span className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {selectedAllocation.trackName}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No team available for selected round
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {!selectedAllocation ? (
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+              No team available for the selected round.
             </div>
-          ) : !scoreDialogPayload ? (
-            <p className="text-sm text-muted-foreground">
-              No score data available.
-            </p>
           ) : (
-            <div className="space-y-4">
-              {scoreDialogPayload.roundStatus === "Completed" ? (
-                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700">
-                  This round is completed. Scores are locked.
-                </div>
-              ) : null}
-
-              {scoreDialogPayload.criteria.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No criteria configured for this round.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {scoreDialogPayload.criteria.map((criterion) => (
-                    <div
-                      key={criterion.id}
-                      className="grid grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-5"
-                    >
-                      <div className="sm:col-span-3">
-                        <p className="text-sm font-medium">
-                          {criterion.criteriaName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Max score: {criterion.maxScore}
-                        </p>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          max={criterion.maxScore}
-                          step={1}
-                          value={criterion.rawScore ?? ""}
-                          onChange={(e) =>
-                            updateCriterionScore(criterion.id, e.target.value)
-                          }
-                          disabled={
-                            scoreDialogPayload.roundStatus === "Completed"
-                          }
-                        />
-                      </div>
+            <div className="grid min-h-[50vh] grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-xl text-primary">
+                        {selectedAllocation.teamName}
+                      </CardTitle>
+                      <CardDescription>
+                        Team {selectedAllocation.teamNumber}
+                      </CardDescription>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">
+                      {selectedAllocation.roundStatus}
+                    </Badge>
+                    <Badge variant="outline">
+                      {selectedAllocation.scoredCriteria > 0
+                        ? `Scored ${selectedAllocation.scoredCriteria}/${selectedAllocation.totalCriteria} Criteria`
+                        : "No Scores Entered"}
+                    </Badge>
+                    {selectedAllocation.trackName && (
+                      <Badge
+                        variant="default"
+                        className="bg-primary/20 text-primary hover:bg-primary/30"
+                      >
+                        {selectedAllocation.trackName}
+                      </Badge>
+                    )}
+                  </div>
 
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsScoreDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveScores}
-                  disabled={
-                    isSavingScores ||
-                    scoreDialogPayload.roundStatus === "Completed" ||
-                    scoreDialogPayload.criteria.length === 0
-                  }
-                >
-                  {isSavingScores ? "Saving..." : "Save Scores"}
-                </Button>
-              </div>
+                  <div className="space-y-2 mt-6">
+                    <p className="text-sm font-medium">Resources</p>
+                    <div className="rounded-md border p-4 text-center">
+                      {selectedAllocation.pptUrl ? (
+                        <a
+                          href={selectedAllocation.pptUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                        >
+                          View Pitch Deck / PPT
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No PPT submitted by team.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="h-full w-full">
+                <CardHeader>
+                  <div className="flex flex-col w-full items-center justify-center">
+                    <div>Team No</div>
+                    <div className="text-6xl">
+                      {selectedAllocation.teamNumber}
+                    </div>
+                  </div>
+                  <CardTitle>Score Entry</CardTitle>
+                  <CardDescription>
+                    Enter criteria-wise scores for {selectedAllocation.teamName}
+                    .
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {isLoadingScores ? (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading criteria...
+                    </div>
+                  ) : !scorePayload ? (
+                    <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                      No score data available.
+                    </div>
+                  ) : (
+                    <>
+                      {scorePayload.roundStatus === "Completed" ? (
+                        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700">
+                          This round is completed. Scores are locked.
+                        </div>
+                      ) : null}
+
+                      {scorePayload.criteria.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No criteria configured for this round.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {scorePayload.criteria.map((criterion) => (
+                            <div
+                              key={criterion.id}
+                              className="grid grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-5"
+                            >
+                              <div className="sm:col-span-3">
+                                <p className="text-sm font-medium">
+                                  {criterion.criteriaName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Max score: {criterion.maxScore}
+                                </p>
+                              </div>
+                              <div className="sm:col-span-2">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={criterion.maxScore}
+                                  step={1}
+                                  value={criterion.rawScore ?? ""}
+                                  onChange={(e) =>
+                                    updateCriterionScore(
+                                      criterion.id,
+                                      e.target.value,
+                                    )
+                                  }
+                                  disabled={
+                                    scorePayload.roundStatus === "Completed"
+                                  }
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {scorePayload.roundStatus !== "Completed" &&
+                        scorePayload.criteria.length > 0 && (
+                          <div className="flex justify-end pt-4">
+                            <Button
+                              onClick={handleSaveScores}
+                              disabled={isSavingScores}
+                              className="w-full sm:w-auto"
+                            >
+                              {isSavingScores ? "Saving..." : "Save Scores"}
+                            </Button>
+                          </div>
+                        )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

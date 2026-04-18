@@ -8,6 +8,7 @@ import {
   judgeRoundAssignments,
   judgeRounds,
   judgeScores,
+  selected,
   teams,
   tracks,
 } from "~/db/schema";
@@ -29,6 +30,7 @@ export const GET = permissionProtected(
           assignmentId: judgeRoundAssignments.id,
           teamId: teams.id,
           teamName: teams.name,
+          teamNo: selected.teamNo,
           teamStage: teams.teamStage,
           paymentStatus: teams.paymentStatus,
           roundId: judgeRounds.id,
@@ -39,6 +41,7 @@ export const GET = permissionProtected(
         })
         .from(judgeRoundAssignments)
         .innerJoin(teams, eq(teams.id, judgeRoundAssignments.teamId))
+        .innerJoin(selected, eq(selected.teamId, teams.id))
         .innerJoin(
           judgeRounds,
           eq(judgeRounds.id, judgeRoundAssignments.judgeRoundId),

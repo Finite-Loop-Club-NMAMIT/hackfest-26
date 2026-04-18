@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
 import {
   Card,
   CardContent,
@@ -29,6 +28,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Textarea } from "~/components/ui/textarea";
+import { cn } from "~/lib/utils";
 
 type MentorAllocation = {
   assignmentId: string;

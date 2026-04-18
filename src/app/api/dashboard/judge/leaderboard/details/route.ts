@@ -93,7 +93,10 @@ export const GET = adminProtected(async (req: NextRequest) => {
     const scoreMap = new Map<string, number>();
     for (const score of scoreRows) {
       if (score.rawScore !== null) {
-        scoreMap.set(`${score.assignmentId}:${score.criteriaId}`, score.rawScore);
+        scoreMap.set(
+          `${score.assignmentId}:${score.criteriaId}`,
+          score.rawScore,
+        );
       }
     }
 

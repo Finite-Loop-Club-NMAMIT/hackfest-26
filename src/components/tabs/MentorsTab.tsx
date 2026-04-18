@@ -912,7 +912,7 @@ function AdminMentorPanel() {
                                     ) {
                                       return true;
                                     }
-                                    return false
+                                    return false;
                                   }).length
                                 }
                               </span>

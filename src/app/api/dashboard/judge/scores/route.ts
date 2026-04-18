@@ -8,10 +8,6 @@ import {
   judgeRoundAssignments,
   judgeScores,
 } from "~/db/schema";
-import {
-  // addAggregationJob,
-  addNormalizationJob,
-} from "~/lib/queue/normalization";
 
 const saveScoresSchema = z.object({
   assignmentId: z.string().min(1, "Assignment ID is required"),
@@ -234,15 +230,6 @@ export const POST = permissionProtected(
       });
 
       console.log("Scores saved successfully, total raw score:", totalRawScore);
-      // 4. Queue normalization and aggregation jobs AFTER transaction commits
-      try {
-        console.log("Queuing normalization job for judge:", judge.id, "round:", assignment.judgeRoundId);
-        await addNormalizationJob(judge.id, assignment.judgeRoundId);
-        // await addAggregationJob(assignment.judgeRoundId);
-      } catch (queueError) {
-        console.error("Failed to queue normalization jobs:", queueError);
-        // Continue - scores were saved successfully
-      }
 
       return NextResponse.json(
         { message: "Scores saved successfully", totalRawScore },

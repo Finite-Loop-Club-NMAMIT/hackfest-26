@@ -2,11 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { adminProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
-import {
-  judgeCriterias,
-  teamRoundScores,
-  teams,
-} from "~/db/schema";
+import { judgeCriterias, teamRoundScores, teams } from "~/db/schema";
 
 export const GET = adminProtected(async (req: NextRequest) => {
   try {

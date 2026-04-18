@@ -4,6 +4,7 @@ import {
   dashboardUserRoles,
   dashboardUsers,
   ideaSubmission,
+  labTeams,
   mentorFeedback,
   mentorRoundAssignments,
   mentorRounds,
@@ -12,7 +13,6 @@ import {
   selected,
   teams,
   tracks,
-  labTeams,
 } from "../schema";
 
 export async function getMentorUsers() {

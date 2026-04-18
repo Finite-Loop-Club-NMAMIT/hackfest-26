@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import db from "../index";
-import { addAggregationJob } from "../../../scripts/normalization-worker";
 
 export async function recalculateNormalizedScores(
   judgeId: string,
@@ -52,11 +51,6 @@ export async function recalculateNormalizedScores(
       AND raw_total_score IS NULL
   `);
 
-  // save to team_round_scores
-// await aggregateTeamScores(judgeRoundId)
-
-await addAggregationJob(judgeRoundId);
-
   console.log(
     `[recalculateNormalizedScores] Cleared ${clearResult.rowCount ?? 0} assignments without raw scores`,
   );
@@ -92,7 +86,7 @@ export async function aggregateTeamScores(judgeRoundId: string) {
       jra.team_id,
       jra.judge_round_id,
       COALESCE(SUM(jra.raw_total_score), 0)::integer,
-      COALESCE(SUM(jra.normalized_total_score), 0),
+      AVG(jra.normalized_total_score),
       COUNT(DISTINCT jra.judge_id)
     FROM judge_round_assignments jra
     WHERE jra.judge_round_id = ${judgeRoundId}
