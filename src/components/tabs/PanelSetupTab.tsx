@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Loader2, MessageSquare } from "lucide-react";
+import { Download, Eye, Loader2, MessageSquare } from "lucide-react";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -675,6 +675,15 @@ export function PanelSetupTab() {
     }
   };
 
+  const handleExportAllocations = () => {
+    const params = new URLSearchParams();
+    if (selectedRoundId) params.set("panelRoundId", selectedRoundId);
+    window.open(
+      `/api/dashboard/panel/assignments/export?${params.toString()}`,
+      "_blank",
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -1033,6 +1042,14 @@ export function PanelSetupTab() {
                     judge rounds.
                   </CardDescription>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleExportAllocations}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export PDF
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
