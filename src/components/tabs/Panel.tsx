@@ -1,7 +1,15 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { 
+  CheckCircle2, 
+  ChevronLeft, 
+  ChevronRight, 
+  Loader2, 
+  Presentation,
+  Save,
+  Trophy
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -54,6 +62,7 @@ type ScorePayload = {
 };
 
 export function PanelTab() {
+  const scoreAbortRef = useRef<AbortController | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [isLoadingScores, setIsLoadingScores] = useState(false);
@@ -115,11 +124,16 @@ export function PanelTab() {
     async (allocation: typeof selectedAllocation) => {
       if (!allocation) return;
 
+      scoreAbortRef.current?.abort();
+      scoreAbortRef.current = new AbortController();
+      const { signal } = scoreAbortRef.current;
+
       setIsLoadingScores(true);
 
       try {
         const res = await fetch(
           `/api/dashboard/panel/scores?assignmentId=${encodeURIComponent(allocation.assignmentId)}`,
+          { signal },
         );
 
         if (!res.ok) {
@@ -130,6 +144,7 @@ export function PanelTab() {
         const payload = (await res.json()) as ScorePayload;
         setScorePayload(payload);
       } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
         toast.error(
           error instanceof Error
             ? error.message
@@ -137,7 +152,7 @@ export function PanelTab() {
         );
         setScorePayload(null);
       } finally {
-        setIsLoadingScores(false);
+        if (!signal.aborted) setIsLoadingScores(false);
       }
     },
     [],
@@ -201,18 +216,27 @@ export function PanelTab() {
     run();
   }, [loadTeamScores, selectedAllocation]);
 
-  const updateCriterionScore = (criteriaId: string, value: string) => {
+  const updateCriterionScore = (
+    criteriaId: string,
+    value: string,
+    maxScore: number,
+  ) => {
     if (!scorePayload) return;
 
-    const parsed = value === "" ? 0 : Number(value);
+    if (value !== "" && !/^\d+$/.test(value)) return;
+
+    const parsed = value === "" ? null : parseInt(value, 10);
+
+    if (parsed !== null && parsed > maxScore) {
+      toast.error(`Score cannot exceed ${maxScore}`);
+      return;
+    }
+
     setScorePayload({
       ...scorePayload,
       criteria: scorePayload.criteria.map((criterion) =>
         criterion.id === criteriaId
-          ? {
-              ...criterion,
-              rawScore: Number.isFinite(parsed) ? parsed : criterion.rawScore,
-            }
+          ? { ...criterion, rawScore: parsed }
           : criterion,
       ),
     });
@@ -256,11 +280,6 @@ export function PanelTab() {
 
       toast.success("Scores saved successfully");
       await fetchAllocations();
-
-      // Reload current team to get updated criteria count reflection
-      if (selectedAllocation) {
-        await loadTeamScores(selectedAllocation);
-      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to save scores",
@@ -275,299 +294,326 @@ export function PanelTab() {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          Panel Scoring Interface
-        </h2>
-        <p className="text-muted-foreground">
-          Review allocated teams by round, switch using team number, and submit
-          scores in a single workspace.
-        </p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Panel Workspace
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Review your allocated teams, check resources, and submit scores.
+          </p>
+        </div>
+        {roundOptions.length > 0 && (
+          <div className="w-full md:w-72">
+            <Select
+              value={selectedRoundId}
+              onValueChange={setSelectedRoundId}
+            >
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue placeholder="Select round" />
+              </SelectTrigger>
+              <SelectContent>
+                {roundOptions.map((round) => (
+                  <SelectItem key={round.id} value={round.id}>
+                    {round.name} ({round.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <div className="flex h-40 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading assigned teams...
         </div>
       ) : roundOptions.length === 0 ? (
-        <div className="rounded-md border p-4 text-sm text-muted-foreground">
-          No teams are allocated to your panelist account yet.
+        <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed text-center text-sm text-muted-foreground">
+          <Trophy className="mb-2 h-8 w-8 text-muted-foreground/50" />
+          <p>No teams are allocated to your panelist account yet.</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Round</CardTitle>
-                <CardDescription>Select which round to score.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={selectedRoundId}
-                  onValueChange={setSelectedRoundId}
+        <div className="space-y-8">
+          {/* Team Selector Navigation */}
+          <div className="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold leading-none text-foreground">
+                  Assigned Teams
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Select a team below or use next/prev to navigate.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setSelectedTeamNumber(
+                      teamsInSelectedRound[currentTeamIndex - 1]?.teamNumber,
+                    )
+                  }
+                  disabled={currentTeamIndex <= 0}
+                  className="h-9 px-4"
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select round" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roundOptions.map((round) => (
-                      <SelectItem key={round.id} value={round.id}>
-                        {round.name} ({round.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+                  <ChevronLeft className="mr-1 h-4 w-4" /> Prev
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setSelectedTeamNumber(
+                      teamsInSelectedRound[currentTeamIndex + 1]?.teamNumber,
+                    )
+                  }
+                  disabled={
+                    currentTeamIndex === -1 ||
+                    currentTeamIndex >= teamsInSelectedRound.length - 1
+                  }
+                  className="h-9 px-4"
+                >
+                  Next <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">
-                  Team IDs ({selectedTeamNumber})
-                </CardTitle>
-                <CardDescription>Pick a team number directly.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setSelectedTeamNumber(
-                        teamsInSelectedRound[currentTeamIndex - 1].teamNumber,
-                      )
-                    }
-                    disabled={currentTeamIndex <= 0}
-                  >
-                    Prev
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setSelectedTeamNumber(
-                        teamsInSelectedRound[currentTeamIndex + 1].teamNumber,
-                      )
-                    }
-                    disabled={
-                      currentTeamIndex === -1 ||
-                      currentTeamIndex >= teamsInSelectedRound.length - 1
-                    }
-                  >
-                    Next
-                  </Button>
-                </div>
-
-                <div className="rounded-md border p-2">
-                  <div className="flex max-w-full flex-wrap gap-1">
-                    {teamsInSelectedRound.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">
-                        No teams in this round
-                      </span>
-                    ) : (
-                      teamsInSelectedRound.map((team) => (
-                        <Button
-                          key={team.assignmentId}
-                          type="button"
-                          size="sm"
-                          variant={
-                            team.teamNumber === selectedTeamNumber
-                              ? "default"
-                              : "outline"
-                          }
-                          className={cn(
-                            "h-7 min-w-8 px-2",
-                            team.scoredCriteria > 0 &&
-                              "rounded-none border-green-600 bg-green-600 font-bold text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700",
-                          )}
-                          onClick={() => setSelectedTeamNumber(team.teamNumber)}
-                        >
-                          {team.teamNumber}
-                        </Button>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {selectedAllocation ? (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground mr-1">
-                      Team {selectedAllocation.teamNumber}:
-                    </span>
-                    <span className="font-semibold text-primary">
-                      {selectedAllocation.teamName}
-                    </span>
-                    {selectedAllocation.trackName && (
-                      <span className="ml-2 inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                        {selectedAllocation.trackName}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    No team available for selected round
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <div className="flex flex-wrap gap-2">
+              {teamsInSelectedRound.length === 0 ? (
+                <span className="text-sm text-muted-foreground italic">
+                  No teams found for this round.
+                </span>
+              ) : (
+                teamsInSelectedRound.map((team) => {
+                  const isSelected = team.teamNumber === selectedTeamNumber;
+                  const isScored = team.scoredCriteria > 0;
+                  
+                  return (
+                    <Button
+                      key={team.assignmentId}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      className={cn(
+                        "h-10 min-w-12 transition-all duration-200",
+                        isSelected
+                          ? "shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background"
+                          : isScored
+                            ? "border-green-500/40 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-400 dark:bg-green-500/20 dark:hover:bg-green-500/30"
+                            : "hover:bg-muted"
+                      )}
+                      onClick={() => setSelectedTeamNumber(team.teamNumber)}
+                    >
+                      {isScored && !isSelected && (
+                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {team.teamNumber}
+                    </Button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {!selectedAllocation ? (
-            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+            <div className="flex h-40 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
               No team available for the selected round.
             </div>
           ) : (
-            <div className="grid min-h-[50vh] grid-cols-1 gap-6 xl:grid-cols-2">
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-xl text-primary">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              {/* Left Column: Team Details */}
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="shadow-md border-border/60 overflow-hidden">
+                  <CardHeader className="space-y-4 pb-4">
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Team {selectedAllocation.teamNumber}
+                      </p>
+                      <CardTitle className="text-2xl font-bold text-foreground">
                         {selectedAllocation.teamName}
                       </CardTitle>
-                      <CardDescription>
-                        Team {selectedAllocation.teamNumber}
-                      </CardDescription>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">
-                      {selectedAllocation.roundStatus}
-                    </Badge>
-                    <Badge variant="outline">
-                      {selectedAllocation.scoredCriteria > 0
-                        ? `Scored ${selectedAllocation.scoredCriteria}/${selectedAllocation.totalCriteria} Criteria`
-                        : "No Scores Entered"}
-                    </Badge>
-                    {selectedAllocation.trackName && (
-                      <Badge
-                        variant="default"
-                        className="bg-primary/20 text-primary hover:bg-primary/30"
-                      >
-                        {selectedAllocation.trackName}
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-semibold">
+                        {selectedAllocation.roundStatus}
                       </Badge>
-                    )}
-                  </div>
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "px-2.5 py-0.5 text-xs font-semibold",
+                          selectedAllocation.scoredCriteria > 0 && "border-green-500 text-green-600 dark:text-green-500"
+                        )}
+                      >
+                        {selectedAllocation.scoredCriteria > 0
+                          ? `Scored ${selectedAllocation.scoredCriteria}/${selectedAllocation.totalCriteria} Criteria`
+                          : "No Scores Entered"}
+                      </Badge>
+                      {selectedAllocation.trackName && (
+                        <Badge
+                          variant="default"
+                          className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent"
+                        >
+                          {selectedAllocation.trackName}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
 
-                  <div className="space-y-2 mt-6">
-                    <p className="text-sm font-medium">Resources</p>
-                    <div className="rounded-md border p-4 text-center">
+                  <CardContent className="pt-0">
+                    <div className="mt-4 space-y-3">
+                      <p className="text-sm font-semibold text-foreground">Resources</p>
                       {selectedAllocation.pptUrl ? (
                         <a
                           href={selectedAllocation.pptUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                          className="group flex w-full items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 text-sm font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md"
                         >
+                          <Presentation className="h-5 w-5 transition-transform group-hover:scale-110" />
                           View Pitch Deck / PPT
                         </a>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
-                          No PPT submitted by team.
-                        </span>
+                        <div className="flex h-24 flex-col items-center justify-center rounded-xl border border-dashed bg-muted/40 text-center text-sm text-muted-foreground">
+                          <Presentation className="mb-2 h-6 w-6 opacity-30" />
+                          <p>No presentation submitted.</p>
+                        </div>
                       )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <Card className="h-full w-full">
-                <CardHeader>
-                  <div className="flex flex-col w-full items-center justify-center">
-                    <div>Team No</div>
-                    <div className="text-6xl">
-                      {selectedAllocation.teamNumber}
+              {/* Right Column: Scoring Entry */}
+              <div className="lg:col-span-8">
+                <Card className="h-full shadow-md border-border/60 flex flex-col">
+                  <CardHeader className="border-b border-border/40 bg-muted/20 pb-5">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="text-xl">Score Entry</CardTitle>
+                        <CardDescription>
+                          Evaluate <span className="font-semibold text-foreground">{selectedAllocation.teamName}</span> across the following criteria.
+                        </CardDescription>
+                      </div>
+                      <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
+                        {selectedAllocation.teamNumber}
+                      </div>
                     </div>
-                  </div>
-                  <CardTitle>Score Entry</CardTitle>
-                  <CardDescription>
-                    Enter criteria-wise scores for {selectedAllocation.teamName}
-                    .
-                  </CardDescription>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="space-y-4">
-                  {isLoadingScores ? (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading criteria...
-                    </div>
-                  ) : !scorePayload ? (
-                    <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                      No score data available.
-                    </div>
-                  ) : (
-                    <>
-                      {scorePayload.roundStatus === "Completed" ? (
-                        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700">
-                          This round is completed. Scores are locked.
-                        </div>
-                      ) : null}
-
-                      {scorePayload.criteria.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          No criteria configured for this round.
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {scorePayload.criteria.map((criterion) => (
-                            <div
-                              key={criterion.id}
-                              className="grid grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-5"
-                            >
-                              <div className="sm:col-span-3">
-                                <p className="text-sm font-medium">
-                                  {criterion.criteriaName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Max score: {criterion.maxScore}
-                                </p>
-                              </div>
-                              <div className="sm:col-span-2">
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={criterion.maxScore}
-                                  step={1}
-                                  value={criterion.rawScore ?? ""}
-                                  onChange={(e) =>
-                                    updateCriterionScore(
-                                      criterion.id,
-                                      e.target.value,
-                                    )
-                                  }
-                                  disabled={
-                                    scorePayload.roundStatus === "Completed"
-                                  }
-                                />
-                              </div>
+                  <CardContent className="flex-1 p-0">
+                    {isLoadingScores ? (
+                      <div className="flex h-64 flex-col items-center justify-center text-sm text-muted-foreground">
+                        <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary/50" />
+                        <p>Loading score criteria...</p>
+                      </div>
+                    ) : !scorePayload ? (
+                      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+                        No score data available.
+                      </div>
+                    ) : (
+                      <div className="flex h-full flex-col">
+                        <div className="flex-1 p-4 sm:p-6 space-y-6">
+                          {scorePayload.roundStatus === "Completed" && (
+                            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-400 flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4" />
+                              This round is completed. Scores are currently locked.
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          )}
 
-                      {scorePayload.roundStatus !== "Completed" &&
-                        scorePayload.criteria.length > 0 && (
-                          <div className="flex justify-end pt-4">
-                            <Button
-                              onClick={handleSaveScores}
-                              disabled={isSavingScores}
-                              className="w-full sm:w-auto"
-                            >
-                              {isSavingScores ? "Saving..." : "Save Scores"}
-                            </Button>
+                          {scorePayload.criteria.length === 0 ? (
+                            <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+                              No criteria configured for this round.
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {scorePayload.criteria.map((criterion, idx) => (
+                                <div
+                                  key={criterion.id}
+                                  className="group flex flex-col gap-4 rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/30 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                  <div className="space-y-1 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                                        {idx + 1}
+                                      </span>
+                                      <p className="text-base font-semibold leading-none text-foreground">
+                                        {criterion.criteriaName}
+                                      </p>
+                                    </div>
+                                    <p className="pl-8 text-sm text-muted-foreground">
+                                      Maximum score: {criterion.maxScore}
+                                    </p>
+                                  </div>
+                                  <div className="w-full pl-8 sm:w-32 sm:pl-0">
+                                    <Input
+                                      type="text"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      value={
+                                        criterion.rawScore === null
+                                          ? ""
+                                          : String(criterion.rawScore)
+                                      }
+                                      onChange={(e) =>
+                                        updateCriterionScore(
+                                          criterion.id,
+                                          e.target.value,
+                                          criterion.maxScore,
+                                        )
+                                      }
+                                      disabled={
+                                        scorePayload.roundStatus === "Completed"
+                                      }
+                                      className={cn(
+                                        "h-14 bg-muted/40 text-center text-xl font-bold transition-all focus:bg-background",
+                                        criterion.rawScore && criterion.rawScore > 0 && "border-green-500/50 text-green-700 dark:text-green-400"
+                                      )}
+                                      placeholder="-"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {scorePayload.roundStatus !== "Completed" && scorePayload.criteria.length > 0 && (
+                          <div className="border-t border-border/40 bg-muted/10 p-4 sm:p-6 mt-auto rounded-b-xl">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                              <p className="text-sm text-muted-foreground text-center sm:text-left">
+                                Ensure all criteria are scored correctly before saving.
+                              </p>
+                              <Button
+                                size="lg"
+                                onClick={handleSaveScores}
+                                disabled={isSavingScores}
+                                className="w-full sm:w-auto min-w-[150px] font-bold shadow-md transition-transform active:scale-95"
+                              >
+                                {isSavingScores ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Save Scores
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { Eye, Loader2, MessageSquare } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -69,6 +69,8 @@ type LeaderboardRow = {
   rank: number;
   teamId: string;
   teamName: string;
+  trackId: string | null;
+  trackName: string | null;
   rawTotalScore: number;
   normalizedTotalScore: number;
   maxPossibleScore: number;
@@ -85,6 +87,7 @@ type PanelistScoreDetail = {
   assignmentId: string;
   totalRawScore: number;
   totalMaxScore: number;
+  normalizedTotalScore: number;
   criteriaScores: Array<{
     criteriaId: string;
     criteriaName: string;
@@ -94,6 +97,8 @@ type PanelistScoreDetail = {
 };
 
 export function PanelSetupTab() {
+  const scoreDetailsTeamRef = useRef<string | null>(null);
+  const feedbackTeamRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingRound, setIsCreatingRound] = useState(false);
   const [isCreatingCriteria, setIsCreatingCriteria] = useState(false);
@@ -134,6 +139,7 @@ export function PanelSetupTab() {
   const [selectedRoundId, setSelectedRoundId] = useState("");
   const [showCumulativeLeaderboard, setShowCumulativeLeaderboard] =
     useState(false);
+  const [leaderboardTrackFilter, setLeaderboardTrackFilter] = useState("all");
 
   const [newRoundName, setNewRoundName] = useState("");
   const [newCriteriaName, setNewCriteriaName] = useState("");
@@ -313,6 +319,7 @@ export function PanelSetupTab() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: round selection changes should reload criteria only
   useEffect(() => {
+    setSelectedPanelistUserId("");
     const run = async () => {
       try {
         await fetchCriteria(selectedRoundId);
@@ -327,6 +334,7 @@ export function PanelSetupTab() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: leaderboard should refresh when round changes
   useEffect(() => {
+    setLeaderboardTrackFilter("all");
     const run = async () => {
       try {
         await fetchLeaderboard(selectedRoundId);
@@ -566,14 +574,19 @@ export function PanelSetupTab() {
   const handleOpenScoreDetails = async (teamRow: LeaderboardRow) => {
     if (!selectedRoundId) return;
 
+    scoreDetailsTeamRef.current = teamRow.teamId;
+
     try {
       setIsLoadingScoreDetails(true);
       setSelectedLeaderboardTeam(teamRow);
+      setPanelistScoreDetails([]);
       setIsScoreDetailsOpen(true);
 
       const res = await fetch(
         `/api/dashboard/panel/leaderboard/details?panelRoundId=${encodeURIComponent(selectedRoundId)}&teamId=${encodeURIComponent(teamRow.teamId)}`,
       );
+
+      if (scoreDetailsTeamRef.current !== teamRow.teamId) return;
 
       if (!res.ok) {
         const data = (await res.json()) as { message?: string };
@@ -594,19 +607,26 @@ export function PanelSetupTab() {
       );
       setIsScoreDetailsOpen(false);
     } finally {
-      setIsLoadingScoreDetails(false);
+      if (scoreDetailsTeamRef.current === teamRow.teamId) {
+        setIsLoadingScoreDetails(false);
+      }
     }
   };
 
   const handleOpenFeedbacks = async (teamRow: LeaderboardRow) => {
+    feedbackTeamRef.current = teamRow.teamId;
+
     try {
       setIsLoadingFeedbacks(true);
       setFeedbackTeam(teamRow);
+      setMentorFeedbacks([]);
       setIsFeedbacksOpen(true);
 
       const res = await fetch(
         `/api/dashboard/mentor/history?teamId=${encodeURIComponent(teamRow.teamId)}`,
       );
+
+      if (feedbackTeamRef.current !== teamRow.teamId) return;
 
       if (!res.ok) {
         const data = (await res.json()) as { message?: string };
@@ -630,15 +650,26 @@ export function PanelSetupTab() {
       );
       setIsFeedbacksOpen(false);
     } finally {
-      setIsLoadingFeedbacks(false);
+      if (feedbackTeamRef.current === teamRow.teamId) {
+        setIsLoadingFeedbacks(false);
+      }
     }
   };
 
   const handleSelectVisible = () => {
-    if (selectedTeamIds.length === filteredTeams.length) {
-      setSelectedTeamIds([]);
+    if (filteredTeams.length === 0) return;
+    const allVisibleSelected = filteredTeams.every((t) =>
+      selectedTeamIds.includes(t.id),
+    );
+    if (allVisibleSelected) {
+      setSelectedTeamIds((prev) =>
+        prev.filter((id) => !filteredTeams.some((t) => t.id === id)),
+      );
     } else {
-      setSelectedTeamIds(filteredTeams.map((team) => team.id));
+      setSelectedTeamIds((prev) => [
+        ...prev,
+        ...filteredTeams.map((t) => t.id).filter((id) => !prev.includes(id)),
+      ]);
     }
   };
 
@@ -941,15 +972,9 @@ export function PanelSetupTab() {
                               <span>{team.name}</span>
                               <span>
                                 {
-                                  panelScoreHistory.filter((h) => {
-                                    if (
-                                      team.id === h.teamId &&
-                                      h.teamId === team.id
-                                    ) {
-                                      return true;
-                                    }
-                                    return false;
-                                  }).length
+                                  panelScoreHistory.filter(
+                                    (h) => h.teamId === team.id,
+                                  ).length
                                 }
                               </span>
                             </div>
@@ -1023,8 +1048,28 @@ export function PanelSetupTab() {
                 </div>
               </div>
 
-              <div className="text-xs text-muted-foreground">
-                Max score per panelist for this round: {maxPerPanelist}
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-xs text-muted-foreground">
+                  Max score per panelist for this round: {maxPerPanelist}
+                </div>
+                {tracks.length > 0 && (
+                  <Select
+                    value={leaderboardTrackFilter}
+                    onValueChange={setLeaderboardTrackFilter}
+                  >
+                    <SelectTrigger className="h-8 w-48 text-xs">
+                      <SelectValue placeholder="All Tracks" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Tracks</SelectItem>
+                      {tracks.map((track) => (
+                        <SelectItem key={track.id} value={track.id}>
+                          {track.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {leaderboardRows.length === 0 && isLoadingLeaderboard ? (
@@ -1052,7 +1097,11 @@ export function PanelSetupTab() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leaderboardRows.map((row) => (
+                      {leaderboardRows.filter((row) =>
+                        leaderboardTrackFilter !== "all"
+                          ? row.trackId === leaderboardTrackFilter
+                          : true,
+                      ).map((row) => (
                         <TableRow key={row.teamId}>
                           <TableCell>{row.rank}</TableCell>
                           <TableCell className="font-medium">
@@ -1142,10 +1191,17 @@ export function PanelSetupTab() {
                         @{panelistDetail.panelistUsername}
                       </p>
                     </div>
-                    <Badge variant="secondary">
-                      {panelistDetail.totalRawScore} /{" "}
-                      {panelistDetail.totalMaxScore}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {panelistDetail.totalRawScore} /{" "}
+                        {panelistDetail.totalMaxScore}
+                      </Badge>
+                      <Badge variant="outline">
+                        {panelistDetail.normalizedTotalScore != null
+                          ? panelistDetail.normalizedTotalScore.toFixed(3)
+                          : "—"}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="p-3">

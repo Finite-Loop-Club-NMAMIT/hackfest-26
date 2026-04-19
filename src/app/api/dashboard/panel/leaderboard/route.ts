@@ -3,10 +3,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { adminProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
 import {
+  ideaSubmission,
   panelCriterias,
   panelTeamRoundScores,
   teamRoundScores,
   teams,
+  tracks,
 } from "~/db/schema";
 
 export const GET = adminProtected(async (req: NextRequest) => {
@@ -37,9 +39,13 @@ export const GET = adminProtected(async (req: NextRequest) => {
         rawTotalScore: panelTeamRoundScores.rawTotalScore,
         normalizedTotalScore: panelTeamRoundScores.normalizedTotalScore,
         panelistCount: panelTeamRoundScores.panelistCount,
+        trackId: ideaSubmission.trackId,
+        trackName: tracks.name,
       })
       .from(panelTeamRoundScores)
       .innerJoin(teams, eq(teams.id, panelTeamRoundScores.teamId))
+      .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, panelTeamRoundScores.teamId))
+      .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
       .where(eq(panelTeamRoundScores.roundId, panelRoundId));
 
     // Judge Z-score totals (sum of normalized_total_score across ALL judge rounds per team)
@@ -90,6 +96,8 @@ export const GET = adminProtected(async (req: NextRequest) => {
         return {
           teamId: row.teamId,
           teamName: row.teamName,
+          trackId: row.trackId ?? null,
+          trackName: row.trackName ?? null,
           rawTotalScore: row.rawTotalScore ?? 0,
           normalizedTotalScore: row.normalizedTotalScore ?? 0,
           maxPossibleScore,
