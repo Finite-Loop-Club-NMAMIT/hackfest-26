@@ -140,6 +140,7 @@ export function PanelSetupTab() {
   const [showCumulativeLeaderboard, setShowCumulativeLeaderboard] =
     useState(false);
   const [leaderboardTrackFilter, setLeaderboardTrackFilter] = useState("all");
+  const [leaderboardSort, setLeaderboardSort] = useState("panel-zscore");
 
   const [newRoundName, setNewRoundName] = useState("");
   const [newCriteriaName, setNewCriteriaName] = useState("");
@@ -335,6 +336,7 @@ export function PanelSetupTab() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: leaderboard should refresh when round changes
   useEffect(() => {
     setLeaderboardTrackFilter("all");
+    setLeaderboardSort("panel-zscore");
     const run = async () => {
       try {
         await fetchLeaderboard(selectedRoundId);
@@ -1052,24 +1054,39 @@ export function PanelSetupTab() {
                 <div className="text-xs text-muted-foreground">
                   Max score per panelist for this round: {maxPerPanelist}
                 </div>
-                {tracks.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {tracks.length > 0 && (
+                    <Select
+                      value={leaderboardTrackFilter}
+                      onValueChange={setLeaderboardTrackFilter}
+                    >
+                      <SelectTrigger className="h-8 w-44 text-xs">
+                        <SelectValue placeholder="All Tracks" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tracks</SelectItem>
+                        {tracks.map((track) => (
+                          <SelectItem key={track.id} value={track.id}>
+                            {track.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Select
-                    value={leaderboardTrackFilter}
-                    onValueChange={setLeaderboardTrackFilter}
+                    value={leaderboardSort}
+                    onValueChange={setLeaderboardSort}
                   >
-                    <SelectTrigger className="h-8 w-48 text-xs">
-                      <SelectValue placeholder="All Tracks" />
+                    <SelectTrigger className="h-8 w-44 text-xs">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Tracks</SelectItem>
-                      {tracks.map((track) => (
-                        <SelectItem key={track.id} value={track.id}>
-                          {track.name}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="panel-zscore">Sort: Panel Z-Score</SelectItem>
+                      <SelectItem value="judge-zscore">Sort: Judge Z-Score</SelectItem>
+                      <SelectItem value="raw-score">Sort: Raw Score</SelectItem>
                     </SelectContent>
                   </Select>
-                )}
+                </div>
               </div>
 
               {leaderboardRows.length === 0 && isLoadingLeaderboard ? (
@@ -1097,13 +1114,24 @@ export function PanelSetupTab() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leaderboardRows.filter((row) =>
-                        leaderboardTrackFilter !== "all"
-                          ? row.trackId === leaderboardTrackFilter
-                          : true,
-                      ).map((row) => (
+                      {leaderboardRows
+                        .filter((row) =>
+                          leaderboardTrackFilter !== "all"
+                            ? row.trackId === leaderboardTrackFilter
+                            : true,
+                        )
+                        .slice()
+                        .sort((a, b) => {
+                          if (leaderboardSort === "judge-zscore")
+                            return b.judgeNormalizedTotal - a.judgeNormalizedTotal;
+                          if (leaderboardSort === "raw-score")
+                            return b.rawTotalScore - a.rawTotalScore;
+                          return b.normalizedTotalScore - a.normalizedTotalScore;
+                        })
+                        .map((row, idx) => ({ ...row, displayRank: idx + 1 }))
+                        .map((row) => (
                         <TableRow key={row.teamId}>
-                          <TableCell>{row.rank}</TableCell>
+                          <TableCell>{row.displayRank}</TableCell>
                           <TableCell className="font-medium">
                             {row.teamName}
                           </TableCell>
