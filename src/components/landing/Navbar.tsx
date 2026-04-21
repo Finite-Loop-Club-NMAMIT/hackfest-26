@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { name: "About", href: "/about" },
   { name: "Events", href: "/events" },
   { name: "Timeline", href: "/timeline" },
+  { name: "Team", href: "/teams" },
   { name: "Contact", href: "/contact" },
 ];
 

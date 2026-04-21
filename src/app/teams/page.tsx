@@ -4,6 +4,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
 import SignOut from "~/components/auth/authButtons/signOut";
+import Footer from "~/components/landing/Footer";
+import { Navbar } from "~/components/landing/Navbar";
+import CommitteesShowcase from "~/components/teams/CommitteesShowcase";
 import { TeamPageLayout } from "~/components/teams/TeamPageLayout";
 import { TeamForm } from "~/components/teams/team-form";
 import { Button } from "~/components/ui/button";
@@ -20,12 +23,19 @@ export const metadata: Metadata = {
 
 export default async function TeamsPage() {
   const session = await auth();
-  if (!session?.user?.email) {
-    redirect("/");
-  }
+  if (!session?.user?.email || !session.user.isRegistrationComplete) {
+    return (
+      <main className="relative min-h-screen w-full overflow-x-hidden text-white selection:bg-cyan-500/30">
+        <div className="fixed top-0 left-0 z-50 w-full">
+          <Navbar isUnderwater={true} session={session} />
+        </div>
 
-  if (!session.user.isRegistrationComplete) {
-    redirect("/register");
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-[#041320] via-[#062739] to-[#020b14]" />
+
+        <CommitteesShowcase />
+        <Footer />
+      </main>
+    );
   }
 
   const user = await userData.findByEmail(session.user.email);
@@ -55,7 +65,7 @@ export default async function TeamsPage() {
             </Button>
 
             {/* Mobile Sign Out */}
-            <div className="md:hidden [&_button]:!bg-white/90 [&_button]:!border-[#10569c]/30 [&_button]:!text-[#10569c] [&_button]:hover:!bg-white [&_button]:hover:!border-[#10569c]/60 [&_button]:!backdrop-blur-sm [&_button]:!rounded-xl [&_button]:!shadow-sm [&_button]:!transition-all">
+            <div className="md:hidden [&_button]:bg-white/90! [&_button]:border-[#10569c]/30! [&_button]:text-[#10569c]! [&_button]:hover:bg-white! [&_button]:hover:border-[#10569c]/60! [&_button]:backdrop-blur-sm! [&_button]:rounded-xl! [&_button]:shadow-sm! [&_button]:transition-all!">
               <SignOut className="font-pirate" variant="outline" />
             </div>
           </div>
@@ -71,7 +81,7 @@ export default async function TeamsPage() {
           </div>
 
           {/* Desktop Sign Out */}
-          <div className="hidden md:block [&_button]:!bg-white/90 [&_button]:!border-[#10569c]/30 [&_button]:!text-[#10569c] [&_button]:hover:!bg-white [&_button]:hover:!border-[#10569c]/60 [&_button]:!backdrop-blur-sm [&_button]:!rounded-xl [&_button]:!shadow-sm [&_button]:!transition-all">
+          <div className="hidden md:block [&_button]:bg-white/90! [&_button]:border-[#10569c]/30! [&_button]:text-[#10569c]! [&_button]:hover:bg-white! [&_button]:hover:border-[#10569c]/60! [&_button]:backdrop-blur-sm! [&_button]:rounded-xl! [&_button]:shadow-sm! [&_button]:transition-all!">
             <SignOut variant="outline" />
           </div>
         </div>
