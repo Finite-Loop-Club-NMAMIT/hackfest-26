@@ -1,7 +1,7 @@
 "use client";
 
 import { Github, Instagram } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type CommitteeMember = {
   name: string;
@@ -238,21 +238,11 @@ const facultyData: FacultyCoordinator[] = [
   },
 ];
 
-type RevealItem = {
-  id: string;
-  visible: boolean;
-};
-
 export default function CommitteesShowcase() {
   const [activeSection, setActiveSection] = useState<"core" | "faculty">(
     "core",
   );
-  const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [activeCommittee, setActiveCommittee] = useState<Committee | null>(
-    null,
-  );
-  const [reveals, setReveals] = useState<Record<string, RevealItem>>({});
   const totalMembers = useMemo(
     () =>
       teamsData.reduce(
@@ -261,57 +251,10 @@ export default function CommitteesShowcase() {
       ),
     [],
   );
-
-  useEffect(() => {
-    const cards = document.querySelectorAll<HTMLElement>(
-      "[data-committee-card]",
-    );
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const cardId = entry.target.getAttribute("data-committee-id");
-          if (!cardId) continue;
-
-          if (entry.isIntersecting) {
-            setReveals((prev) => ({
-              ...prev,
-              [cardId]: { id: cardId, visible: true },
-            }));
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      {
-        threshold: 0.2,
-        rootMargin: "0px 0px -10% 0px",
-      },
-    );
-
-    for (const card of cards) {
-      observer.observe(card);
-    }
-
-    return () => observer.disconnect();
-  }, [activeSection, query, activeFilter]);
-
-  const filteredCommittees = teamsData.filter((committee) => {
-    const matchesQuery =
-      committee.name.toLowerCase().includes(query.toLowerCase()) ||
-      committee.description.toLowerCase().includes(query.toLowerCase());
-    const matchesFilter =
-      activeFilter === "all" || activeFilter === committee.id;
-
-    return matchesQuery && matchesFilter;
-  });
-
-  const filteredFaculty = facultyData.filter((faculty) => {
-    return (
-      faculty.name.toLowerCase().includes(query.toLowerCase()) ||
-      faculty.designation.toLowerCase().includes(query.toLowerCase()) ||
-      faculty.department.toLowerCase().includes(query.toLowerCase())
-    );
-  });
+  const visibleCommittees =
+    activeFilter === "all"
+      ? teamsData
+      : teamsData.filter((committee) => committee.id === activeFilter);
 
   return (
     <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-28 text-white sm:px-6 lg:px-8 lg:pt-32">
@@ -350,7 +293,6 @@ export default function CommitteesShowcase() {
           active={activeSection === "core"}
           onClick={() => {
             setActiveSection("core");
-            setActiveCommittee(null);
           }}
         />
         <SectionTab
@@ -358,115 +300,100 @@ export default function CommitteesShowcase() {
           active={activeSection === "faculty"}
           onClick={() => {
             setActiveSection("faculty");
-            setActiveCommittee(null);
           }}
         />
       </div>
 
-      {/* Search and filter controls */}
-      <div className="mt-10 space-y-4">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={
-            activeSection === "core"
-              ? "Search committees"
-              : "Search faculty coordinators"
-          }
-          className="h-12 w-full rounded-xl border border-cyan-200/25 bg-slate-950/60 px-4 font-crimson text-base text-cyan-50 placeholder:text-cyan-50/50 outline-hidden transition-all duration-300 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/30"
-          aria-label={
-            activeSection === "core"
-              ? "Search committees"
-              : "Search faculty coordinators"
-          }
-        />
-
-        {activeSection === "core" ? (
-          <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
+      {/* Committee tabs */}
+      {activeSection === "core" ? (
+        <div className="mt-10 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
+          <FilterChip
+            label="All Committees"
+            active={activeFilter === "all"}
+            onClick={() => setActiveFilter("all")}
+          />
+          {teamsData.map((committee) => (
             <FilterChip
-              label="All Committees"
-              active={activeFilter === "all"}
-              onClick={() => setActiveFilter("all")}
+              key={committee.id}
+              label={committee.name}
+              active={activeFilter === committee.id}
+              onClick={() => setActiveFilter(committee.id)}
             />
-            {teamsData.map((committee) => (
-              <FilterChip
-                key={committee.id}
-                label={committee.name}
-                active={activeFilter === committee.id}
-                onClick={() => setActiveFilter(committee.id)}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
+          ))}
+        </div>
+      ) : null}
 
       {/* Main section content */}
       {activeSection === "core" ? (
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCommittees.map((committee, index) => {
-            const cardVisible = reveals[committee.id]?.visible;
-            const isActive = activeCommittee?.id === committee.id;
-
-            return (
-              <article
-                key={committee.id}
-                data-committee-card
-                data-committee-id={committee.id}
-                className={[
-                  "group relative flex min-h-63.75 flex-col rounded-2xl border p-6 transition-all duration-500",
-                  "bg-linear-to-b from-slate-900/85 via-slate-900/70 to-slate-950/70 backdrop-blur-md",
-                  isActive
-                    ? "border-cyan-300/80 shadow-[0_0_30px_rgba(34,211,238,0.35)]"
-                    : "border-cyan-200/20 hover:border-cyan-200/45",
-                  cardVisible
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-10 opacity-0",
-                ].join(" ")}
-                style={{ transitionDelay: `${Math.min(index * 80, 500)}ms` }}
-              >
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-100/25 bg-cyan-300/10 text-2xl shadow-[0_0_20px_rgba(34,211,238,0.2)]">
-                  <span aria-hidden>{committee.icon}</span>
-                </div>
-
-                <h2 className="font-pirate text-2xl leading-tight text-white">
+        <div className="mt-8 space-y-8">
+          {visibleCommittees.map((committee) => (
+            <section
+              key={committee.id}
+              className="rounded-2xl border border-cyan-200/20 bg-linear-to-b from-slate-900/85 via-slate-900/70 to-slate-950/70 p-6 backdrop-blur-md"
+            >
+              <div className="mb-6">
+                <p className="inline-flex items-center gap-2 font-crimson text-xs tracking-[0.2em] text-cyan-100/75 uppercase">
+                  <span aria-hidden className="text-lg leading-none">
+                    {committee.icon}
+                  </span>
+                  Committee
+                </p>
+                <h2 className="pt-1 font-pirate text-3xl text-white">
                   {committee.name}
                 </h2>
-                <p className="mt-3 font-crimson text-lg text-cyan-50/80">
+                <p className="mt-2 font-crimson text-lg text-cyan-50/80">
                   {committee.description}
                 </p>
+              </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveCommittee(committee)}
-                  className="mt-auto inline-flex h-11 w-fit items-center gap-2 rounded-lg border border-amber-200/40 bg-amber-100/10 px-4 font-crimson text-base font-semibold text-amber-100 transition-all duration-300 hover:border-amber-200/70 hover:bg-amber-200/20 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-amber-300/60"
-                >
-                  Meet the Team
-                  <span aria-hidden>→</span>
-                </button>
-              </article>
-            );
-          })}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {committee.members.map((member) => (
+                  <article
+                    key={`${committee.id}-${member.name}`}
+                    className="flex min-h-96 flex-col rounded-xl border border-cyan-200/20 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/45 hover:shadow-[0_16px_32px_rgba(3,105,161,0.25)]"
+                  >
+                    <div className="mx-auto mb-4 aspect-square w-full max-w-65 overflow-hidden rounded-xl border-2 border-cyan-300/70 shadow-[0_0_16px_rgba(34,211,238,0.45)] sm:max-w-75">
+                      <img
+                        src={member.photo}
+                        alt={member.name}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <h3 className="text-center font-crimson text-2xl font-bold text-white">
+                      {member.name}
+                    </h3>
+                    <p className="text-center font-crimson text-base text-cyan-100/75">
+                      {member.role}
+                    </p>
+
+                    <div className="mt-auto pt-4 grid gap-2">
+                      <SocialHandleLink
+                        platform="github"
+                        handle={member.githubHandle}
+                      />
+                      <SocialHandleLink
+                        platform="instagram"
+                        handle={member.instagramHandle}
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {filteredFaculty.map((faculty, index) => {
-            const cardId = `faculty-${faculty.id}`;
-            const cardVisible = reveals[cardId]?.visible;
-
+          {facultyData.map((faculty) => {
             return (
               <article
                 key={faculty.id}
-                data-committee-card
-                data-committee-id={cardId}
                 className={[
                   "group relative flex min-h-80 flex-col rounded-2xl border p-6 transition-all duration-500",
                   "bg-linear-to-b from-slate-900/85 via-slate-900/70 to-slate-950/70 backdrop-blur-md",
                   "border-cyan-200/20 hover:border-cyan-200/45",
-                  cardVisible
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-10 opacity-0",
                 ].join(" ")}
-                style={{ transitionDelay: `${Math.min(index * 80, 500)}ms` }}
               >
                 <div className="mx-auto mb-4 aspect-square w-full max-w-65 overflow-hidden rounded-2xl border-2 border-cyan-300/70 shadow-[0_0_20px_rgba(34,211,238,0.45)] sm:max-w-75">
                   <img
@@ -502,12 +429,6 @@ export default function CommitteesShowcase() {
           })}
         </div>
       )}
-
-      {/* Member modal */}
-      <MemberModal
-        committee={activeCommittee}
-        onClose={() => setActiveCommittee(null)}
-      />
     </section>
   );
 }
@@ -617,115 +538,5 @@ function SocialHandleLink({
       </span>
       <span>@{normalizedHandle}</span>
     </a>
-  );
-}
-
-function MemberModal({
-  committee,
-  onClose,
-}: {
-  committee: Committee | null;
-  onClose: () => void;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    if (committee) {
-      setIsVisible(true);
-      document.body.style.overflow = "hidden";
-      return;
-    }
-
-    document.body.style.overflow = "";
-    setIsVisible(false);
-  }, [committee]);
-
-  useEffect(() => {
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onEscape);
-    return () => window.removeEventListener("keydown", onEscape);
-  }, [onClose]);
-
-  if (!committee) return null;
-
-  return (
-    <div
-      className={[
-        "fixed inset-0 z-80 flex items-end justify-center bg-slate-950/75 pb-0 pt-24 backdrop-blur-sm sm:items-start sm:p-4 sm:pt-28",
-        "transition-opacity duration-350",
-        isVisible ? "opacity-100" : "opacity-0",
-      ].join(" ")}
-      onClick={onClose}
-      aria-modal="true"
-      role="dialog"
-      aria-label={`${committee.name} members`}
-    >
-      <div
-        className={[
-          "relative h-[calc(100dvh-6rem)] w-full overflow-y-auto border border-cyan-200/30 bg-linear-to-b from-slate-900 via-slate-950 to-slate-950 p-5",
-          "transition-transform duration-350 sm:h-auto sm:max-h-[calc(100dvh-8rem)] sm:max-w-4xl sm:rounded-2xl sm:p-8",
-          isVisible ? "translate-y-0" : "translate-y-10",
-        ].join(" ")}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <p className="font-crimson text-sm tracking-[0.2em] text-cyan-100/75 uppercase">
-              {committee.icon} Committee Members
-            </p>
-            <h3 className="pt-1 font-pirate text-3xl text-white">
-              {committee.name}
-            </h3>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-11 min-w-11 rounded-lg border border-cyan-200/35 bg-cyan-200/10 px-3 text-cyan-50 transition-colors hover:bg-cyan-200/20 focus:outline-hidden focus:ring-2 focus:ring-cyan-300/60"
-            aria-label="Close members modal"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {committee.members.map((member) => (
-            <article
-              key={`${committee.id}-${member.name}`}
-              className="flex min-h-96 flex-col rounded-xl border border-cyan-200/20 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/45 hover:shadow-[0_16px_32px_rgba(3,105,161,0.25)]"
-            >
-              <div className="mx-auto mb-4 aspect-square w-full max-w-65 overflow-hidden rounded-xl border-2 border-cyan-300/70 shadow-[0_0_16px_rgba(34,211,238,0.45)] sm:max-w-75">
-                <img
-                  src={member.photo}
-                  alt={member.name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <h4 className="text-center font-crimson text-2xl font-bold text-white">
-                {member.name}
-              </h4>
-              <p className="text-center font-crimson text-base text-cyan-100/75">
-                {member.role}
-              </p>
-
-              <div className="mt-auto pt-4 grid gap-2">
-                <SocialHandleLink
-                  platform="github"
-                  handle={member.githubHandle}
-                />
-                <SocialHandleLink
-                  platform="instagram"
-                  handle={member.instagramHandle}
-                />
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
