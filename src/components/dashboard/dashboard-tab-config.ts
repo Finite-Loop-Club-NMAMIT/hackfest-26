@@ -88,6 +88,11 @@ export const dashboardFeatureTabs: FeatureTabConfig[] = [
     permissions: ["event:manage"],
   },
   {
+    id: "manage-teams",
+    label: "Manage Teams",
+    permissions: ["team:view_all"],
+  },
+  {
     id: "event-stats",
     label: "Event Stats",
     permissions: ["event:organizer"],

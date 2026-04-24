@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 
 interface CloudinaryUploadProps {
   onUpload: (url: string) => void;
+  onUploadInfo?: (info: { secureUrl: string; publicId?: string }) => void;
   uploadPreset?: string;
   maxFileSize?: number;
   allowedFormats?: string[];
@@ -20,6 +21,7 @@ interface CloudinaryUploadProps {
 
 export function CloudinaryUpload({
   onUpload,
+  onUploadInfo,
   uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
   maxFileSize = 5000000, // 5MB default
   allowedFormats = ["jpg", "png", "jpeg", "webp"],
@@ -35,7 +37,14 @@ export function CloudinaryUpload({
       "secure_url" in result.info &&
       result.info.secure_url
     ) {
-      onUpload(result.info.secure_url as string);
+      const secureUrl = result.info.secure_url as string;
+      const publicId =
+        "public_id" in result.info
+          ? (result.info.public_id as string | undefined)
+          : undefined;
+
+      onUpload(secureUrl);
+      onUploadInfo?.({ secureUrl, publicId });
       setError(null);
     }
   };

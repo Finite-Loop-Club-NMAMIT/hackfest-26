@@ -6,7 +6,7 @@ import { auth } from "~/auth/config";
 import SignOut from "~/components/auth/authButtons/signOut";
 import Footer from "~/components/landing/Footer";
 import { Navbar } from "~/components/landing/Navbar";
-import CommitteesShowcase from "~/components/teams/CommitteesShowcase";
+import CommitteesShowcase from "~/components/teams/committees-showcase";
 import { TeamPageLayout } from "~/components/teams/TeamPageLayout";
 import { TeamForm } from "~/components/teams/team-form";
 import { Button } from "~/components/ui/button";

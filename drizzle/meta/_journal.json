@@ -358,6 +358,13 @@
       "when": 1776538061511,
       "tag": "0050_tranquil_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1776806400000,
+      "tag": "0051_manage_teams",
+      "breakpoints": true
     }
   ]
 }

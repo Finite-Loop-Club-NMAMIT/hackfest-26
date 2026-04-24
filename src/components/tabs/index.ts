@@ -4,6 +4,7 @@ export { DashboardUsersTab } from "./dashboard-users/DashboardUsersTab";
 export { JudgeSetupTab } from "./JudgeSetupTab";
 export { JudgeTab } from "./JudgeTab";
 export { MealsTab } from "./Meals";
+export { ManageTeamsTab } from "~/components/dashboard/tabs/ManageTeams";
 export { MentorsTab } from "./MentorsTab";
 export { PanelTab } from "./Panel";
 export { PanelSetupTab } from "./PanelSetupTab";
