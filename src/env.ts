@@ -23,6 +23,8 @@ const server = z.object({
   WORKER_API_URL: z.string().min(1),
   WORKER_SECRET: z.string().min(1),
   RABBIT_MQ_URL: z.string().min(1),
+  SHASHANK_SIGN_URL: z.string(),
+  NANDAN_SIGN_URL: z.string(),
 });
 
 const client = z.object({
@@ -61,6 +63,8 @@ const processEnv = {
   WORKER_API_URL: process.env.WORKER_API_URL,
   WORKER_SECRET: process.env.WORKER_SECRET,
   RABBIT_MQ_URL: process.env.RABBIT_MQ_URL,
+  SHASHANK_SIGN_URL: process.env.SHASHANK_SIGN_URL,
+  NANDAN_SIGN_URL: process.env.NANDAN_SIGN_URL,
 };
 
 function validateEnv() {
@@ -135,6 +139,8 @@ function validateEnv() {
       WORKER_API_URL: "",
       WORKER_SECRET: "",
       RABBIT_MQ_URL: "",
+      SHASHANK_SIGN_URL: "",
+      NANDAN_SIGN_URL: "",
       ...clientParsed.data,
     };
   }

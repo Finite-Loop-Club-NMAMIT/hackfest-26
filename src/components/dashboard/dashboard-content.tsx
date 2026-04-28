@@ -41,7 +41,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
   const isMentor = userRoles.includes("MENTOR");
   const isJudge =
     userRoles.includes("JUDGE") || userRoles.includes("FINAL_JUDGE");
-  const isPanelist = userRoles.includes("PANELIST");
+  const _isPanelist = userRoles.includes("PANELIST");
 
   const baseTabs = [
     { id: "quickboard", content: <QuickboardTab /> },

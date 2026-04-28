@@ -77,7 +77,7 @@ export function AttendanceTable() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(25);
-  const [_refreshKey, setRefreshKey] = useState(0);
+  const [_refreshKey, _setRefreshKey] = useState(0);
   const hasInitialized = useRef(false);
 
   // Dialog State
@@ -425,7 +425,7 @@ export function AttendanceTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedTeams.map((team, index) => (
+              paginatedTeams.map((team, _index) => (
                 <TableRow
                   key={team.id}
                   className="hover:bg-muted/30 transition-colors"

@@ -6,8 +6,8 @@ import {
   dashboardUsers,
   lab,
   labTeams,
-  panelRoundAssignments,
   panelists,
+  panelRoundAssignments,
   selected,
   teams,
 } from "~/db/schema";
@@ -64,9 +64,8 @@ export const GET = adminProtected(async (req: NextRequest) => {
       { teamNo: number | null; teamName: string; labName: string }[]
     >();
     for (const row of assignments) {
-      if (!byPanelist.has(row.panelistId))
-        byPanelist.set(row.panelistId, []);
-      byPanelist.get(row.panelistId)!.push({
+      if (!byPanelist.has(row.panelistId)) byPanelist.set(row.panelistId, []);
+      byPanelist.get(row.panelistId)?.push({
         teamNo: row.teamNo,
         teamName: row.teamName,
         labName: row.labName ?? "Unassigned",
@@ -76,8 +75,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
     let tableRows = "";
     for (const panelist of allPanelists) {
       const panelistTeams = byPanelist.get(panelist.panelistId) ?? [];
-      const displayName =
-        panelist.panelistName || panelist.panelistUsername;
+      const displayName = panelist.panelistName || panelist.panelistUsername;
 
       if (panelistTeams.length === 0) {
         tableRows += `

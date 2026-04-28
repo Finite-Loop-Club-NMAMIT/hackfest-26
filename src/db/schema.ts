@@ -7,6 +7,7 @@ export * from "./schema/evaluator";
 export * from "./schema/event";
 export * from "./schema/github";
 export * from "./schema/ideaSubmission";
+export * from "./schema/invoice";
 export * from "./schema/judge";
 export * from "./schema/lab-teams";
 export * from "./schema/labs";

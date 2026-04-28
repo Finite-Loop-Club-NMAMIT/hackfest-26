@@ -28,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Switch } from "~/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -137,7 +136,7 @@ export function PanelSetupTab() {
   >([]);
   const [maxPerPanelist, setMaxPerPanelist] = useState(0);
   const [selectedRoundId, setSelectedRoundId] = useState("");
-  const [showCumulativeLeaderboard, setShowCumulativeLeaderboard] =
+  const [_showCumulativeLeaderboard, _setShowCumulativeLeaderboard] =
     useState(false);
   const [leaderboardTrackFilter, setLeaderboardTrackFilter] = useState("all");
   const [leaderboardSort, setLeaderboardSort] = useState("panel-zscore");
@@ -1098,8 +1097,12 @@ export function PanelSetupTab() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="panel-zscore">Sort: Panel Z-Score</SelectItem>
-                      <SelectItem value="judge-zscore">Sort: Judge Z-Score</SelectItem>
+                      <SelectItem value="panel-zscore">
+                        Sort: Panel Z-Score
+                      </SelectItem>
+                      <SelectItem value="judge-zscore">
+                        Sort: Judge Z-Score
+                      </SelectItem>
                       <SelectItem value="raw-score">Sort: Raw Score</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1140,53 +1143,61 @@ export function PanelSetupTab() {
                         .slice()
                         .sort((a, b) => {
                           if (leaderboardSort === "judge-zscore")
-                            return b.judgeNormalizedTotal - a.judgeNormalizedTotal;
+                            return (
+                              b.judgeNormalizedTotal - a.judgeNormalizedTotal
+                            );
                           if (leaderboardSort === "raw-score")
                             return b.rawTotalScore - a.rawTotalScore;
-                          return b.normalizedTotalScore - a.normalizedTotalScore;
+                          return (
+                            b.normalizedTotalScore - a.normalizedTotalScore
+                          );
                         })
                         .map((row, idx) => ({ ...row, displayRank: idx + 1 }))
                         .map((row) => (
-                        <TableRow key={row.teamId}>
-                          <TableCell>{row.displayRank}</TableCell>
-                          <TableCell className="font-medium">
-                            {row.teamName}
-                          </TableCell>
-                          <TableCell>{row.rawTotalScore}</TableCell>
-                          <TableCell>{row.maxPossibleScore}</TableCell>
-                          <TableCell>{row.panelistCount}</TableCell>
-                          <TableCell className="font-medium">
-                            {((row.normalizedTotalScore || 0) >= 0 ? "+" : "") +
-                              (row.normalizedTotalScore || 0).toFixed(3)}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {((row.judgeNormalizedTotal || 0) >= 0 ? "+" : "") +
-                              (row.judgeNormalizedTotal || 0).toFixed(3)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() => handleOpenScoreDetails(row)}
-                                aria-label={`View panelist scores for ${row.teamName}`}
-                                title="View Scores"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                onClick={() => handleOpenFeedbacks(row)}
-                                aria-label={`View mentor feedbacks for ${row.teamName}`}
-                                title="View Feedbacks"
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                          <TableRow key={row.teamId}>
+                            <TableCell>{row.displayRank}</TableCell>
+                            <TableCell className="font-medium">
+                              {row.teamName}
+                            </TableCell>
+                            <TableCell>{row.rawTotalScore}</TableCell>
+                            <TableCell>{row.maxPossibleScore}</TableCell>
+                            <TableCell>{row.panelistCount}</TableCell>
+                            <TableCell className="font-medium">
+                              {((row.normalizedTotalScore || 0) >= 0
+                                ? "+"
+                                : "") +
+                                (row.normalizedTotalScore || 0).toFixed(3)}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {((row.judgeNormalizedTotal || 0) >= 0
+                                ? "+"
+                                : "") +
+                                (row.judgeNormalizedTotal || 0).toFixed(3)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  onClick={() => handleOpenScoreDetails(row)}
+                                  aria-label={`View panelist scores for ${row.teamName}`}
+                                  title="View Scores"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  onClick={() => handleOpenFeedbacks(row)}
+                                  aria-label={`View mentor feedbacks for ${row.teamName}`}
+                                  title="View Feedbacks"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
                 </div>

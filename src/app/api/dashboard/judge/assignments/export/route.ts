@@ -56,7 +56,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
     const byJudge = new Map<string, { teamName: string; labName: string }[]>();
     for (const row of assignments) {
       if (!byJudge.has(row.judgeId)) byJudge.set(row.judgeId, []);
-      byJudge.get(row.judgeId)!.push({
+      byJudge.get(row.judgeId)?.push({
         teamName: row.teamName,
         labName: row.labName ?? "Unassigned",
       });

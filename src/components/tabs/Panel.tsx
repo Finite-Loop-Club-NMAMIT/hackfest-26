@@ -1,13 +1,13 @@
 "use client";
 
-import { 
-  CheckCircle2, 
-  ChevronLeft, 
-  ChevronRight, 
-  Loader2, 
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
   Presentation,
   Save,
-  Trophy
+  Trophy,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -297,19 +297,14 @@ export function PanelTab() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Panel Workspace
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight">Panel Workspace</h2>
           <p className="text-muted-foreground mt-1">
             Review your allocated teams, check resources, and submit scores.
           </p>
         </div>
         {roundOptions.length > 0 && (
           <div className="w-full md:w-72">
-            <Select
-              value={selectedRoundId}
-              onValueChange={setSelectedRoundId}
-            >
+            <Select value={selectedRoundId} onValueChange={setSelectedRoundId}>
               <SelectTrigger className="w-full bg-background">
                 <SelectValue placeholder="Select round" />
               </SelectTrigger>
@@ -392,7 +387,7 @@ export function PanelTab() {
                 teamsInSelectedRound.map((team) => {
                   const isSelected = team.teamNumber === selectedTeamNumber;
                   const isScored = team.scoredCriteria > 0;
-                  
+
                   return (
                     <Button
                       key={team.assignmentId}
@@ -404,7 +399,7 @@ export function PanelTab() {
                           ? "shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background"
                           : isScored
                             ? "border-green-500/40 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-400 dark:bg-green-500/20 dark:hover:bg-green-500/30"
-                            : "hover:bg-muted"
+                            : "hover:bg-muted",
                       )}
                       onClick={() => setSelectedTeamNumber(team.teamNumber)}
                     >
@@ -437,16 +432,20 @@ export function PanelTab() {
                         {selectedAllocation.teamName}
                       </CardTitle>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-semibold">
+                      <Badge
+                        variant="secondary"
+                        className="px-2.5 py-0.5 text-xs font-semibold"
+                      >
                         {selectedAllocation.roundStatus}
                       </Badge>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={cn(
                           "px-2.5 py-0.5 text-xs font-semibold",
-                          selectedAllocation.scoredCriteria > 0 && "border-green-500 text-green-600 dark:text-green-500"
+                          selectedAllocation.scoredCriteria > 0 &&
+                            "border-green-500 text-green-600 dark:text-green-500",
                         )}
                       >
                         {selectedAllocation.scoredCriteria > 0
@@ -466,7 +465,9 @@ export function PanelTab() {
 
                   <CardContent className="pt-0">
                     <div className="mt-4 space-y-3">
-                      <p className="text-sm font-semibold text-foreground">Resources</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        Resources
+                      </p>
                       {selectedAllocation.pptUrl ? (
                         <a
                           href={selectedAllocation.pptUrl}
@@ -496,7 +497,11 @@ export function PanelTab() {
                       <div className="space-y-1">
                         <CardTitle className="text-xl">Score Entry</CardTitle>
                         <CardDescription>
-                          Evaluate <span className="font-semibold text-foreground">{selectedAllocation.teamName}</span> across the following criteria.
+                          Evaluate{" "}
+                          <span className="font-semibold text-foreground">
+                            {selectedAllocation.teamName}
+                          </span>{" "}
+                          across the following criteria.
                         </CardDescription>
                       </div>
                       <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
@@ -521,7 +526,8 @@ export function PanelTab() {
                           {scorePayload.roundStatus === "Completed" && (
                             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-400 flex items-center gap-2">
                               <CheckCircle2 className="h-4 w-4" />
-                              This round is completed. Scores are currently locked.
+                              This round is completed. Scores are currently
+                              locked.
                             </div>
                           )}
 
@@ -571,7 +577,9 @@ export function PanelTab() {
                                       }
                                       className={cn(
                                         "h-14 bg-muted/40 text-center text-xl font-bold transition-all focus:bg-background",
-                                        criterion.rawScore && criterion.rawScore > 0 && "border-green-500/50 text-green-700 dark:text-green-400"
+                                        criterion.rawScore &&
+                                          criterion.rawScore > 0 &&
+                                          "border-green-500/50 text-green-700 dark:text-green-400",
                                       )}
                                       placeholder="-"
                                     />
@@ -582,33 +590,35 @@ export function PanelTab() {
                           )}
                         </div>
 
-                        {scorePayload.roundStatus !== "Completed" && scorePayload.criteria.length > 0 && (
-                          <div className="border-t border-border/40 bg-muted/10 p-4 sm:p-6 mt-auto rounded-b-xl">
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                              <p className="text-sm text-muted-foreground text-center sm:text-left">
-                                Ensure all criteria are scored correctly before saving.
-                              </p>
-                              <Button
-                                size="lg"
-                                onClick={handleSaveScores}
-                                disabled={isSavingScores}
-                                className="w-full sm:w-auto min-w-[150px] font-bold shadow-md transition-transform active:scale-95"
-                              >
-                                {isSavingScores ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Save Scores
-                                  </>
-                                )}
-                              </Button>
+                        {scorePayload.roundStatus !== "Completed" &&
+                          scorePayload.criteria.length > 0 && (
+                            <div className="border-t border-border/40 bg-muted/10 p-4 sm:p-6 mt-auto rounded-b-xl">
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <p className="text-sm text-muted-foreground text-center sm:text-left">
+                                  Ensure all criteria are scored correctly
+                                  before saving.
+                                </p>
+                                <Button
+                                  size="lg"
+                                  onClick={handleSaveScores}
+                                  disabled={isSavingScores}
+                                  className="w-full sm:w-auto min-w-[150px] font-bold shadow-md transition-transform active:scale-95"
+                                >
+                                  {isSavingScores ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="mr-2 h-4 w-4" />
+                                      Save Scores
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     )}
                   </CardContent>

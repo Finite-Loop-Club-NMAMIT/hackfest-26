@@ -11,6 +11,7 @@ import {
   ArrowDownUp,
   CheckCircle2,
   Circle,
+  Download,
   ExternalLink,
   Search,
   X,
@@ -331,6 +332,18 @@ export function PaymentsTable() {
           );
         },
       }),
+      columnHelper.display({
+        id: "invoice",
+        header: "Invoice",
+        cell: ({ row }) => {
+          const { team } = row.original;
+          if (!team)
+            return <span className="text-muted-foreground text-sm">—</span>;
+          return (
+            <DownloadInvoiceButton teamId={team.id} teamName={team.name} />
+          );
+        },
+      }),
       columnHelper.accessor("createdAt", {
         header: "Date",
         cell: (info) =>
@@ -556,5 +569,38 @@ export function PaymentsTable() {
         </Table>
       </div>
     </div>
+  );
+}
+
+export function DownloadInvoiceButton({
+  teamId,
+  teamName,
+}: {
+  teamId: string;
+  teamName: string;
+}) {
+  const handleDownload = async () => {
+    const res = await fetch(`/api/invoice/${teamId}`);
+    if (!res.ok) return alert("Failed to generate invoice");
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Invoice_${teamName}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={handleDownload}
+      className="gap-1 min-w-[90px]"
+    >
+      <Download className="h-3.5 w-3.5" />
+      <span>Invoice</span>
+    </Button>
   );
 }

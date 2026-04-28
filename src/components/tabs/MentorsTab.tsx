@@ -3,7 +3,6 @@
 import { ChevronRight, Loader2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { promise } from "zod";
 import { useDashboardUser } from "~/components/dashboard/permissions-context";
 import { MentorTab } from "~/components/dashboard/tabs/Mentor";
 import { Badge } from "~/components/ui/badge";
