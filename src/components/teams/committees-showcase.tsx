@@ -3,7 +3,7 @@
 import { Github, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { type TeamCommittee } from "~/lib/constants/team-committees";
+import type { TeamCommittee } from "~/lib/constants/team-committees";
 
 type CommitteeMember = {
   id: string;
@@ -27,55 +27,25 @@ type CommitteePayload = {
   members: CommitteeMember[];
 };
 
-type FacultyCoordinator = {
+type FacultyMember = {
   id: string;
   name: string;
   designation: string;
   department: string;
-  photo: string;
-  githubHandle?: string;
-  instagramHandle?: string;
+  photo: string | null;
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    instagram?: string;
+    email?: string;
+  };
+  order: number;
+  isActive: boolean;
 };
 
 const makeAvatar = (name: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=ffffff&bold=true`;
-
-const facultyData: FacultyCoordinator[] = [
-  {
-    id: "faculty-1",
-    name: "Dr. Shreya Nayak",
-    designation: "Faculty Coordinator",
-    department: "Computer Science & Engineering",
-    photo: makeAvatar("Dr. Shreya Nayak"),
-    githubHandle: "drshreyan",
-    instagramHandle: "dr.shreya.nayak",
-  },
-  {
-    id: "faculty-2",
-    name: "Prof. Raghavendra B",
-    designation: "Faculty Coordinator",
-    department: "Information Science & Engineering",
-    photo: makeAvatar("Prof. Raghavendra B"),
-    githubHandle: "raghavendrab",
-    instagramHandle: "prof.raghavendra",
-  },
-  {
-    id: "faculty-3",
-    name: "Dr. Meera D'Souza",
-    designation: "Faculty Coordinator",
-    department: "Artificial Intelligence & Data Science",
-    photo: makeAvatar("Dr. Meera D'Souza"),
-    githubHandle: "drmeerads",
-    instagramHandle: "dr.meera.dsouza",
-  },
-  {
-    id: "faculty-4",
-    name: "Name Here",
-    designation: "Faculty Coordinator",
-    department: "Department Name",
-    photo: makeAvatar("Name Here"),
-  },
-];
 
 export default function CommitteesShowcase() {
   const [activeSection, setActiveSection] = useState<"core" | "faculty">(
@@ -85,8 +55,11 @@ export default function CommitteesShowcase() {
   const [committeeGroups, setCommitteeGroups] = useState<CommitteePayload[]>(
     [],
   );
+  const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFacultyLoading, setIsFacultyLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [facultyLoadError, setFacultyLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCommittees = async () => {
@@ -113,6 +86,33 @@ export default function CommitteesShowcase() {
     };
 
     void loadCommittees();
+  }, []);
+
+  useEffect(() => {
+    const loadFaculty = async () => {
+      try {
+        setIsFacultyLoading(true);
+        setFacultyLoadError(null);
+
+        const res = await fetch("/api/faculty", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to load faculty members");
+        }
+
+        const data = (await res.json()) as { faculty?: FacultyMember[] };
+        setFacultyMembers(data.faculty ?? []);
+      } catch (error) {
+        console.error("Failed to fetch faculty:", error);
+        setFacultyLoadError("Unable to load faculty right now.");
+      } finally {
+        setIsFacultyLoading(false);
+      }
+    };
+
+    void loadFaculty();
   }, []);
 
   const totalMembers = useMemo(
@@ -187,7 +187,7 @@ export default function CommitteesShowcase() {
               value={`${nonEmptyCommittees.length}`}
             />
             <StatChip label="Members" value={`${totalMembers}+`} />
-            <StatChip label="Faculty" value={`${facultyData.length}`} />
+            <StatChip label="Faculty" value={`${facultyMembers.length}`} />
           </div>
         </div>
       </motion.div>
@@ -319,16 +319,28 @@ export default function CommitteesShowcase() {
             })
           )}
         </div>
+      ) : isFacultyLoading ? (
+        <div className="mt-10 rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
+          Loading faculty members...
+        </div>
+      ) : facultyLoadError ? (
+        <div className="mt-10 rounded-2xl border border-red-300/30 bg-red-950/20 p-6 font-crimson text-red-100 shadow-[0_12px_28px_rgba(127,29,29,0.25)]">
+          {facultyLoadError}
+        </div>
+      ) : facultyMembers.length === 0 ? (
+        <div className="mt-10 rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
+          No faculty members found.
+        </div>
       ) : (
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {facultyData.map((faculty) => {
+          {facultyMembers.map((faculty, facultyIndex) => {
             return (
               <motion.article
                 key={faculty.id}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.35 }}
+                transition={{ duration: 0.35, delay: facultyIndex * 0.04 }}
                 className={[
                   "group relative aspect-4/5 overflow-hidden rounded-2xl border transition-all duration-300",
                   "bg-linear-to-b from-slate-900/92 via-slate-900/75 to-slate-950/85 backdrop-blur-md",
@@ -337,7 +349,7 @@ export default function CommitteesShowcase() {
               >
                 <div className="relative h-4/5 w-full overflow-hidden">
                   <img
-                    src={faculty.photo}
+                    src={faculty.photo || makeAvatar(faculty.name)}
                     alt={faculty.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     loading="lazy"
@@ -353,16 +365,31 @@ export default function CommitteesShowcase() {
                     <p className="mt-0.5 line-clamp-1 font-crimson text-xs leading-relaxed text-cyan-100/80 md:text-sm">
                       {faculty.designation}
                     </p>
+                    <p className="mt-0.5 line-clamp-1 font-crimson text-[11px] leading-relaxed text-cyan-100/65 md:text-xs">
+                      {faculty.department}
+                    </p>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1.5">
-                    <SocialHandleLink
-                      platform="github"
-                      handle={faculty.githubHandle}
+                    <SocialIconLink
+                      platform="linkedin"
+                      href={faculty.socialLinks?.linkedin}
                     />
-                    <SocialHandleLink
+                    <SocialIconLink
+                      platform="github"
+                      href={faculty.socialLinks?.github}
+                    />
+                    <SocialIconLink
+                      platform="twitter"
+                      href={faculty.socialLinks?.twitter}
+                    />
+                    <SocialIconLink
                       platform="instagram"
-                      handle={faculty.instagramHandle}
+                      href={faculty.socialLinks?.instagram}
+                    />
+                    <SocialIconLink
+                      platform="email"
+                      href={faculty.socialLinks?.email}
                     />
                   </div>
                 </div>
@@ -437,39 +464,6 @@ function StatChip({ label, value }: { label: string; value: string }) {
         {value}
       </p>
     </div>
-  );
-}
-
-function SocialHandleLink({
-  platform,
-  handle,
-}: {
-  platform: "github" | "instagram";
-  handle?: string;
-}) {
-  const normalizedHandle = handle?.trim().replace(/^@/, "");
-  const isGithub = platform === "github";
-  const Icon = isGithub ? Github : Instagram;
-  const label = isGithub ? "GitHub" : "Instagram";
-
-  if (!normalizedHandle) {
-    return null;
-  }
-
-  const href = isGithub
-    ? `https://github.com/${normalizedHandle}`
-    : `https://instagram.com/${normalizedHandle}`;
-
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-cyan-200/25 bg-slate-900/60 text-cyan-50 transition-colors duration-200 hover:border-cyan-200/45 hover:bg-slate-800/70"
-      aria-label={`${label} profile of ${normalizedHandle}`}
-    >
-      <Icon className="h-4 w-4" />
-    </a>
   );
 }
 

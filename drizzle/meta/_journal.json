@@ -365,6 +365,13 @@
       "when": 1776806400000,
       "tag": "0051_manage_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1777392060215,
+      "tag": "0052_talented_naoko",
+      "breakpoints": true
     }
   ]
 }
