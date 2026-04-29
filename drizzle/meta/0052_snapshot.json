@@ -112,12 +112,8 @@
           "name": "account_userId_participant_id_fk",
           "tableFrom": "account",
           "tableTo": "participant",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -125,10 +121,7 @@
       "compositePrimaryKeys": {
         "account_provider_providerAccountId_pk": {
           "name": "account_provider_providerAccountId_pk",
-          "columns": [
-            "provider",
-            "providerAccountId"
-          ]
+          "columns": ["provider", "providerAccountId"]
         }
       },
       "uniqueConstraints": {},
@@ -211,12 +204,8 @@
           "name": "authenticator_userId_participant_id_fk",
           "tableFrom": "authenticator",
           "tableTo": "participant",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -224,19 +213,14 @@
       "compositePrimaryKeys": {
         "authenticator_userId_credentialID_pk": {
           "name": "authenticator_userId_credentialID_pk",
-          "columns": [
-            "userId",
-            "credentialID"
-          ]
+          "columns": ["userId", "credentialID"]
         }
       },
       "uniqueConstraints": {
         "authenticator_credentialID_unique": {
           "name": "authenticator_credentialID_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "credentialID"
-          ]
+          "columns": ["credentialID"]
         }
       },
       "policies": {},
@@ -303,12 +287,8 @@
           "name": "session_userId_participant_id_fk",
           "tableFrom": "session",
           "tableTo": "participant",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -486,12 +466,8 @@
           "name": "dashboard_session_dashboard_user_id_dashboard_user_id_fk",
           "tableFrom": "dashboard_session",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "dashboard_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -530,10 +506,7 @@
       "compositePrimaryKeys": {
         "dashboard_verification_token_identifier_token_pk": {
           "name": "dashboard_verification_token_identifier_token_pk",
-          "columns": [
-            "identifier",
-            "token"
-          ]
+          "columns": ["identifier", "token"]
         }
       },
       "uniqueConstraints": {},
@@ -603,12 +576,8 @@
           "name": "dormitory_teams_dormitory_id_dormitory_id_fk",
           "tableFrom": "dormitory_teams",
           "tableTo": "dormitory",
-          "columnsFrom": [
-            "dormitory_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dormitory_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -616,12 +585,8 @@
           "name": "dormitory_teams_team_id_team_id_fk",
           "tableFrom": "dormitory_teams",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -629,10 +594,7 @@
       "compositePrimaryKeys": {
         "dormitory_teams_dormitory_id_team_id_pk": {
           "name": "dormitory_teams_dormitory_id_team_id_pk",
-          "columns": [
-            "dormitory_id",
-            "team_id"
-          ]
+          "columns": ["dormitory_id", "team_id"]
         }
       },
       "uniqueConstraints": {},
@@ -682,12 +644,8 @@
           "name": "idea_round_assignments_round_id_idea_rounds_id_fk",
           "tableFrom": "idea_round_assignments",
           "tableTo": "idea_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -695,12 +653,8 @@
           "name": "idea_round_assignments_team_id_team_id_fk",
           "tableFrom": "idea_round_assignments",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -708,12 +662,8 @@
           "name": "idea_round_assignments_evaluator_id_dashboard_user_id_fk",
           "tableFrom": "idea_round_assignments",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "evaluator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["evaluator_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -723,11 +673,7 @@
         "unique_idea_assignment": {
           "name": "unique_idea_assignment",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_id",
-            "team_id",
-            "evaluator_id"
-          ]
+          "columns": ["round_id", "team_id", "evaluator_id"]
         }
       },
       "policies": {},
@@ -770,12 +716,8 @@
           "name": "idea_round_criteria_round_id_idea_rounds_id_fk",
           "tableFrom": "idea_round_criteria",
           "tableTo": "idea_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -838,12 +780,8 @@
           "name": "idea_rounds_role_id_roles_id_fk",
           "tableFrom": "idea_rounds",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -901,12 +839,8 @@
           "name": "idea_scores_round_id_idea_rounds_id_fk",
           "tableFrom": "idea_scores",
           "tableTo": "idea_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -914,12 +848,8 @@
           "name": "idea_scores_team_id_team_id_fk",
           "tableFrom": "idea_scores",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -927,12 +857,8 @@
           "name": "idea_scores_evaluator_id_dashboard_user_id_fk",
           "tableFrom": "idea_scores",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "evaluator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["evaluator_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -940,12 +866,8 @@
           "name": "idea_scores_criteria_id_idea_round_criteria_id_fk",
           "tableFrom": "idea_scores",
           "tableTo": "idea_round_criteria",
-          "columnsFrom": [
-            "criteria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["criteria_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -955,12 +877,7 @@
         "unique_score": {
           "name": "unique_score",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_id",
-            "team_id",
-            "evaluator_id",
-            "criteria_id"
-          ]
+          "columns": ["round_id", "team_id", "evaluator_id", "criteria_id"]
         }
       },
       "policies": {},
@@ -1022,12 +939,8 @@
           "name": "idea_team_evaluations_round_id_idea_rounds_id_fk",
           "tableFrom": "idea_team_evaluations",
           "tableTo": "idea_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1035,12 +948,8 @@
           "name": "idea_team_evaluations_team_id_team_id_fk",
           "tableFrom": "idea_team_evaluations",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1048,12 +957,8 @@
           "name": "idea_team_evaluations_evaluator_id_dashboard_user_id_fk",
           "tableFrom": "idea_team_evaluations",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "evaluator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["evaluator_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1063,11 +968,7 @@
         "unique_team_evaluation": {
           "name": "unique_team_evaluation",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_id",
-            "team_id",
-            "evaluator_id"
-          ]
+          "columns": ["round_id", "team_id", "evaluator_id"]
         }
       },
       "policies": {},
@@ -1124,12 +1025,8 @@
           "name": "idea_team_round_scores_round_id_idea_rounds_id_fk",
           "tableFrom": "idea_team_round_scores",
           "tableTo": "idea_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1137,12 +1034,8 @@
           "name": "idea_team_round_scores_team_id_team_id_fk",
           "tableFrom": "idea_team_round_scores",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1152,10 +1045,7 @@
         "unique_idea_team_round_score": {
           "name": "unique_idea_team_round_score",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_id",
-            "team_id"
-          ]
+          "columns": ["round_id", "team_id"]
         }
       },
       "policies": {},
@@ -1198,12 +1088,8 @@
           "name": "event_organizers_event_id_event_id_fk",
           "tableFrom": "event_organizers",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1211,12 +1097,8 @@
           "name": "event_organizers_organizer_id_dashboard_user_id_fk",
           "tableFrom": "event_organizers",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "organizer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organizer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1283,12 +1165,8 @@
           "name": "event_participant_event_id_event_id_fk",
           "tableFrom": "event_participant",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1296,12 +1174,8 @@
           "name": "event_participant_user_id_participant_id_fk",
           "tableFrom": "event_participant",
           "tableTo": "participant",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1309,12 +1183,8 @@
           "name": "event_participant_team_id_event_teams_id_fk",
           "tableFrom": "event_participant",
           "tableTo": "event_teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1324,18 +1194,12 @@
         "event_participant_unique": {
           "name": "event_participant_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "event_id",
-            "user_id"
-          ]
+          "columns": ["event_id", "user_id"]
         },
         "team_participant_unique": {
           "name": "team_participant_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "user_id"
-          ]
+          "columns": ["team_id", "user_id"]
         }
       },
       "policies": {},
@@ -1413,12 +1277,8 @@
           "name": "event_teams_payment_id_payment_id_fk",
           "tableFrom": "event_teams",
           "tableTo": "payment",
-          "columnsFrom": [
-            "payment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1426,12 +1286,8 @@
           "name": "event_teams_event_id_event_id_fk",
           "tableFrom": "event_teams",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1692,12 +1548,8 @@
           "name": "github_repo_github_id_github_id_fk",
           "tableFrom": "github_repo",
           "tableTo": "github",
-          "columnsFrom": [
-            "github_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["github_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1761,12 +1613,8 @@
           "name": "github_team_github_id_github_id_fk",
           "tableFrom": "github_team",
           "tableTo": "github",
-          "columnsFrom": [
-            "github_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["github_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1800,12 +1648,8 @@
           "name": "github_team_id_team_id_fk",
           "tableFrom": "github",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1896,12 +1740,8 @@
           "name": "idea_submission_team_id_team_id_fk",
           "tableFrom": "idea_submission",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1909,12 +1749,8 @@
           "name": "idea_submission_track_id_tracks_id_fk",
           "tableFrom": "idea_submission",
           "tableTo": "tracks",
-          "columnsFrom": [
-            "track_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["track_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1924,9 +1760,7 @@
         "idea_submission_team_id_unique": {
           "name": "idea_submission_team_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id"
-          ]
+          "columns": ["team_id"]
         }
       },
       "policies": {},
@@ -2100,12 +1934,8 @@
           "name": "judge_criterias_judge_round_id_judge_rounds_id_fk",
           "tableFrom": "judge_criterias",
           "tableTo": "judge_rounds",
-          "columnsFrom": [
-            "judge_round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["judge_round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2251,12 +2081,8 @@
           "name": "judge_round_assignments_judge_id_judges_id_fk",
           "tableFrom": "judge_round_assignments",
           "tableTo": "judges",
-          "columnsFrom": [
-            "judge_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["judge_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2264,12 +2090,8 @@
           "name": "judge_round_assignments_team_id_team_id_fk",
           "tableFrom": "judge_round_assignments",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2277,12 +2099,8 @@
           "name": "judge_round_assignments_judge_round_id_judge_rounds_id_fk",
           "tableFrom": "judge_round_assignments",
           "tableTo": "judge_rounds",
-          "columnsFrom": [
-            "judge_round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["judge_round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2292,11 +2110,7 @@
         "judge_round_team_assignment_unique": {
           "name": "judge_round_team_assignment_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "judge_id",
-            "team_id",
-            "judge_round_id"
-          ]
+          "columns": ["judge_id", "team_id", "judge_round_id"]
         }
       },
       "policies": {},
@@ -2402,12 +2216,8 @@
           "name": "judge_scores_round_assignment_id_judge_round_assignments_id_fk",
           "tableFrom": "judge_scores",
           "tableTo": "judge_round_assignments",
-          "columnsFrom": [
-            "round_assignment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_assignment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2415,12 +2225,8 @@
           "name": "judge_scores_criteria_id_judge_criterias_id_fk",
           "tableFrom": "judge_scores",
           "tableTo": "judge_criterias",
-          "columnsFrom": [
-            "criteria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["criteria_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2430,10 +2236,7 @@
         "judge_score_assignment_criteria_unique": {
           "name": "judge_score_assignment_criteria_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_assignment_id",
-            "criteria_id"
-          ]
+          "columns": ["round_assignment_id", "criteria_id"]
         }
       },
       "policies": {},
@@ -2479,12 +2282,8 @@
           "name": "judges_dashboard_user_id_dashboard_user_id_fk",
           "tableFrom": "judges",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "dashboard_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2543,12 +2342,8 @@
           "name": "team_round_scores_team_id_team_id_fk",
           "tableFrom": "team_round_scores",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2556,12 +2351,8 @@
           "name": "team_round_scores_round_id_judge_rounds_id_fk",
           "tableFrom": "team_round_scores",
           "tableTo": "judge_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2571,10 +2362,7 @@
         "team_round_scores_unique": {
           "name": "team_round_scores_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "round_id"
-          ]
+          "columns": ["team_id", "round_id"]
         }
       },
       "policies": {},
@@ -2611,12 +2399,8 @@
           "name": "lab_teams_lab_id_lab_id_fk",
           "tableFrom": "lab_teams",
           "tableTo": "lab",
-          "columnsFrom": [
-            "lab_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lab_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2624,12 +2408,8 @@
           "name": "lab_teams_team_id_team_id_fk",
           "tableFrom": "lab_teams",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2637,10 +2417,7 @@
       "compositePrimaryKeys": {
         "lab_teams_lab_id_team_id_pk": {
           "name": "lab_teams_lab_id_team_id_pk",
-          "columns": [
-            "lab_id",
-            "team_id"
-          ]
+          "columns": ["lab_id", "team_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2724,12 +2501,8 @@
           "name": "mentor_feedback_round_assignment_id_mentor_round_assignments_id_fk",
           "tableFrom": "mentor_feedback",
           "tableTo": "mentor_round_assignments",
-          "columnsFrom": [
-            "round_assignment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_assignment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2863,12 +2636,8 @@
           "name": "mentor_round_assignments_mentor_id_mentors_id_fk",
           "tableFrom": "mentor_round_assignments",
           "tableTo": "mentors",
-          "columnsFrom": [
-            "mentor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mentor_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2876,12 +2645,8 @@
           "name": "mentor_round_assignments_team_id_team_id_fk",
           "tableFrom": "mentor_round_assignments",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2889,12 +2654,8 @@
           "name": "mentor_round_assignments_mentor_round_id_mentor_rounds_id_fk",
           "tableFrom": "mentor_round_assignments",
           "tableTo": "mentor_rounds",
-          "columnsFrom": [
-            "mentor_round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mentor_round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2904,11 +2665,7 @@
         "mentor_round_team_assignment_unique": {
           "name": "mentor_round_team_assignment_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "mentor_id",
-            "team_id",
-            "mentor_round_id"
-          ]
+          "columns": ["mentor_id", "team_id", "mentor_round_id"]
         }
       },
       "policies": {},
@@ -2987,12 +2744,8 @@
           "name": "mentors_dashboard_user_id_dashboard_user_id_fk",
           "tableFrom": "mentors",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "dashboard_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3055,12 +2808,8 @@
           "name": "panel_criterias_panel_round_id_panel_rounds_id_fk",
           "tableFrom": "panel_criterias",
           "tableTo": "panel_rounds",
-          "columnsFrom": [
-            "panel_round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["panel_round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3206,12 +2955,8 @@
           "name": "panel_round_assignments_panelist_id_panelists_id_fk",
           "tableFrom": "panel_round_assignments",
           "tableTo": "panelists",
-          "columnsFrom": [
-            "panelist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["panelist_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3219,12 +2964,8 @@
           "name": "panel_round_assignments_team_id_team_id_fk",
           "tableFrom": "panel_round_assignments",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3232,12 +2973,8 @@
           "name": "panel_round_assignments_panel_round_id_panel_rounds_id_fk",
           "tableFrom": "panel_round_assignments",
           "tableTo": "panel_rounds",
-          "columnsFrom": [
-            "panel_round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["panel_round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3247,11 +2984,7 @@
         "panel_round_team_assignment_unique": {
           "name": "panel_round_team_assignment_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "panelist_id",
-            "team_id",
-            "panel_round_id"
-          ]
+          "columns": ["panelist_id", "team_id", "panel_round_id"]
         }
       },
       "policies": {},
@@ -3357,12 +3090,8 @@
           "name": "panel_scores_round_assignment_id_panel_round_assignments_id_fk",
           "tableFrom": "panel_scores",
           "tableTo": "panel_round_assignments",
-          "columnsFrom": [
-            "round_assignment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_assignment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3370,12 +3099,8 @@
           "name": "panel_scores_criteria_id_panel_criterias_id_fk",
           "tableFrom": "panel_scores",
           "tableTo": "panel_criterias",
-          "columnsFrom": [
-            "criteria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["criteria_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3385,10 +3110,7 @@
         "panel_score_assignment_criteria_unique": {
           "name": "panel_score_assignment_criteria_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "round_assignment_id",
-            "criteria_id"
-          ]
+          "columns": ["round_assignment_id", "criteria_id"]
         }
       },
       "policies": {},
@@ -3443,12 +3165,8 @@
           "name": "panel_team_round_scores_team_id_team_id_fk",
           "tableFrom": "panel_team_round_scores",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3456,12 +3174,8 @@
           "name": "panel_team_round_scores_round_id_panel_rounds_id_fk",
           "tableFrom": "panel_team_round_scores",
           "tableTo": "panel_rounds",
-          "columnsFrom": [
-            "round_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["round_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3471,10 +3185,7 @@
         "panel_team_round_scores_unique": {
           "name": "panel_team_round_scores_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "round_id"
-          ]
+          "columns": ["team_id", "round_id"]
         }
       },
       "policies": {},
@@ -3520,12 +3231,8 @@
           "name": "panelists_dashboard_user_id_dashboard_user_id_fk",
           "tableFrom": "panelists",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "dashboard_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3583,9 +3290,7 @@
         "college_name_unique": {
           "name": "college_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -3791,12 +3496,8 @@
           "name": "participant_dormitory_id_dormitory_id_fk",
           "tableFrom": "participant",
           "tableTo": "dormitory",
-          "columnsFrom": [
-            "dormitory_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dormitory_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3804,12 +3505,8 @@
           "name": "participant_college_id_college_id_fk",
           "tableFrom": "participant",
           "tableTo": "college",
-          "columnsFrom": [
-            "college_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["college_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3817,12 +3514,8 @@
           "name": "participant_team_id_team_id_fk",
           "tableFrom": "participant",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3832,9 +3525,7 @@
         "participant_email_unique": {
           "name": "participant_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -3918,12 +3609,8 @@
           "name": "payment_user_id_participant_id_fk",
           "tableFrom": "payment",
           "tableTo": "participant",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4029,12 +3716,8 @@
           "name": "dashboard_user_role_dashboard_user_id_dashboard_user_id_fk",
           "tableFrom": "dashboard_user_role",
           "tableTo": "dashboard_user",
-          "columnsFrom": [
-            "dashboard_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4042,12 +3725,8 @@
           "name": "dashboard_user_role_role_id_roles_id_fk",
           "tableFrom": "dashboard_user_role",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4149,23 +3828,17 @@
         "dashboard_user_username_unique": {
           "name": "dashboard_user_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         },
         "dashboard_user_email_unique": {
           "name": "dashboard_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "dashboard_user_phone_unique": {
           "name": "dashboard_user_phone_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "phone"
-          ]
+          "columns": ["phone"]
         }
       },
       "policies": {},
@@ -4202,9 +3875,7 @@
         "permission_key_unique": {
           "name": "permission_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -4265,12 +3936,8 @@
           "name": "role_permission_role_id_roles_id_fk",
           "tableFrom": "role_permission",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4278,12 +3945,8 @@
           "name": "role_permission_permission_id_permission_id_fk",
           "tableFrom": "role_permission",
           "tableTo": "permission",
-          "columnsFrom": [
-            "permission_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["permission_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4291,10 +3954,7 @@
       "compositePrimaryKeys": {
         "role_permission_role_id_permission_id_pk": {
           "name": "role_permission_role_id_permission_id_pk",
-          "columns": [
-            "role_id",
-            "permission_id"
-          ]
+          "columns": ["role_id", "permission_id"]
         }
       },
       "uniqueConstraints": {},
@@ -4377,9 +4037,7 @@
         "roles_name_unique": {
           "name": "roles_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -4564,12 +4222,8 @@
           "name": "team_payment_id_payment_id_fk",
           "tableFrom": "team",
           "tableTo": "payment",
-          "columnsFrom": [
-            "payment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4577,12 +4231,8 @@
           "name": "team_leader_id_participant_id_fk",
           "tableFrom": "team",
           "tableTo": "participant",
-          "columnsFrom": [
-            "leader_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["leader_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4590,12 +4240,8 @@
           "name": "team_lab_id_lab_id_fk",
           "tableFrom": "team",
           "tableTo": "lab",
-          "columnsFrom": [
-            "lab_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lab_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4605,9 +4251,7 @@
         "team_name_unique": {
           "name": "team_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -4768,12 +4412,8 @@
           "name": "not_selected_team_id_team_id_fk",
           "tableFrom": "not_selected",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4821,12 +4461,8 @@
           "name": "selected_team_id_team_id_fk",
           "tableFrom": "selected",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4860,12 +4496,8 @@
           "name": "semi_selected_team_id_team_id_fk",
           "tableFrom": "semi_selected",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5025,9 +4657,7 @@
         "tracks_name_unique": {
           "name": "tracks_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -5039,11 +4669,7 @@
     "public.college_request_status": {
       "name": "college_request_status",
       "schema": "public",
-      "values": [
-        "Pending",
-        "Approved",
-        "Rejected"
-      ]
+      "values": ["Pending", "Approved", "Rejected"]
     },
     "public.course": {
       "name": "course",
@@ -5061,64 +4687,37 @@
     "public.event_audience": {
       "name": "event_audience",
       "schema": "public",
-      "values": [
-        "Participants",
-        "Non-Participants",
-        "Both"
-      ]
+      "values": ["Participants", "Non-Participants", "Both"]
     },
     "public.event_status": {
       "name": "event_status",
       "schema": "public",
-      "values": [
-        "Draft",
-        "Published",
-        "Ongoing",
-        "Completed"
-      ]
+      "values": ["Draft", "Published", "Ongoing", "Completed"]
     },
     "public.event_type": {
       "name": "event_type",
       "schema": "public",
-      "values": [
-        "Solo",
-        "Team"
-      ]
+      "values": ["Solo", "Team"]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": [
-        "Male",
-        "Female",
-        "Prefer Not To Say"
-      ]
+      "values": ["Male", "Female", "Prefer Not To Say"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "Pending",
-        "Paid",
-        "Refunded"
-      ]
+      "values": ["Pending", "Paid", "Refunded"]
     },
     "public.payment_type": {
       "name": "payment_type",
       "schema": "public",
-      "values": [
-        "HACKFEST",
-        "EVENT"
-      ]
+      "values": ["HACKFEST", "EVENT"]
     },
     "public.round_status": {
       "name": "round_status",
       "schema": "public",
-      "values": [
-        "Draft",
-        "Active",
-        "Completed"
-      ]
+      "values": ["Draft", "Active", "Completed"]
     },
     "public.state": {
       "name": "state",
@@ -5182,22 +4781,12 @@
     "public.team_progress": {
       "name": "team_progress",
       "schema": "public",
-      "values": [
-        "WINNER",
-        "RUNNER",
-        "SECOND_RUNNER",
-        "TRACK",
-        "PARTICIPATION"
-      ]
+      "values": ["WINNER", "RUNNER", "SECOND_RUNNER", "TRACK", "PARTICIPATION"]
     },
     "public.team_stage": {
       "name": "team_stage",
       "schema": "public",
-      "values": [
-        "NOT_SELECTED",
-        "SEMI_SELECTED",
-        "SELECTED"
-      ]
+      "values": ["NOT_SELECTED", "SEMI_SELECTED", "SELECTED"]
     },
     "public.team_status": {
       "name": "team_status",
@@ -5215,12 +4804,7 @@
     "public.timer_status": {
       "name": "timer_status",
       "schema": "public",
-      "values": [
-        "IDLE",
-        "RUNNING",
-        "PAUSED",
-        "COMPLETED"
-      ]
+      "values": ["IDLE", "RUNNING", "PAUSED", "COMPLETED"]
     }
   },
   "schemas": {},

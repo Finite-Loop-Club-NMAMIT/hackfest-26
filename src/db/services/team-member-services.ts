@@ -8,8 +8,8 @@ import {
 import { AppError } from "~/lib/errors/app-error";
 import {
   type CreateTeamMemberInput,
-  type UpdateTeamMemberInput,
   createTeamMemberSchema,
+  type UpdateTeamMemberInput,
   updateTeamMemberSchema,
 } from "~/lib/validation/team-member";
 

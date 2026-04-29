@@ -472,7 +472,7 @@ export function TeamDetailsClient({
             </div>
 
             {/* 3. MOBILE ONLY: Sign Out */}
-            <div className="md:hidden shrink-0 [&_button]:!bg-white/90 [&_button]:!border-[#10569c]/30 [&_button]:!text-[#10569c] [&_button]:hover:!bg-white [&_button]:hover:!border-[#10569c]/60 [&_button]:!backdrop-blur-sm [&_button]:!rounded-xl [&_button]:!shadow-sm [&_button]:!transition-all">
+            <div className="md:hidden shrink-0 [&_button]:bg-white/90! [&_button]:border-[#10569c]/30! [&_button]:text-[#10569c]! [&_button]:hover:bg-white! [&_button]:hover:border-[#10569c]/60! [&_button]:backdrop-blur-sm! [&_button]:rounded-xl! [&_button]:shadow-sm! [&_button]:transition-all!">
               {signOutButton}
             </div>
           </div>
@@ -490,7 +490,7 @@ export function TeamDetailsClient({
           </div>
 
           {/* RIGHT SIDE (DESKTOP ONLY) - Sign Out */}
-          <div className="hidden md:block shrink-0 [&_button]:bg-white/90! [&_button]:border-[#10569c]/30! [&_button]:!text-[#10569c] [&_button]:hover:!bg-white [&_button]:hover:!border-[#10569c]/60 [&_button]:!backdrop-blur-sm [&_button]:!rounded-xl [&_button]:!shadow-sm [&_button]:!transition-all">
+          <div className="hidden md:block shrink-0 [&_button]:bg-white/90! [&_button]:border-[#10569c]/30! [&_button]:text-[#10569c]! [&_button]:hover:bg-white! [&_button]:hover:border-[#10569c]/60! [&_button]:backdrop-blur-sm! [&_button]:rounded-xl! [&_button]:shadow-sm! [&_button]:transition-all!">
             {signOutButton}
           </div>
         </div>
@@ -520,7 +520,7 @@ export function TeamDetailsClient({
               <span className="text-sm font-bold text-[#10569c]/80 uppercase tracking-wider shrink-0">
                 College
               </span>
-              <span className="text-[#10569c] font-medium font-crimson text-lg break-words ml-3">
+              <span className="text-[#10569c] font-medium font-crimson text-lg wrap-break-word ml-3">
                 {collegeName ?? "Not set"}
               </span>
             </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { Github, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import { motion } from "framer-motion";
+import { Github, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { TeamCommittee } from "~/lib/constants/team-committees";
 
@@ -269,11 +270,13 @@ export default function CommitteesShowcase() {
                         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,rgba(255,255,255,0.08)_0%,transparent_32%)]" />
 
                         <div className="relative h-4/5 w-full overflow-hidden">
-                          <img
+                          <Image
                             src={member.photo || makeAvatar(member.name)}
                             alt={member.name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                            loading="lazy"
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            unoptimized
                           />
                           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-slate-950/92 via-slate-950/35 to-transparent" />
                         </div>
@@ -348,11 +351,13 @@ export default function CommitteesShowcase() {
                 ].join(" ")}
               >
                 <div className="relative h-4/5 w-full overflow-hidden">
-                  <img
+                  <Image
                     src={faculty.photo || makeAvatar(faculty.name)}
                     alt={faculty.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    loading="lazy"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    unoptimized
                   />
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-slate-950/92 via-slate-950/35 to-transparent" />
                 </div>

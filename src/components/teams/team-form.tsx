@@ -294,11 +294,11 @@ export function TeamForm() {
 
       {/* Separator / OR (Left untouched as it sits on the main background) */}
       <div className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-white/30"></div>
-        <span className="flex-shrink-0 mx-4 text-white/90 font-pirate font-bold text-xl tracking-widest drop-shadow-sm">
+        <div className="grow border-t border-white/30"></div>
+        <span className="shrink-0 mx-4 text-white/90 font-pirate font-bold text-xl tracking-widest drop-shadow-sm">
           OR
         </span>
-        <div className="flex-grow border-t border-white/30"></div>
+        <div className="grow border-t border-white/30"></div>
       </div>
 
       {/* --- JOIN TEAM CARD --- */}

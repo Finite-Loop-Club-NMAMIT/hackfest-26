@@ -4,8 +4,8 @@ import { facultyMembers } from "~/db/schema";
 import { AppError } from "~/lib/errors/app-error";
 import {
   type CreateFacultyInput,
-  type UpdateFacultyInput,
   createFacultySchema,
+  type UpdateFacultyInput,
   updateFacultySchema,
 } from "~/lib/validation/faculty";
 

@@ -10,6 +10,7 @@ import {
   Trash2,
   Twitter,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CloudinaryUpload } from "~/components/cloudinary-upload";
@@ -112,6 +113,13 @@ type FacultyFormState = {
   socialLinks: SocialLinks;
   order: number;
   isActive: boolean;
+};
+
+const getInitials = (name: string) => {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/).slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase()).join("");
 };
 
 const EMPTY_FORM: TeamMemberFormState = {
@@ -829,14 +837,20 @@ export function ManageTeamsTab() {
                 <TableRow key={member.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <img
-                        src={
-                          member.photo ||
-                          "https://ui-avatars.com/api/?name=Team+Member&background=random&color=ffffff"
-                        }
-                        alt={member.name}
-                        className="h-10 w-10 rounded-full object-cover border"
-                      />
+                      {member.photo ? (
+                        <Image
+                          src={member.photo}
+                          alt={member.name}
+                          width={40}
+                          height={40}
+                          className="h-10 w-10 rounded-full object-cover border"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full border bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                          {getInitials(member.name)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-medium">{member.name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -1019,10 +1033,13 @@ export function ManageTeamsTab() {
                 ) : null}
               </div>
               {form.photo ? (
-                <img
+                <Image
                   src={form.photo}
                   alt="Member preview"
+                  width={96}
+                  height={96}
                   className="h-24 w-24 rounded-lg object-cover border"
+                  unoptimized
                 />
               ) : null}
             </div>
@@ -1200,14 +1217,20 @@ export function ManageTeamsTab() {
                   <TableRow key={faculty.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <img
-                          src={
-                            faculty.photo ||
-                            "https://ui-avatars.com/api/?name=Faculty&background=random&color=ffffff"
-                          }
-                          alt={faculty.name}
-                          className="h-10 w-10 rounded-full border object-cover"
-                        />
+                        {faculty.photo ? (
+                          <Image
+                            src={faculty.photo}
+                            alt={faculty.name}
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 rounded-full border object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full border bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                            {getInitials(faculty.name)}
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium">{faculty.name}</p>
                           <p className="text-xs text-muted-foreground">
@@ -1384,10 +1407,13 @@ export function ManageTeamsTab() {
                 ) : null}
               </div>
               {facultyForm.photo ? (
-                <img
+                <Image
                   src={facultyForm.photo}
                   alt="Faculty preview"
+                  width={96}
+                  height={96}
                   className="h-24 w-24 rounded-lg border object-cover"
+                  unoptimized
                 />
               ) : null}
             </div>

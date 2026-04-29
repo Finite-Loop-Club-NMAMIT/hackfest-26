@@ -10,8 +10,8 @@ import {
   permissions,
   roles,
   siteSettings,
-  teams,
   teamMembers,
+  teams,
 } from "~/db/schema";
 import { queryBuilder } from "./utils/builder";
 

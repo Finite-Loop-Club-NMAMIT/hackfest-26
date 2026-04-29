@@ -482,13 +482,14 @@ export async function fetchAttendanceTeams({
     const searchTerm = search.trim();
     const searchNo = parseInt(searchTerm, 10);
 
-    if (!isNaN(searchNo)) {
-      conditions.push(
-        or(
-          ilike(teams.name, `%${searchTerm}%`),
-          eq(selected.teamNo, searchNo),
-        )!,
+    if (!Number.isNaN(searchNo)) {
+      const searchCondition = or(
+        ilike(teams.name, `%${searchTerm}%`),
+        eq(selected.teamNo, searchNo),
       );
+      if (searchCondition) {
+        conditions.push(searchCondition);
+      }
     } else {
       conditions.push(ilike(teams.name, `%${searchTerm}%`));
     }

@@ -23,7 +23,12 @@ interface TeamData {
   id: string;
   name: string;
   members: Member[];
+  attended?: boolean;
 }
+
+type DetectedCode = {
+  rawValue: string;
+};
 
 export function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [result, setResult] = useState<string | null>(null);
@@ -50,7 +55,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     setError(null);
     setIsLoadingTeam(true);
 
-    const team = await fetchTeamDetails(teamId);
+    const team = (await fetchTeamDetails(teamId)) as TeamData | null;
 
     if (!team) {
       setError("Invalid QR Code or Team not found.");
@@ -63,8 +68,8 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     // Default all members to present if not scanned before
     const initialPresence: Record<string, boolean> = {};
     if (team.members && Array.isArray(team.members)) {
-      team.members.forEach((m: any) => {
-        initialPresence[m.id] = team.attended ? !!m.attended : true;
+      team.members.forEach((member: Member) => {
+        initialPresence[member.id] = team.attended ? !!member.attended : true;
       });
     }
     setPresentMembers(initialPresence);
@@ -118,9 +123,10 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         <>
           <div className="w-full aspect-square relative overflow-hidden rounded-lg border border-border bg-black">
             <Scanner
-              onScan={(detectedCodes: string | any[]) => {
-                if (detectedCodes && detectedCodes.length > 0) {
-                  const val = detectedCodes[0].rawValue;
+              onScan={(detectedCodes: DetectedCode[]) => {
+                if (detectedCodes.length > 0) {
+                  const val = detectedCodes[0]?.rawValue;
+                  if (!val) return;
                   void processScannedCode(val);
                 }
               }}
