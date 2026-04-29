@@ -301,10 +301,16 @@ export function InvoicePDF({
             <View style={styles.logoRow}>
               <Image src={logoUrl} style={styles.logo} />
               <View>
-                <Text style={styles.orgName}>FINITE LOOP CLUB</Text>
+                <Text style={styles.orgName}>Finite Loop Club</Text>
                 <Text style={styles.orgSub}>NMAM Institute of Technology</Text>
                 <Text style={styles.orgSub}>
                   Nitte, SH1, Karkala, Karnataka - 574110
+                </Text>
+                <Text style={styles.orgSub}>
+                  Phone - +91 80503 38576
+                </Text>
+                <Text style={styles.orgSub}>
+                                     Email - finiteloopclub@nmamit.in
                 </Text>
               </View>
             </View>
