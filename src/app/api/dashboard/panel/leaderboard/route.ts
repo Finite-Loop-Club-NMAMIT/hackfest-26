@@ -44,7 +44,10 @@ export const GET = adminProtected(async (req: NextRequest) => {
       })
       .from(panelTeamRoundScores)
       .innerJoin(teams, eq(teams.id, panelTeamRoundScores.teamId))
-      .leftJoin(ideaSubmission, eq(ideaSubmission.teamId, panelTeamRoundScores.teamId))
+      .leftJoin(
+        ideaSubmission,
+        eq(ideaSubmission.teamId, panelTeamRoundScores.teamId),
+      )
       .leftJoin(tracks, eq(tracks.id, ideaSubmission.trackId))
       .where(eq(panelTeamRoundScores.roundId, panelRoundId));
 

@@ -3,9 +3,9 @@
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useDashboardUser } from "~/components/dashboard/permissions-context";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { useDashboardUser } from "~/components/dashboard/permissions-context";
 import {
   Card,
   CardContent,
@@ -103,7 +103,7 @@ export function MentorTab() {
       (allocation) => allocation.roundId === selectedRoundId,
     );
 
-    return roundAllocations.map((allocation, index) => ({
+    return roundAllocations.map((allocation, _index) => ({
       ...allocation,
       // TODO: Replace derived teamNumber with a stable mapped team identifier from DB.
       teamNumber: allocation.teamNo,
@@ -467,10 +467,18 @@ export function MentorTab() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="whitespace-nowrap">Mentor</TableHead>
-                              <TableHead className="whitespace-nowrap">Round</TableHead>
-                              <TableHead className="whitespace-nowrap">Status</TableHead>
-                              <TableHead className="min-w-[200px]">Feedback</TableHead>
+                              <TableHead className="whitespace-nowrap">
+                                Mentor
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap">
+                                Round
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap">
+                                Status
+                              </TableHead>
+                              <TableHead className="min-w-[200px]">
+                                Feedback
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>

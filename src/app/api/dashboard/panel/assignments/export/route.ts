@@ -4,10 +4,11 @@ import { adminProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
 import {
   dashboardUsers,
-  judgeRoundAssignments,
-  judges,
   lab,
   labTeams,
+  panelists,
+  panelRoundAssignments,
+  selected,
   teams,
 } from "~/db/schema";
 import { errorResponse } from "~/lib/response/error";
@@ -15,79 +16,92 @@ import { errorResponse } from "~/lib/response/error";
 export const GET = adminProtected(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
-    const judgeRoundId = searchParams.get("judgeRoundId");
+    const panelRoundId = searchParams.get("panelRoundId");
 
     let roundLabel = "All Rounds";
-    if (judgeRoundId) {
-      const round = await db.query.judgeRounds.findFirst({
-        where: (r, { eq }) => eq(r.id, judgeRoundId),
+    if (panelRoundId) {
+      const round = await db.query.panelRounds.findFirst({
+        where: (r, { eq }) => eq(r.id, panelRoundId),
       });
       if (round) roundLabel = round.name;
     }
 
-    const allJudges = await db
+    const allPanelists = await db
       .select({
-        judgeId: judges.id,
-        judgeName: dashboardUsers.name,
-        judgeUsername: dashboardUsers.username,
+        panelistId: panelists.id,
+        panelistName: dashboardUsers.name,
+        panelistUsername: dashboardUsers.username,
       })
-      .from(judges)
-      .innerJoin(dashboardUsers, eq(dashboardUsers.id, judges.dashboardUserId))
+      .from(panelists)
+      .innerJoin(
+        dashboardUsers,
+        eq(dashboardUsers.id, panelists.dashboardUserId),
+      )
       .orderBy(asc(dashboardUsers.name));
 
     const baseQuery = db
       .select({
-        judgeId: judgeRoundAssignments.judgeId,
+        panelistId: panelRoundAssignments.panelistId,
         teamName: teams.name,
+        teamNo: selected.teamNo,
         labName: lab.name,
       })
-      .from(judgeRoundAssignments)
-      .innerJoin(teams, eq(teams.id, judgeRoundAssignments.teamId))
+      .from(panelRoundAssignments)
+      .innerJoin(teams, eq(teams.id, panelRoundAssignments.teamId))
+      .innerJoin(selected, eq(selected.teamId, teams.id))
       .leftJoin(labTeams, eq(labTeams.teamId, teams.id))
       .leftJoin(lab, eq(lab.id, labTeams.labId))
-      .orderBy(asc(teams.name));
+      .orderBy(asc(selected.teamNo));
 
-    const assignments = judgeRoundId
+    const assignments = panelRoundId
       ? await baseQuery.where(
-          eq(judgeRoundAssignments.judgeRoundId, judgeRoundId),
+          eq(panelRoundAssignments.panelRoundId, panelRoundId),
         )
       : await baseQuery;
 
-    const byJudge = new Map<string, { teamName: string; labName: string }[]>();
+    const byPanelist = new Map<
+      string,
+      { teamNo: number | null; teamName: string; labName: string }[]
+    >();
     for (const row of assignments) {
-      if (!byJudge.has(row.judgeId)) byJudge.set(row.judgeId, []);
-      byJudge.get(row.judgeId)?.push({
+      if (!byPanelist.has(row.panelistId)) byPanelist.set(row.panelistId, []);
+      byPanelist.get(row.panelistId)?.push({
+        teamNo: row.teamNo,
         teamName: row.teamName,
         labName: row.labName ?? "Unassigned",
       });
     }
 
     let tableRows = "";
-    for (const judge of allJudges) {
-      const judgeTeams = byJudge.get(judge.judgeId) ?? [];
-      const displayName = judge.judgeName || judge.judgeUsername;
+    for (const panelist of allPanelists) {
+      const panelistTeams = byPanelist.get(panelist.panelistId) ?? [];
+      const displayName = panelist.panelistName || panelist.panelistUsername;
 
-      if (judgeTeams.length === 0) {
+      if (panelistTeams.length === 0) {
         tableRows += `
-          <tr class="judge-start">
-            <td class="judge-cell">${displayName}</td>
+          <tr class="panelist-start">
+            <td class="panelist-cell">${displayName}</td>
+            <td>—</td>
             <td>—</td>
             <td>—</td>
           </tr>`;
         continue;
       }
 
-      judgeTeams.forEach((team, idx) => {
+      panelistTeams.forEach((team, idx) => {
+        const teamNoDisplay = team.teamNo ?? "—";
         if (idx === 0) {
           tableRows += `
-          <tr class="judge-start">
-            <td class="judge-cell" rowspan="${judgeTeams.length}">${displayName}</td>
+          <tr class="panelist-start">
+            <td class="panelist-cell" rowspan="${panelistTeams.length}">${displayName}</td>
+            <td>${teamNoDisplay}</td>
             <td>${team.teamName}</td>
             <td>${team.labName}</td>
           </tr>`;
         } else {
           tableRows += `
           <tr>
+            <td>${teamNoDisplay}</td>
             <td>${team.teamName}</td>
             <td>${team.labName}</td>
           </tr>`;
@@ -99,7 +113,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Judge Allocations — ${roundLabel}</title>
+  <title>Panel Allocations — ${roundLabel}</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -137,9 +151,10 @@ export const GET = adminProtected(async (req: NextRequest) => {
       border: 2px solid #000;
     }
 
-    col.col-judge { width: 28%; }
-    col.col-team  { width: 42%; }
-    col.col-lab   { width: 30%; }
+    col.col-panelist { width: 25%; }
+    col.col-no       { width: 10%; }
+    col.col-team     { width: 37%; }
+    col.col-lab      { width: 28%; }
 
     thead tr {
       background: #000;
@@ -169,11 +184,11 @@ export const GET = adminProtected(async (req: NextRequest) => {
       border: 1px solid #ccc;
     }
 
-    tr.judge-start td {
+    tr.panelist-start td {
       border-top: 2px solid #000;
     }
 
-    .judge-cell {
+    .panelist-cell {
       font-weight: 600;
       border-right: 2px solid #000;
       vertical-align: top;
@@ -192,20 +207,22 @@ export const GET = adminProtected(async (req: NextRequest) => {
 </head>
 <body>
   <header>
-    <h1>Judge Allocations</h1>
+    <h1>Panel Allocations</h1>
     <p>Round: ${roundLabel}</p>
   </header>
 
   <table>
     <colgroup>
-      <col class="col-judge" />
+      <col class="col-panelist" />
+      <col class="col-no" />
       <col class="col-team" />
       <col class="col-lab" />
     </colgroup>
     <thead>
       <tr>
-        <th>Judge Name</th>
-        <th>Teams</th>
+        <th>Panelist Name</th>
+        <th>Team No</th>
+        <th>Team Name</th>
         <th>Allocated Lab</th>
       </tr>
     </thead>
@@ -215,7 +232,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
   </table>
 
   <script>
-    const cells = document.querySelectorAll('.judge-cell');
+    const cells = document.querySelectorAll('.panelist-cell');
     cells.forEach((cell, i) => {
       if (i % 2 === 1) {
         const span = parseInt(cell.getAttribute('rowspan') || '1', 10);

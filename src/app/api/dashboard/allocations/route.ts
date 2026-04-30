@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { publicRoute } from "~/auth/route-handlers";
 import { adminProtected } from "~/auth/routes-wrapper";
 import db from "~/db";
 import { AppError } from "~/lib/errors/app-error";
@@ -23,7 +22,7 @@ export const GET = adminProtected(async (req: NextRequest) => {
         return successResponse(labs, {
           toast: false,
         });
-      } catch (error) {
+      } catch (_error) {
         return errorResponse(
           new AppError("Failed to fetch labs", 500, {
             toast: true,

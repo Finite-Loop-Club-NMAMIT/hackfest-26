@@ -92,7 +92,7 @@ type JudgeScoreDetail = {
   }>;
 };
 
-function getPercentageColor(percentage: number) {
+function _getPercentageColor(percentage: number) {
   if (percentage >= 80) return "text-green-600";
   if (percentage >= 60) return "text-blue-600";
   if (percentage >= 40) return "text-yellow-600";

@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 import { query } from "~/db/data";
