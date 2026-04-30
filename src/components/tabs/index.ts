@@ -1,3 +1,4 @@
+export { ManageTeamsTab } from "~/components/dashboard/tabs/ManageTeams";
 export { AllocationsTab } from "./Allocations";
 export { AttendanceTab } from "./Attendance";
 export { DashboardUsersTab } from "./dashboard-users/DashboardUsersTab";

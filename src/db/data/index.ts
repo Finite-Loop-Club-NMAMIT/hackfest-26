@@ -10,6 +10,7 @@ import {
   permissions,
   roles,
   siteSettings,
+  teamMembers,
   teams,
 } from "~/db/schema";
 import { queryBuilder } from "./utils/builder";
@@ -17,6 +18,7 @@ import { queryBuilder } from "./utils/builder";
 export const query = {
   participants: queryBuilder(participants, "participants"),
   teams: queryBuilder(teams, "teams"),
+  teamMembers: queryBuilder(teamMembers, "teamMembers"),
   dashboardUsers: queryBuilder(dashboardUsers, "dashboardUsers"),
   roles: queryBuilder(roles, "roles"),
   events: queryBuilder(events, "events"),

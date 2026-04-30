@@ -1,4 +1,5 @@
 import { pgEnum } from "drizzle-orm/pg-core";
+import { TEAM_COMMITTEES } from "~/lib/constants/team-committees";
 
 export enum StateEnum {
   AndhraPradesh = "Andhra Pradesh",
@@ -154,6 +155,8 @@ export const teamStage = pgEnum("team_stage", [
 ]);
 
 export const paymentType = pgEnum("payment_type", ["HACKFEST", "EVENT"]);
+
+export const teamCommitteeEnum = pgEnum("team_committee", TEAM_COMMITTEES);
 
 export const timerStatus = pgEnum("timer_status", [
   "IDLE",
