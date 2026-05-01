@@ -306,11 +306,9 @@ export function InvoicePDF({
                 <Text style={styles.orgSub}>
                   Nitte, SH1, Karkala, Karnataka - 574110
                 </Text>
+                <Text style={styles.orgSub}>Phone - +91 80503 38576</Text>
                 <Text style={styles.orgSub}>
-                  Phone - +91 80503 38576
-                </Text>
-                <Text style={styles.orgSub}>
-                                     Email - finiteloopclub@nmamit.in
+                  Email - finiteloopclub@nmamit.in
                 </Text>
               </View>
             </View>

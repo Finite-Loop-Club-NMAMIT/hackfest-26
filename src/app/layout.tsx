@@ -6,7 +6,6 @@ import { ToasterWrapper } from "~/components/providers/toaster-wrapper";
 import { DayNightProvider } from "~/components/providers/useDayNight";
 import { CompassFloatingButton } from "~/components/ui/compass-floating-button";
 import { GlobalLoader } from "~/components/ui/global-loader";
-import { RegistrationMarquee } from "~/components/ui/registration-marquee";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
 import "./globals.css";
 import { LoaderProvider } from "~/components/providers/loader-context";

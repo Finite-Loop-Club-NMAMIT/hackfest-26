@@ -4,9 +4,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/config";
 import SignOut from "~/components/auth/authButtons/signOut";
-import Footer from "~/components/landing/Footer";
-import { Navbar } from "~/components/landing/Navbar";
-import CommitteesShowcase from "~/components/teams/committees-showcase";
 import { TeamPageLayout } from "~/components/teams/TeamPageLayout";
 import { TeamForm } from "~/components/teams/team-form";
 import { Button } from "~/components/ui/button";
@@ -23,19 +20,12 @@ export const metadata: Metadata = {
 
 export default async function TeamsPage() {
   const session = await auth();
-  if (!session?.user?.email || !session.user.isRegistrationComplete) {
-    return (
-      <main className="relative min-h-screen w-full overflow-x-hidden text-white selection:bg-cyan-500/30">
-        <div className="fixed top-0 left-0 z-50 w-full">
-          <Navbar isUnderwater={true} session={session} />
-        </div>
+  if (!session?.user?.email) {
+    redirect("/login");
+  }
 
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-[#041320] via-[#062739] to-[#020b14]" />
-
-        <CommitteesShowcase />
-        <Footer />
-      </main>
-    );
+  if (!session.user.isRegistrationComplete) {
+    redirect("/register");
   }
 
   const user = await userData.findByEmail(session.user.email);
