@@ -109,7 +109,7 @@ export default function RootLayout({
           <DayNightProvider>
             <LoaderProvider>
               <GlobalLoader />
-              <RegistrationMarquee />
+              {/* <RegistrationMarquee /> */}
               {children}
               <ThemeToggle />
               <ToasterWrapper />
