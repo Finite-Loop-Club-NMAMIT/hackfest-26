@@ -61,7 +61,7 @@ export function DashboardContent({ session }: DashboardContentProps) {
     { id: "users", content: <DashboardUsersTab /> },
     { id: "settings", content: <SettingsTab /> },
     { id: "events", content: <ManageEventsTab session={session} /> },
-    { id: "manage-teams", content: <ManageTeamsTab /> },
+    { id: "manage-teams", content: <ManageTeamsTab session={session} /> },
     { id: "event-stats", content: <EventStatsTab /> },
     { id: "judge-setup", content: <JudgeSetupTab /> },
     { id: "judge", content: <JudgeTab /> },

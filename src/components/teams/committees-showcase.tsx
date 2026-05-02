@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Github, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -48,73 +48,58 @@ type FacultyMember = {
 const makeAvatar = (name: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=ffffff&bold=true`;
 
-export default function CommitteesShowcase() {
+/* ------------------------------------------------------------------ */
+/*  Shared social-link icon row                                       */
+/* ------------------------------------------------------------------ */
+function SocialRow({
+  links,
+}: {
+  links?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    instagram?: string;
+    email?: string;
+  };
+}) {
+  if (!links) return null;
+  const entries = [
+    { platform: "linkedin" as const, href: links.linkedin },
+    { platform: "github" as const, href: links.github },
+    { platform: "twitter" as const, href: links.twitter },
+    { platform: "instagram" as const, href: links.instagram },
+    { platform: "email" as const, href: links.email },
+  ].filter((e) => e.href?.trim());
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {entries.map((e) => (
+        <SocialIconLink key={e.platform} platform={e.platform} href={e.href} />
+      ))}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  MAIN COMPONENT                                                    */
+/* ================================================================== */
+export default function CommitteesShowcase({
+  initialCommittees,
+  initialFaculty,
+}: {
+  initialCommittees: CommitteePayload[];
+  initialFaculty: FacultyMember[];
+}) {
   const [activeSection, setActiveSection] = useState<"core" | "faculty">(
     "core",
   );
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [committeeGroups, setCommitteeGroups] = useState<CommitteePayload[]>(
-    [],
-  );
-  const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFacultyLoading, setIsFacultyLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [facultyLoadError, setFacultyLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadCommittees = async () => {
-      try {
-        setIsLoading(true);
-        setLoadError(null);
-
-        const res = await fetch("/api/teams", {
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to load team members");
-        }
-
-        const data = (await res.json()) as { committees?: CommitteePayload[] };
-        setCommitteeGroups(data.committees ?? []);
-      } catch (error) {
-        console.error("Failed to fetch committees:", error);
-        setLoadError("Unable to load committees right now.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadCommittees();
-  }, []);
-
-  useEffect(() => {
-    const loadFaculty = async () => {
-      try {
-        setIsFacultyLoading(true);
-        setFacultyLoadError(null);
-
-        const res = await fetch("/api/faculty", {
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to load faculty members");
-        }
-
-        const data = (await res.json()) as { faculty?: FacultyMember[] };
-        setFacultyMembers(data.faculty ?? []);
-      } catch (error) {
-        console.error("Failed to fetch faculty:", error);
-        setFacultyLoadError("Unable to load faculty right now.");
-      } finally {
-        setIsFacultyLoading(false);
-      }
-    };
-
-    void loadFaculty();
-  }, []);
+  // Data is passed from the server — no client-side fetching needed
+  const committeeGroups = initialCommittees;
+  const facultyMembers = initialFaculty;
 
   const totalMembers = useMemo(
     () =>
@@ -153,10 +138,12 @@ export default function CommitteesShowcase() {
 
   return (
     <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-18 pt-28 text-white sm:px-6 lg:px-8 lg:pt-32">
+      {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-55">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(56,189,248,0.18),transparent_34%),radial-gradient(circle_at_86%_16%,rgba(251,191,36,0.14),transparent_36%),radial-gradient(circle_at_50%_90%,rgba(6,182,212,0.13),transparent_35%)]" />
       </div>
 
+      {/* ── HERO BANNER ── */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -193,6 +180,7 @@ export default function CommitteesShowcase() {
         </div>
       </motion.div>
 
+      {/* ── SECTION TOGGLE (Core / Faculty) ── */}
       <div className="mt-10 inline-flex rounded-full border border-cyan-200/25 bg-slate-950/65 p-1.5 backdrop-blur-sm shadow-[0_10px_24px_rgba(8,47,73,0.25)]">
         <SectionTab
           label="Core Team"
@@ -206,6 +194,7 @@ export default function CommitteesShowcase() {
         />
       </div>
 
+      {/* ── COMMITTEE FILTER CHIPS ── */}
       {activeSection === "core" ? (
         <div className="mt-9 flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none]">
           <FilterChip
@@ -224,186 +213,215 @@ export default function CommitteesShowcase() {
         </div>
       ) : null}
 
+      {/* ── CORE TEAM CARDS ── */}
       {activeSection === "core" ? (
-        <div className="mt-10 space-y-10">
-          {isLoading ? (
-            <div className="rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
-              Loading team members...
-            </div>
-          ) : loadError ? (
-            <div className="rounded-2xl border border-red-300/30 bg-red-950/20 p-6 font-crimson text-red-100 shadow-[0_12px_28px_rgba(127,29,29,0.25)]">
-              {loadError}
-            </div>
-          ) : visibleCommittees.length === 0 ? (
-            <div className="rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
-              No team members found for the selected committee.
-            </div>
+        <div className="mt-10 space-y-14">
+          {visibleCommittees.length === 0 ? (
+            <EmptyCard text="No team members found for the selected committee." />
           ) : (
-            visibleCommittees.map((committeeGroup, committeeIndex) => {
-              return (
-                <motion.section
-                  key={committeeGroup.committee}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.35, delay: committeeIndex * 0.05 }}
-                  className="space-y-5"
-                >
+            visibleCommittees.map((committeeGroup, ci) => (
+              <motion.section
+                key={committeeGroup.committee}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.35, delay: ci * 0.05 }}
+                className="space-y-6"
+              >
+                {/* Committee heading */}
+                <div className="flex items-center gap-4">
                   <h2 className="font-pirate text-3xl leading-none text-white md:text-[2.1rem]">
                     {committeeGroup.committee}
                   </h2>
+                  <div className="h-px grow bg-gradient-to-r from-cyan-400/40 to-transparent" />
+                  <span className="shrink-0 rounded-full border border-cyan-400/25 bg-cyan-950/50 px-3 py-1 font-crimson text-xs font-semibold text-cyan-300/90">
+                    {committeeGroup.members.length}{" "}
+                    {committeeGroup.members.length === 1
+                      ? "member"
+                      : "members"}
+                  </span>
+                </div>
 
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                    {committeeGroup.members.map((member, memberIndex) => (
-                      <motion.article
+                {/* Cards grid */}
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <AnimatePresence mode="popLayout">
+                    {committeeGroup.members.map((member, mi) => (
+                      <MemberCard
                         key={member.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.2 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: committeeIndex * 0.04 + memberIndex * 0.03,
-                        }}
-                        whileHover={{ y: -4 }}
-                        className="group relative aspect-4/5 overflow-hidden rounded-2xl border border-cyan-200/20 bg-linear-to-b from-slate-900/92 via-slate-900/75 to-slate-950/85 transition-all duration-300 hover:border-cyan-200/45 hover:shadow-[0_22px_42px_rgba(3,105,161,0.24)]"
-                      >
-                        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,rgba(255,255,255,0.08)_0%,transparent_32%)]" />
-
-                        <div className="relative h-4/5 w-full overflow-hidden">
-                          <Image
-                            src={member.photo || makeAvatar(member.name)}
-                            alt={member.name}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                            unoptimized
-                          />
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-slate-950/92 via-slate-950/35 to-transparent" />
-                        </div>
-
-                        <div className="flex h-1/5 items-end justify-between gap-3 px-4 py-3">
-                          <div className="min-w-0">
-                            <h3 className="truncate font-crimson text-lg leading-tight font-semibold text-white md:text-xl">
-                              {member.name}
-                            </h3>
-                            <p className="mt-0.5 line-clamp-1 font-crimson text-xs leading-relaxed text-cyan-100/75 md:text-sm">
-                              {member.role}
-                            </p>
-                          </div>
-
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            <SocialIconLink
-                              platform="linkedin"
-                              href={member.socialLinks?.linkedin}
-                            />
-                            <SocialIconLink
-                              platform="github"
-                              href={member.socialLinks?.github}
-                            />
-                            <SocialIconLink
-                              platform="twitter"
-                              href={member.socialLinks?.twitter}
-                            />
-                            <SocialIconLink
-                              platform="instagram"
-                              href={member.socialLinks?.instagram}
-                            />
-                            <SocialIconLink
-                              platform="email"
-                              href={member.socialLinks?.email}
-                            />
-                          </div>
-                        </div>
-                      </motion.article>
+                        member={member}
+                        index={mi}
+                        groupIndex={ci}
+                      />
                     ))}
-                  </div>
-                </motion.section>
-              );
-            })
+                  </AnimatePresence>
+                </div>
+              </motion.section>
+            ))
           )}
         </div>
-      ) : isFacultyLoading ? (
-        <div className="mt-10 rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
-          Loading faculty members...
-        </div>
-      ) : facultyLoadError ? (
-        <div className="mt-10 rounded-2xl border border-red-300/30 bg-red-950/20 p-6 font-crimson text-red-100 shadow-[0_12px_28px_rgba(127,29,29,0.25)]">
-          {facultyLoadError}
-        </div>
-      ) : facultyMembers.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
-          No faculty members found.
+      ) : /* ── FACULTY CARDS ── */
+      facultyMembers.length === 0 ? (
+        <div className="mt-10">
+          <EmptyCard text="No faculty members found." />
         </div>
       ) : (
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {facultyMembers.map((faculty, facultyIndex) => {
-            return (
-              <motion.article
-                key={faculty.id}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.35, delay: facultyIndex * 0.04 }}
-                className={[
-                  "group relative aspect-4/5 overflow-hidden rounded-2xl border transition-all duration-300",
-                  "bg-linear-to-b from-slate-900/92 via-slate-900/75 to-slate-950/85 backdrop-blur-md",
-                  "border-cyan-200/20 hover:-translate-y-1 hover:border-cyan-200/45 hover:shadow-[0_22px_42px_rgba(3,105,161,0.24)]",
-                ].join(" ")}
-              >
-                <div className="relative h-4/5 w-full overflow-hidden">
-                  <Image
-                    src={faculty.photo || makeAvatar(faculty.name)}
-                    alt={faculty.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    unoptimized
-                  />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-slate-950/92 via-slate-950/35 to-transparent" />
-                </div>
-
-                <div className="flex h-1/5 items-end justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate font-crimson text-lg leading-tight font-semibold text-white md:text-xl">
-                      {faculty.name}
-                    </h2>
-                    <p className="mt-0.5 line-clamp-1 font-crimson text-xs leading-relaxed text-cyan-100/80 md:text-sm">
-                      {faculty.designation}
-                    </p>
-                    <p className="mt-0.5 line-clamp-1 font-crimson text-[11px] leading-relaxed text-cyan-100/65 md:text-xs">
-                      {faculty.department}
-                    </p>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <SocialIconLink
-                      platform="linkedin"
-                      href={faculty.socialLinks?.linkedin}
-                    />
-                    <SocialIconLink
-                      platform="github"
-                      href={faculty.socialLinks?.github}
-                    />
-                    <SocialIconLink
-                      platform="twitter"
-                      href={faculty.socialLinks?.twitter}
-                    />
-                    <SocialIconLink
-                      platform="instagram"
-                      href={faculty.socialLinks?.instagram}
-                    />
-                    <SocialIconLink
-                      platform="email"
-                      href={faculty.socialLinks?.email}
-                    />
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <AnimatePresence mode="popLayout">
+            {facultyMembers.map((faculty, fi) => (
+              <FacultyCard key={faculty.id} faculty={faculty} index={fi} />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </section>
+  );
+}
+
+/* ================================================================== */
+/*  MEMBER CARD — premium redesign                                    */
+/* ================================================================== */
+function MemberCard({
+  member,
+  index,
+  groupIndex,
+}: {
+  member: CommitteeMember;
+  index: number;
+  groupIndex: number;
+}) {
+  return (
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{
+        duration: 0.4,
+        delay: groupIndex * 0.03 + index * 0.04,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(160deg,rgba(15,23,42,0.92)_0%,rgba(8,47,73,0.55)_50%,rgba(15,23,42,0.92)_100%)] backdrop-blur-xl transition-all duration-500 hover:border-cyan-400/30 hover:shadow-[0_0_50px_-10px_rgba(6,182,212,0.22)]"
+    >
+      {/* ── Animated border glow on hover ── */}
+      <div className="pointer-events-none absolute -inset-px rounded-2xl bg-[conic-gradient(from_230deg,transparent_60%,rgba(6,182,212,0.25)_78%,rgba(34,211,238,0.35)_85%,transparent_95%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+      {/* Inner background to sit over the conic border */}
+      <div className="pointer-events-none absolute inset-px rounded-[15px] bg-[linear-gradient(160deg,rgba(15,23,42,0.98)_0%,rgba(8,47,73,0.65)_50%,rgba(15,23,42,0.98)_100%)]" />
+
+      {/* ── PHOTO ── */}
+      <div className="relative z-[1] mx-3 mt-3 overflow-hidden rounded-xl aspect-square">
+        <Image
+          src={member.photo || makeAvatar(member.name)}
+          alt={member.name}
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 24vw"
+        />
+        {/* Photo gradient overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+        {/* Subtle top-left highlight */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08)_0%,transparent_40%)]" />
+      </div>
+
+      {/* ── INFO SECTION ── */}
+      <div className="relative z-[1] flex grow flex-col px-4 pb-4 pt-3.5">
+        {/* Role badge — the star of the show */}
+        <span className="inline-flex w-fit items-center rounded-full border border-cyan-400/25 bg-cyan-500/[0.12] px-3 py-1 font-crimson text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-300 shadow-[0_0_16px_rgba(6,182,212,0.12)] transition-all duration-500 group-hover:border-cyan-400/40 group-hover:bg-cyan-500/[0.18] group-hover:shadow-[0_0_20px_rgba(6,182,212,0.22)] group-hover:text-cyan-200">
+          {member.role}
+        </span>
+
+        {/* Name */}
+        <h3 className="mt-2.5 font-pirate text-[1.15rem] leading-tight text-white/95 transition-colors duration-300 group-hover:text-white">
+          {member.name}
+        </h3>
+
+        {/* Divider */}
+        <div className="my-3 h-px w-full bg-gradient-to-r from-cyan-400/20 via-cyan-400/10 to-transparent" />
+
+        {/* Social links */}
+        <SocialRow links={member.socialLinks} />
+      </div>
+    </motion.article>
+  );
+}
+
+/* ================================================================== */
+/*  FACULTY CARD                                                      */
+/* ================================================================== */
+function FacultyCard({
+  faculty,
+  index,
+}: {
+  faculty: FacultyMember;
+  index: number;
+}) {
+  return (
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{
+        duration: 0.4,
+        delay: index * 0.04,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(160deg,rgba(15,23,42,0.92)_0%,rgba(8,47,73,0.55)_50%,rgba(15,23,42,0.92)_100%)] backdrop-blur-xl transition-all duration-500 hover:border-cyan-400/30 hover:shadow-[0_0_50px_-10px_rgba(6,182,212,0.22)]"
+    >
+      {/* Animated border glow */}
+      <div className="pointer-events-none absolute -inset-px rounded-2xl bg-[conic-gradient(from_230deg,transparent_60%,rgba(6,182,212,0.25)_78%,rgba(34,211,238,0.35)_85%,transparent_95%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-px rounded-[15px] bg-[linear-gradient(160deg,rgba(15,23,42,0.98)_0%,rgba(8,47,73,0.65)_50%,rgba(15,23,42,0.98)_100%)]" />
+
+      {/* Photo */}
+      <div className="relative z-[1] mx-3 mt-3 overflow-hidden rounded-xl aspect-square">
+        <Image
+          src={faculty.photo || makeAvatar(faculty.name)}
+          alt={faculty.name}
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 24vw"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08)_0%,transparent_40%)]" />
+      </div>
+
+      {/* Info */}
+      <div className="relative z-[1] flex grow flex-col px-4 pb-4 pt-3.5">
+        {/* Designation badge */}
+        <span className="inline-flex w-fit items-center rounded-full border border-amber-400/25 bg-amber-500/[0.1] px-3 py-1 font-crimson text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.1)] transition-all duration-500 group-hover:border-amber-400/40 group-hover:bg-amber-500/[0.16] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.2)] group-hover:text-amber-200">
+          {faculty.designation}
+        </span>
+
+        {/* Name */}
+        <h2 className="mt-2.5 font-pirate text-[1.15rem] leading-tight text-white/95 transition-colors duration-300 group-hover:text-white">
+          {faculty.name}
+        </h2>
+
+        {/* Department */}
+        <p className="mt-1 font-crimson text-xs leading-relaxed text-cyan-100/55">
+          {faculty.department}
+        </p>
+
+        {/* Divider */}
+        <div className="my-3 h-px w-full bg-gradient-to-r from-amber-400/20 via-amber-400/10 to-transparent" />
+
+        {/* Social links */}
+        <SocialRow links={faculty.socialLinks} />
+      </div>
+    </motion.article>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  UI helper sub-components                                          */
+/* ------------------------------------------------------------------ */
+
+function EmptyCard({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-cyan-200/20 bg-slate-900/60 p-6 font-crimson text-cyan-50/85 shadow-[0_12px_28px_rgba(15,23,42,0.35)]">
+      {text}
+    </div>
   );
 }
 
@@ -502,10 +520,10 @@ function SocialIconLink({
       href={finalHref}
       target={platform === "email" ? undefined : "_blank"}
       rel={platform === "email" ? undefined : "noreferrer"}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-cyan-200/25 bg-slate-900/60 text-cyan-50 transition-colors duration-200 hover:border-cyan-200/45 hover:bg-slate-800/70"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-cyan-100/50 transition-all duration-300 hover:border-cyan-400/35 hover:bg-cyan-400/[0.12] hover:text-cyan-200 hover:shadow-[0_0_12px_rgba(6,182,212,0.15)]"
       aria-label={`${label} link`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3.5 w-3.5" />
     </a>
   );
 }

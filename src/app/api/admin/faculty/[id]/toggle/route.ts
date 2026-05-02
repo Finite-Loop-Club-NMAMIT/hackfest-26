@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { permissionProtected, type RouteContext } from "~/auth/routes-wrapper";
+import { adminProtected, type RouteContext } from "~/auth/routes-wrapper";
 import {
   normalizeFacultyMember,
   toggleFacultyMemberStatus,
@@ -9,8 +9,7 @@ type FacultyMemberParams = {
   id: string;
 };
 
-export const PATCH = permissionProtected<FacultyMemberParams>(
-  ["team:view_all"],
+export const PATCH = adminProtected<FacultyMemberParams>(
   async (
     _request: NextRequest,
     { params }: RouteContext<FacultyMemberParams>,

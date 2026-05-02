@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { permissionProtected, type RouteContext } from "~/auth/routes-wrapper";
+import {
+  type DashboardUser,
+  permissionProtected,
+  type RouteContext,
+} from "~/auth/routes-wrapper";
 import {
   deleteTeamMember,
   findTeamMemberById,
@@ -11,6 +15,11 @@ import {
   deleteCloudinaryAsset,
   extractCloudinaryPublicId,
 } from "~/lib/cloudinary/server";
+import {
+  getAllowedCommittees,
+  type TeamCommittee,
+} from "~/lib/constants/team-committees";
+import { isAdmin } from "~/lib/auth/permissions";
 import { updateTeamMemberSchema } from "~/lib/validation/team-member";
 
 type TeamMemberParams = {
@@ -21,12 +30,34 @@ const updateTeamMemberRequestSchema = updateTeamMemberSchema.extend({
   socialLinks: updateTeamMemberSchema.shape.socialLinks.optional(),
 });
 
+function getUserPermissionKeys(user: NonNullable<DashboardUser>): string[] {
+  return user.roles.flatMap((r) => r.permissions).map((p) => p.key);
+}
+function canManageCommittee(
+  user: NonNullable<DashboardUser>,
+  committee: string,
+): boolean {
+  const allowed = getAllowedCommittees(
+    getUserPermissionKeys(user),
+    isAdmin(user),
+  );
+  return allowed.includes(committee as TeamCommittee);
+}
+
 export const PUT = permissionProtected<TeamMemberParams>(
-  ["team:view_all"],
-  async (request: NextRequest, { params }: RouteContext<TeamMemberParams>) => {
+  ["core:manage"],
+  async (request: NextRequest, { params }: RouteContext<TeamMemberParams>, user) => {
     try {
       const { id } = await params;
       const existing = await findTeamMemberById(id);
+
+      // Verify the user can manage this member's committee
+      if (!canManageCommittee(user, existing.committee)) {
+        return NextResponse.json(
+          { message: "You do not have permission to manage this committee" },
+          { status: 403 },
+        );
+      }
 
       const body = await request.json();
       const parsed = updateTeamMemberRequestSchema.safeParse(body);
@@ -35,6 +66,17 @@ export const PUT = permissionProtected<TeamMemberParams>(
         return NextResponse.json(
           { message: "Invalid input", errors: z.treeifyError(parsed.error) },
           { status: 400 },
+        );
+      }
+
+      if (
+        parsed.data.committee &&
+        parsed.data.committee !== existing.committee &&
+        !canManageCommittee(user, parsed.data.committee)
+      ) {
+        return NextResponse.json(
+          { message: "You do not have permission to move members to that committee" },
+          { status: 403 },
         );
       }
 
@@ -71,10 +113,21 @@ export const PUT = permissionProtected<TeamMemberParams>(
 );
 
 export const DELETE = permissionProtected<TeamMemberParams>(
-  ["team:view_all"],
-  async (_request: NextRequest, { params }: RouteContext<TeamMemberParams>) => {
+  ["core:manage"],
+  async (_request: NextRequest, { params }: RouteContext<TeamMemberParams>, user) => {
     try {
       const { id } = await params;
+
+      // Fetch member first to check committee
+      const existing = await findTeamMemberById(id);
+
+      if (!canManageCommittee(user, existing.committee)) {
+        return NextResponse.json(
+          { message: "You do not have permission to manage this committee" },
+          { status: 403 },
+        );
+      }
+
       const member = await deleteTeamMember(id);
 
       const cloudinaryId =

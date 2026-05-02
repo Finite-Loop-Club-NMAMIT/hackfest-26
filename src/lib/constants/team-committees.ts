@@ -62,3 +62,28 @@ export const TEAM_COMMITTEE_META: Record<
       "The rapid-response force that keeps every moment running smooth.",
   },
 };
+export const COMMITTEE_PERMISSION_MAP: Record<TeamCommittee, string> = {
+  "Organising Committee": "team:organising",
+  "Technical Committee": "team:technical",
+  "Sponsorship Committee": "team:sponsorship",
+  "Social Media & Media Committee": "team:social_media",
+  "Digital Committee": "team:digital",
+  "Documentation Committee": "team:documentation",
+  "Publicity Committee": "team:publicity",
+  "Operations Committee": "team:operations",
+  "Event Management Committee": "team:event_management",
+  "Crew Committee": "team:crew",
+};
+
+export function getAllowedCommittees(
+  userPermissionKeys: string[],
+  isAdmin: boolean,
+): TeamCommittee[] {
+  if (isAdmin) return [...TEAM_COMMITTEES];
+
+  return TEAM_COMMITTEES.filter((committee) => {
+    const requiredKey = COMMITTEE_PERMISSION_MAP[committee];
+    return userPermissionKeys.includes(requiredKey);
+  });
+}
+

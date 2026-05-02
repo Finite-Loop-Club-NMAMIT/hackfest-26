@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CloudinaryUpload } from "~/components/cloudinary-upload";
+import { ImageCropUpload } from "~/components/image-crop-upload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,10 +52,13 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import type { Session } from "next-auth";
 import {
   TEAM_COMMITTEES,
   type TeamCommittee,
+  getAllowedCommittees,
 } from "~/lib/constants/team-committees";
+import { isAdmin as checkIsAdmin } from "~/lib/auth/permissions";
 
 type SocialLinks = {
   linkedin?: string;
@@ -156,13 +159,24 @@ const EMPTY_FACULTY_FORM: FacultyFormState = {
   isActive: true,
 };
 
-export function ManageTeamsTab() {
+export function ManageTeamsTab({ session }: { session: Session }) {
+  const userIsAdmin = checkIsAdmin(session.dashboardUser);
+  const userPermissionKeys = session.dashboardUser.roles
+    .flatMap((r) => r.permissions)
+    .map((p) => p.key);
+  const allowedCommittees = getAllowedCommittees(
+    userPermissionKeys,
+    userIsAdmin,
+  );
+
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
-  const [committeeFilter, setCommitteeFilter] = useState<string>("all");
+  const [committeeFilter, setCommitteeFilter] = useState<string>(
+    allowedCommittees.length === 1 ? allowedCommittees[0] : "all",
+  );
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -180,7 +194,12 @@ export function ManageTeamsTab() {
   );
 
   const filteredMembers = useMemo(() => {
-    const sorted = [...members].sort((a, b) => {
+    // Only show members from committees the user is allowed to manage
+    const allowed = members.filter((m) =>
+      allowedCommittees.includes(m.committee),
+    );
+
+    const sorted = [...allowed].sort((a, b) => {
       if (a.committee === b.committee) {
         if (a.order === b.order) {
           return a.name.localeCompare(b.name);
@@ -195,7 +214,7 @@ export function ManageTeamsTab() {
     }
 
     return sorted.filter((member) => member.committee === committeeFilter);
-  }, [members, committeeFilter]);
+  }, [members, committeeFilter, allowedCommittees]);
 
   const parseApiError = async (res: Response, fallback: string) => {
     try {
@@ -298,12 +317,34 @@ export function ManageTeamsTab() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: fetch once on mount
   useEffect(() => {
     fetchMembers();
-    fetchFaculty();
+    // Faculty is admin-only, skip for non-admins
+    if (userIsAdmin) {
+      fetchFaculty();
+    }
   }, []);
 
   const openCreateModal = () => {
+    // Use the active committee filter if it's a specific committee, otherwise fall back
+    const selectedCommittee =
+      committeeFilter !== "all"
+        ? (committeeFilter as TeamCommittee)
+        : allowedCommittees[0] ?? TEAM_COMMITTEES[0];
+
+    // Auto-compute next order: max order in that committee + 1
+    const committeeMembers = members.filter(
+      (m) => m.committee === selectedCommittee,
+    );
+    const maxOrder =
+      committeeMembers.length > 0
+        ? Math.max(...committeeMembers.map((m) => m.order))
+        : 0;
+
     setEditingMemberId(null);
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      committee: selectedCommittee,
+      order: maxOrder + 1,
+    });
     setIsFormOpen(true);
   };
 
@@ -789,13 +830,15 @@ export function ManageTeamsTab() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant={committeeFilter === "all" ? "default" : "outline"}
-          onClick={() => setCommitteeFilter("all")}
-        >
-          All Committees
-        </Button>
-        {TEAM_COMMITTEES.map((committee) => (
+        {allowedCommittees.length > 1 && (
+          <Button
+            variant={committeeFilter === "all" ? "default" : "outline"}
+            onClick={() => setCommitteeFilter("all")}
+          >
+            All Committees
+          </Button>
+        )}
+        {allowedCommittees.map((committee) => (
           <Button
             key={committee}
             variant={committeeFilter === committee ? "default" : "outline"}
@@ -962,18 +1005,37 @@ export function ManageTeamsTab() {
               <Label>Committee</Label>
               <Select
                 value={form.committee}
-                onValueChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    committee: value as TeamCommittee,
-                  }))
-                }
+                onValueChange={(value) => {
+                  const newCommittee = value as TeamCommittee;
+                  // Auto-update order when creating a new member
+                  if (!editingMemberId) {
+                    const committeeMembers = members.filter(
+                      (m) => m.committee === newCommittee,
+                    );
+                    const maxOrder =
+                      committeeMembers.length > 0
+                        ? Math.max(
+                            ...committeeMembers.map((m) => m.order),
+                          )
+                        : 0;
+                    setForm((prev) => ({
+                      ...prev,
+                      committee: newCommittee,
+                      order: maxOrder + 1,
+                    }));
+                  } else {
+                    setForm((prev) => ({
+                      ...prev,
+                      committee: newCommittee,
+                    }));
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select committee" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEAM_COMMITTEES.map((committee) => (
+                  {allowedCommittees.map((committee) => (
                     <SelectItem key={committee} value={committee}>
                       {committee}
                     </SelectItem>
@@ -1001,7 +1063,7 @@ export function ManageTeamsTab() {
             <div className="md:col-span-2 space-y-2">
               <Label>Photo</Label>
               <div className="flex flex-wrap items-center gap-3">
-                <CloudinaryUpload
+                <ImageCropUpload
                   label={form.photo ? "Replace Photo" : "Upload Photo"}
                   folder="teams"
                   onUpload={(url) =>
@@ -1160,6 +1222,8 @@ export function ManageTeamsTab() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {userIsAdmin ? (
+      <>
       <div className="space-y-6 border-t pt-10">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1375,7 +1439,7 @@ export function ManageTeamsTab() {
             <div className="md:col-span-2 space-y-2">
               <Label>Photo</Label>
               <div className="flex flex-wrap items-center gap-3">
-                <CloudinaryUpload
+                <ImageCropUpload
                   label={facultyForm.photo ? "Replace Photo" : "Upload Photo"}
                   folder="faculty"
                   onUpload={(url) =>
@@ -1533,6 +1597,8 @@ export function ManageTeamsTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </>
+      ) : null}
     </div>
   );
 }

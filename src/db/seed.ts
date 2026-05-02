@@ -189,6 +189,16 @@ async function seed() {
       key: "event:organizer",
       description: "Access organizer event stats and organizer team CRUD",
     },
+    { key: "team:organising", description: "Manage organising committee" },
+    { key: "team:technical", description: "Manage technical committee" },
+    { key: "team:sponsorship", description: "Manage sponsorship committee" },
+    { key: "team:social_media", description: "Manage social media committee" },
+    { key: "team:digital", description: "Manage digital committee" },
+    { key: "team:documentation", description: "Manage documentation committee" },
+    { key: "team:publicity", description: "Manage publicity committee" },
+    { key: "team:operations", description: "Manage operations committee" },
+    { key: "team:event_management", description: "Manage event management committee" },
+    { key: "team:crew", description: "Manage crew committee" },
   ];
 
   const permissionMap = new Map<string, string>(); // key -> id

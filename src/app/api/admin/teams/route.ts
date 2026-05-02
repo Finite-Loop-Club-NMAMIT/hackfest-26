@@ -1,20 +1,42 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { permissionProtected } from "~/auth/routes-wrapper";
+import {
+  type DashboardUser,
+  permissionProtected,
+} from "~/auth/routes-wrapper";
 import {
   createTeamMember,
   listAllTeamMembers,
   normalizeTeamMember,
 } from "~/db/services/team-member-services";
+import {
+  getAllowedCommittees,
+  type TeamCommittee,
+} from "~/lib/constants/team-committees";
+import { isAdmin } from "~/lib/auth/permissions";
 import { createTeamMemberSchema } from "~/lib/validation/team-member";
 
+function getUserPermissionKeys(user: NonNullable<DashboardUser>): string[] {
+  return user.roles.flatMap((r) => r.permissions).map((p) => p.key);
+}
+
 export const GET = permissionProtected(
-  ["team:view_all"],
-  async (_request: NextRequest) => {
+  ["core:manage"],
+  async (_request: NextRequest, _ctx, user) => {
     try {
       const members = await listAllTeamMembers();
+
+      const allowed = getAllowedCommittees(
+        getUserPermissionKeys(user),
+        isAdmin(user),
+      );
+
+      const filtered = members.filter((m) =>
+        allowed.includes(m.committee as TeamCommittee),
+      );
+
       return NextResponse.json({
-        members: members.map(normalizeTeamMember),
+        members: filtered.map(normalizeTeamMember),
       });
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -27,12 +49,25 @@ export const GET = permissionProtected(
 );
 
 export const POST = permissionProtected(
-  ["team:view_all"],
-  async (request: NextRequest) => {
+  ["core:manage"],
+  async (request: NextRequest, _ctx, user) => {
     const requestStart = Date.now();
 
     try {
       const body = await request.json();
+
+      const allowed = getAllowedCommittees(
+        getUserPermissionKeys(user),
+        isAdmin(user),
+      );
+
+      if (body?.committee && !allowed.includes(body.committee as TeamCommittee)) {
+        return NextResponse.json(
+          { message: "You do not have permission to add members to this committee" },
+          { status: 403 },
+        );
+      }
+
       console.info("[API][admin/teams][POST] Request received", {
         hasPhoto: Boolean(body?.photo),
         committee: body?.committee,

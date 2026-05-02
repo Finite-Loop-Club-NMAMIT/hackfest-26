@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { permissionProtected, type RouteContext } from "~/auth/routes-wrapper";
+import { adminProtected, type RouteContext } from "~/auth/routes-wrapper";
 import {
   deleteFacultyMember,
   findFacultyMemberById,
@@ -21,8 +21,7 @@ const updateFacultyRequestSchema = updateFacultySchema.extend({
   socialLinks: updateFacultySchema.shape.socialLinks.optional(),
 });
 
-export const PUT = permissionProtected<FacultyMemberParams>(
-  ["team:view_all"],
+export const PUT = adminProtected<FacultyMemberParams>(
   async (
     request: NextRequest,
     { params }: RouteContext<FacultyMemberParams>,
@@ -73,8 +72,7 @@ export const PUT = permissionProtected<FacultyMemberParams>(
   },
 );
 
-export const DELETE = permissionProtected<FacultyMemberParams>(
-  ["team:view_all"],
+export const DELETE = adminProtected<FacultyMemberParams>(
   async (
     _request: NextRequest,
     { params }: RouteContext<FacultyMemberParams>,

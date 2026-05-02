@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { permissionProtected } from "~/auth/routes-wrapper";
+import { adminProtected } from "~/auth/routes-wrapper";
 import {
   createFacultyMember,
   listAllFacultyMembers,
@@ -9,8 +9,7 @@ import {
 import { AppError } from "~/lib/errors/app-error";
 import { createFacultySchema } from "~/lib/validation/faculty";
 
-export const GET = permissionProtected(
-  ["team:view_all"],
+export const GET = adminProtected(
   async (_request: NextRequest) => {
     try {
       const faculty = await listAllFacultyMembers();
@@ -27,8 +26,7 @@ export const GET = permissionProtected(
   },
 );
 
-export const POST = permissionProtected(
-  ["team:view_all"],
+export const POST = adminProtected(
   async (request: NextRequest) => {
     const requestStart = Date.now();
 
