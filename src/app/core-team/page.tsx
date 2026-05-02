@@ -11,8 +11,11 @@ import {
   listPublicFacultyMembers,
   normalizeFacultyMember,
 } from "~/db/services/faculty-services";
+import type { TeamCommittee } from "~/lib/constants/team-committees";
 
-export const dynamic = "force-static";
+// ISR — generated on first request, cached for 1 hour.
+// Cannot use force-static because the DB isn't reachable at Docker build time.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Core Team",
@@ -26,18 +29,25 @@ export const metadata: Metadata = {
 export default async function CoreTeamPage() {
   const session = await auth();
 
-  // Fetch at build / ISR time — no client waterfall
-  const [grouped, faculty] = await Promise.all([
-    listPublicTeamMembersGrouped(),
-    listPublicFacultyMembers(),
-  ]);
+  // Fetch at ISR time — no client waterfall
+  let committees: { committee: TeamCommittee; members: ReturnType<typeof normalizeTeamMember>[] }[] = [];
+  let normalizedFaculty: ReturnType<typeof normalizeFacultyMember>[] = [];
 
-  const committees = grouped.map((group) => ({
-    committee: group.committee,
-    members: group.members.map(normalizeTeamMember),
-  }));
+  try {
+    const [grouped, faculty] = await Promise.all([
+      listPublicTeamMembersGrouped(),
+      listPublicFacultyMembers(),
+    ]);
 
-  const normalizedFaculty = faculty.map(normalizeFacultyMember);
+    committees = grouped.map((group) => ({
+      committee: group.committee,
+      members: group.members.map(normalizeTeamMember),
+    }));
+
+    normalizedFaculty = faculty.map(normalizeFacultyMember);
+  } catch (error) {
+    console.error("[core-team] Failed to fetch team data:", error);
+  }
 
   return (
     <main className="relative min-h-screen w-full overflow-x-hidden text-white selection:bg-cyan-500/30">
