@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { Github, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -144,11 +143,7 @@ export default function CommitteesShowcase({
       </div>
 
       {/* ── HERO BANNER ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.45 }}
+      <div
         className="relative overflow-hidden rounded-3xl border border-cyan-200/20 bg-linear-to-br from-slate-950/80 via-cyan-950/45 to-slate-900/75 px-6 py-12 shadow-[0_24px_80px_rgba(8,47,73,0.35)] backdrop-blur-sm md:px-10 md:py-16"
       >
         <div className="pointer-events-none absolute inset-0">
@@ -178,7 +173,7 @@ export default function CommitteesShowcase({
             <StatChip label="Faculty" value={`${facultyMembers.length}`} />
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── SECTION TOGGLE (Core / Faculty) ── */}
       <div className="mt-10 inline-flex rounded-full border border-cyan-200/25 bg-slate-950/65 p-1.5 backdrop-blur-sm shadow-[0_10px_24px_rgba(8,47,73,0.25)]">
@@ -220,12 +215,8 @@ export default function CommitteesShowcase({
             <EmptyCard text="No team members found for the selected committee." />
           ) : (
             visibleCommittees.map((committeeGroup, ci) => (
-              <motion.section
+              <section
                 key={committeeGroup.committee}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.35, delay: ci * 0.05 }}
                 className="space-y-6"
               >
                 {/* Committee heading */}
@@ -244,18 +235,14 @@ export default function CommitteesShowcase({
 
                 {/* Cards grid */}
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  <AnimatePresence mode="popLayout">
-                    {committeeGroup.members.map((member, mi) => (
+                    {committeeGroup.members.map((member) => (
                       <MemberCard
                         key={member.id}
                         member={member}
-                        index={mi}
-                        groupIndex={ci}
                       />
                     ))}
-                  </AnimatePresence>
                 </div>
-              </motion.section>
+              </section>
             ))
           )}
         </div>
@@ -266,11 +253,9 @@ export default function CommitteesShowcase({
         </div>
       ) : (
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <AnimatePresence mode="popLayout">
-            {facultyMembers.map((faculty, fi) => (
-              <FacultyCard key={faculty.id} faculty={faculty} index={fi} />
+            {facultyMembers.map((faculty) => (
+              <FacultyCard key={faculty.id} faculty={faculty} />
             ))}
-          </AnimatePresence>
         </div>
       )}
     </section>
@@ -282,25 +267,11 @@ export default function CommitteesShowcase({
 /* ================================================================== */
 function MemberCard({
   member,
-  index,
-  groupIndex,
 }: {
   member: CommitteeMember;
-  index: number;
-  groupIndex: number;
 }) {
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{
-        duration: 0.4,
-        delay: groupIndex * 0.03 + index * 0.04,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      }}
+    <article
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(160deg,rgba(15,23,42,0.92)_0%,rgba(8,47,73,0.55)_50%,rgba(15,23,42,0.92)_100%)] backdrop-blur-xl transition-all duration-500 hover:border-cyan-400/30 hover:shadow-[0_0_50px_-10px_rgba(6,182,212,0.22)]"
     >
       {/* ── Animated border glow on hover ── */}
@@ -341,7 +312,7 @@ function MemberCard({
         {/* Social links */}
         <SocialRow links={member.socialLinks} />
       </div>
-    </motion.article>
+    </article>
   );
 }
 
@@ -350,23 +321,11 @@ function MemberCard({
 /* ================================================================== */
 function FacultyCard({
   faculty,
-  index,
 }: {
   faculty: FacultyMember;
-  index: number;
 }) {
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{
-        duration: 0.4,
-        delay: index * 0.04,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      }}
+    <article
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(160deg,rgba(15,23,42,0.92)_0%,rgba(8,47,73,0.55)_50%,rgba(15,23,42,0.92)_100%)] backdrop-blur-xl transition-all duration-500 hover:border-cyan-400/30 hover:shadow-[0_0_50px_-10px_rgba(6,182,212,0.22)]"
     >
       {/* Animated border glow */}
@@ -409,7 +368,7 @@ function FacultyCard({
         {/* Social links */}
         <SocialRow links={faculty.socialLinks} />
       </div>
-    </motion.article>
+    </article>
   );
 }
 
